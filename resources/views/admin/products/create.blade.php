@@ -28,18 +28,15 @@
             <input type="text" class="form-control" id="product_name" name="product_name" value="{{ old('product_name') }}" required>
         </div>
 
-       <div class="mb-3">
-      <label for="category_id" class="form-label">Danh mục</label>
-       <select class="form-select" id="category_id" name="category_id" required>
-         <option value="">-- Chọn danh mục --</option>
-          @foreach ($categories as $category)
-            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                {{ $category->category_name }}
-               </option>
-           @endforeach
-        </select>
-
-
+        <div class="mb-3">
+            <label for="category_id" class="form-label">Danh mục</label>
+            <select class="form-select" id="category_id" name="category_id" required>
+                <option value="">-- Chọn danh mục --</option>
+                @foreach ($categories as $category)
+                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->category_name }}</option>
+                @endforeach
+            </select>
+        </div>
 
         <div class="mb-3">
             <label for="price" class="form-label">Giá</label>
@@ -69,6 +66,10 @@
             </select>
         </div>
 
+        <div class="mb-3">
+            <label for="description" class="form-label">Mô tả chi tiết</label>
+            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Nhập mô tả chi tiết sản phẩm...">{{ old('description') }}</textarea>
+        </div>
 
         <hr>
         <h4>Thêm biến thể</h4>
@@ -110,110 +111,83 @@
         </div>
 
         <hr>
-        <h4>Hình ảnh theo màu</h4>
-        <div id="colorImageContainer"></div>
-
-        <hr>
         <h4>Danh sách biến thể</h4>
         <div id="variantTableContainer"></div>
 
         <button type="submit" class="btn btn-primary mt-3">Thêm sản phẩm và biến thể</button>
-  
+    </form>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const getCombinations = (colors, rams, storages) => {
-                let combinations = [];
-                colors.forEach(color => {
-                    rams.forEach(ram => {
-                        storages.forEach(storage => {
-                            combinations.push({ color, ram, storage });
-                        });
-                    });
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const getCombinations = (colors, rams, storages) => {
+        let combinations = [];
+        colors.forEach(color => {
+            rams.forEach(ram => {
+                storages.forEach(storage => {
+                    combinations.push({ color, ram, storage });
                 });
-                return combinations;
-            };
-
-            const generateColorImages = () => {
-                let selectedColors = Array.from(document.querySelectorAll('input[data-type="color"]:checked')).map(i => ({
-                    id: i.value,
-                    value: i.nextElementSibling.textContent
-                }));
-
-                let colorImageHtml = '';
-                if (selectedColors.length > 0) {
-                    colorImageHtml = '<div class="mb-3">';
-                    selectedColors.forEach((color, index) => {
-                        colorImageHtml += `
-                            <div class="mb-2">
-                                <label for="color_image_${color.id}" class="form-label">Hình ảnh cho màu ${color.value}</label>
-                                <input type="file" class="form-control" name="color_images[${color.id}]" id="color_image_${color.id}">
-                            </div>`;
-                    });
-                    colorImageHtml += '</div>';
-                }
-                document.getElementById('colorImageContainer').innerHTML = colorImageHtml;
-            };
-
-            const generateVariantTable = () => {
-                let selectedColors = Array.from(document.querySelectorAll('input[data-type="color"]:checked')).map(i => ({
-                    id: i.value,
-                    value: i.nextElementSibling.textContent
-                }));
-                let selectedRams = Array.from(document.querySelectorAll('input[data-type="ram"]:checked')).map(i => ({
-                    id: i.value,
-                    value: i.nextElementSibling.textContent
-                }));
-                let selectedStorages = Array.from(document.querySelectorAll('input[data-type="storage"]:checked')).map(i => ({
-                    id: i.value,
-                    value: i.nextElementSibling.textContent
-                }));
-
-                if (selectedColors.length === 0 || selectedRams.length === 0 || selectedStorages.length === 0) {
-                    document.getElementById('variantTableContainer').innerHTML = "<p class='text-danger'>Hãy chọn đủ Màu, RAM và Bộ nhớ để sinh biến thể.</p>";
-                    document.getElementById('colorImageContainer').innerHTML = '';
-                    return;
-                }
-
-                generateColorImages();
-
-                let combinations = getCombinations(selectedColors, selectedRams, selectedStorages);
-                let maxCombinations = 20; // Giới hạn số lượng biến thể tối đa
-                if (combinations.length > maxCombinations) {
-                    alert(`Số lượng biến thể vượt quá giới hạn ${maxCombinations}. Vui lòng giảm số lựa chọn.`);
-                    return;
-                }
-
-                let table = `<table class="table table-bordered mt-3"><thead><tr>
-                                <th>Màu sắc</th>
-                                <th>RAM</th>
-                                <th>Bộ nhớ</th>
-                                <th>Giá</th>
-                                <th>Số lượng</th>
-                            </tr></thead><tbody>`;
-
-                combinations.forEach((combo, index) => {
-                    table += `<tr>
-                                <td><input type="hidden" name="variants[${index}][color_id]" value="${combo.color.id}">${combo.color.value}</td>
-                                <td><input type="hidden" name="variants[${index}][ram_id]" value="${combo.ram.id}">${combo.ram.value}</td>
-                                <td><input type="hidden" name="variants[${index}][storage_id]" value="${combo.storage.id}">${combo.storage.value}</td>
-                                <td><input type="number" class="form-control" name="variants[${index}][price]" min="0" required></td>
-                                <td><input type="number" class="form-control" name="variants[${index}][quantity]" min="0" required></td>
-                            </tr>`;
-                });
-
-                table += "</tbody></table>";
-                document.getElementById('variantTableContainer').innerHTML = table;
-            };
-
-            document.querySelectorAll('.attr-checkbox').forEach(el => {
-                el.addEventListener('change', generateVariantTable);
             });
-
-            // Khởi tạo lần đầu
-            generateVariantTable();
         });
-    </script>
+        return combinations;
+    };
+
+    const generateVariantTable = () => {
+        let selectedColors = Array.from(document.querySelectorAll('input[data-type="color"]:checked')).map(i => ({
+            id: i.value,
+            value: i.nextElementSibling.textContent
+        }));
+        let selectedRams = Array.from(document.querySelectorAll('input[data-type="ram"]:checked')).map(i => ({
+            id: i.value,
+            value: i.nextElementSibling.textContent
+        }));
+        let selectedStorages = Array.from(document.querySelectorAll('input[data-type="storage"]:checked')).map(i => ({
+            id: i.value,
+            value: i.nextElementSibling.textContent
+        }));
+
+        if (selectedColors.length === 0 || selectedRams.length === 0 || selectedStorages.length === 0) {
+            document.getElementById('variantTableContainer').innerHTML = "<p class='text-danger'>Hãy chọn đủ Màu, RAM và Bộ nhớ để sinh biến thể.</p>";
+            return;
+        }
+
+        let combinations = getCombinations(selectedColors, selectedRams, selectedStorages);
+        let maxCombinations = 20;
+        if (combinations.length > maxCombinations) {
+            alert(`Số lượng biến thể vượt quá giới hạn ${maxCombinations}. Vui lòng giảm số lựa chọn.`);
+            return;
+        }
+
+        let table = `<table class="table table-bordered mt-3"><thead><tr>
+                        <th>Màu sắc</th>
+                        <th>RAM</th>
+                        <th>Bộ nhớ</th>
+                        <th>Album sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                    </tr></thead><tbody>`;
+
+        combinations.forEach((combo, index) => {
+            table += `<tr>
+                        <td><input type="hidden" name="variants[${index}][color_id]" value="${combo.color.id}">${combo.color.value}</td>
+                        <td><input type="hidden" name="variants[${index}][ram_id]" value="${combo.ram.id}">${combo.ram.value}</td>
+                        <td><input type="hidden" name="variants[${index}][storage_id]" value="${combo.storage.id}">${combo.storage.value}</td>
+                        <td><input type="file" name="variants[${index}][images][]" class="form-control form-control-sm" accept="image/*" multiple required></td>
+                        <td><input type="number" class="form-control" name="variants[${index}][price]" min="0" required></td>
+                        <td><input type="number" class="form-control" name="variants[${index}][quantity]" min="0" required></td>
+                    </tr>`;
+        });
+
+        table += "</tbody></table>";
+        document.getElementById('variantTableContainer').innerHTML = table;
+    };
+
+    document.querySelectorAll('.attr-checkbox').forEach(el => {
+        el.addEventListener('change', generateVariantTable);
+    });
+
+    generateVariantTable();
+});
+</script>
 
 </div>
 @endsection

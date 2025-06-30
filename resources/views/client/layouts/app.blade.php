@@ -13,5 +13,6 @@
         @yield('content')
     </main>
     @include('client.layouts.footer')
+    
 </body>
 </html>

@@ -2,12 +2,23 @@
 
 @section('content')
     <style>
+        /* Tổng thể container sản phẩm */
+        .container.my-5 {
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Ảnh sản phẩm chính */
         #mainImageWrapper {
             width: 100%;
-            height: 400px;
+            height: 420px;
             overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
         }
 
         #mainImage {
@@ -18,35 +29,307 @@
         }
 
         #mainImageWrapper:hover #mainImage {
-            transform: scale(1.2);
+            transform: scale(1.05);
         }
 
+        /* Tiêu đề sản phẩm */
         .product-title {
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+            margin-bottom: 16px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
         }
 
+        /* Giá sản phẩm */
         .product-price {
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+            margin-bottom: 16px;
+            font-size: 20px;
+            color: #d70018;
         }
 
-        .container.my-5 {
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        .product-price s {
+            color: #999;
+            font-size: 16px;
         }
+
+        /* Bảng thông số kỹ thuật */
+        .table.table-sm th {
+            width: 100px;
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .table.table-sm td {
+            background: #fff;
+        }
+
+        .table.table-sm {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Phiên bản sản phẩm dạng chip */
+        .variant-option {
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            font-size: 14px;
+            transition: all 0.3s;
+            min-width: 80px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .variant-option:hover {
+            background-color: #e0f0ff;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+
+        .variant-option.active {
+            background-color: #1a73e8;
+            color: #fff;
+            border-color: #1a73e8;
+        }
+
+        /* Nút số lượng */
+        .input-group input {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Nút hành động chính */
+        button.btn-primary,
+        button.btn-success {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            min-width: 160px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary {
+            background-color: #d70018;
+            border: none;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #b30014;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        /* Phần mô tả */
+        .bg-light.p-3 {
+            background-color: #f8f9fa !important;
+            border-left: 4px solid #1a73e8;
+            padding: 20px;
+            line-height: 1.6;
+            border-radius: 8px;
+        }
+
+        /* Form đánh giá */
+        form select.form-select,
+        form textarea.form-control {
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        /* Card sản phẩm liên quan */
+        .card.h-100 {
+            transition: 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .card.h-100:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-img-top {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .card-img-top:hover {
+            transform: scale(1.03);
+        }
+
+        .card-title a {
+            font-size: 15px;
+            font-weight: 500;
+            color: #000;
+            text-decoration: none;
+        }
+
+        /* Banner khuyến mãi cố định */
+        .promo-fixed {
+            position: fixed;
+            right: 20px;
+            bottom: 100px;
+            width: 240px;
+            background: linear-gradient(135deg, #fff9d6, #ffe8b3);
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            z-index: 9999;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .promo-fixed .promo-content {
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .promo-fixed h6 {
+            margin: 8px 0;
+            font-size: 18px;
+        }
+
+        .promo-fixed .btn-warning {
+            border-radius: 8px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive cho mobile */
+        @media (max-width: 768px) {
+            .product-title {
+                font-size: 20px;
+            }
+
+            .product-price {
+                font-size: 18px;
+            }
+
+            .variant-option {
+                font-size: 13px;
+                padding: 6px 12px;
+                min-width: 70px;
+            }
+
+            .btn-primary,
+            .btn-success {
+                width: 100%;
+            }
+
+            .promo-fixed {
+                display: none;
+            }
+        }
+        #albumWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.variant-album-img-wrapper {
+    width: 70px;
+    height: 70px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    display: none;
+    transition: transform 0.3s;
+}
+
+.variant-album-img-wrapper:hover {
+    transform: scale(1.05);
+}
+
+.variant-album-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.promo-fixed {
+    position: fixed;
+    width: 200px; /* Chiều rộng thống nhất */
+    height: 300px; /* Chiều cao thống nhất */
+    z-index: 9999;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.promo-left {
+    left: 20px;
+    bottom: 100px;
+}
+
+.promo-right {
+    right: 20px;
+    bottom: 100px;
+}
+
+.promo-fixed img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cắt đều, không méo, tràn khung */
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transition: transform 0.3s;
+}
+
+.promo-fixed img:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .promo-left, .promo-right {
+        display: none;
+    }
+}
+
+
     </style>
 
     <div class="container my-5">
         <div class="row g-4">
             <div class="col-md-5">
-                <div id="mainImageWrapper">
-                    <img id="mainImage" src="{{ asset('storage/' . $product->image) }}" class="img-fluid"
-                        alt="{{ $product->product_name }}">
+    <div id="mainImageWrapper">
+        <img id="mainImage" src="{{ asset('storage/' . $product->image) }}" class="img-fluid"
+            alt="{{ $product->product_name }}">
+    </div>
+
+    <div id="albumWrapper" class="d-flex flex-wrap gap-2 mt-3">
+        @foreach ($product->variants as $variant)
+            @foreach ($variant->images as $img)
+                <div class="variant-album-img-wrapper" data-variant="{{ $variant->id }}" style="display: none;">
+                    <img src="{{ asset('storage/' . $img->image) }}" alt="Ảnh phụ"
+                        class="variant-album-img" data-image="{{ asset('storage/' . $img->image) }}">
                 </div>
-            </div>
+            @endforeach
+        @endforeach
+    </div>
+</div>
+
+
 
             <div class="col-md-7">
                 <h2 class="fw-bold product-title">{{ $product->product_name }}</h2>
@@ -102,27 +385,21 @@
                 </div>
 
                 <div class="mt-4 d-flex gap-3 align-items-end">
-                    {{-- Thêm vào giỏ --}}
                     <form action="{{ route('cart.add') }}" method="POST" id="addToCartForm">
-    @csrf
-    <input type="hidden" name="product_id" value="{{ $product->id }}">
-    <input type="hidden" name="product_variant_id" id="addToCartVariantId">
-    
-    <div class="input-group" style="max-width: 120px;">
-        <button class="btn btn-outline-secondary" type="button" onclick="changeQty(-1)">-</button>
-        <input type="number" name="quantity" id="quantityInput" value="1" min="1" class="form-control text-center">
-        <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1)">+</button>
-    </div>
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <input type="hidden" name="product_variant_id" id="addToCartVariantId">
+                        <div class="input-group" style="max-width: 120px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQty(-1)">-</button>
+                            <input type="number" name="quantity" id="quantityInput" value="1" min="1"
+                                class="form-control text-center">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1)">+</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">
+                            <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
+                        </button>
+                    </form>
 
-    <button type="submit" class="btn btn-primary mt-2">
-        <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
-    </button>
-</form>
-
-
-
-
-                    {{-- Mua ngay --}}
                     <form action="{{ route('cart.buyNow') }}" method="POST">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -136,12 +413,12 @@
             </div>
         </div>
 
-        {{-- Mô tả & Đánh giá --}}
         <hr class="my-5">
         <h4 class="fw-bold mb-3">Mô tả chi tiết</h4>
-        <div class="bg-light p-3 rounded">
-            {!! $product->description ?? 'Đang cập nhật...' !!}
-        </div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap; font-family: inherit;">
+    {!! $product->description ?? 'Đang cập nhật...' !!}
+</pre>
+
 
         <hr class="my-5">
         <h4 class="fw-bold mb-3">Đánh giá & Bình luận</h4>
@@ -207,58 +484,157 @@
             </div>
         @endif
     </div>
-@endsection
-@push('scripts')
-<script>
-function changeQty(change) {
-    const input = document.getElementById('quantityInput');
-    let value = parseInt(input.value) || 1;
-    const max = parseInt(input.max);
-    value += change;
-    if (value < 1) value = 1;
-    if (value > max) value = max;
-    input.value = value;
-    document.getElementById('buyNowQuantity').value = value;
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-    const variantButtons = document.querySelectorAll('.variant-option');
-    const selectedVariantInput = document.getElementById('selectedVariantId');
-    const addToCartVariantInput = document.getElementById('addToCartVariantId');
-    const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');
-    const addToCartForm = document.getElementById('addToCartForm');
+    {{-- Nội dung trang sản phẩm giữ nguyên như bạn đã có --}}
 
-    variantButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            document.getElementById('mainImage').src = this.dataset.image;
-            const priceValue = parseInt(this.dataset.price || 0).toLocaleString('vi-VN') + ' đ';
-            document.getElementById('priceBlock').innerHTML = `<span class="text-danger fw-bold">${priceValue}</span>`;
-            document.getElementById('ram').innerText = this.dataset.ram || '-';
-            document.getElementById('storage').innerText = this.dataset.storage || '-';
-            document.getElementById('color').innerText = this.dataset.color || '-';
-            document.getElementById('stock').innerText = this.dataset.quantity || '-';
-            
-            selectedVariantInput.value = this.dataset.id;
-            addToCartVariantInput.value = this.dataset.id;
+    <div class="container my-5">
+        {{-- Nội dung chi tiết sản phẩm, mô tả, đánh giá, sản phẩm liên quan... --}}
+        {{-- Mình không lặp lại để tránh quá dài, bạn giữ nguyên nội dung sản phẩm như trước --}}
 
-            variantButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
-            this.classList.add('active', 'btn-primary');
-        });
-    });
 
-    buyNowForm.addEventListener('submit', function(e) {
-        if (!selectedVariantInput.value) {
-            e.preventDefault();
-            alert('Vui lòng chọn phiên bản trước khi mua ngay.');
-        }
-    });
 
-    addToCartForm.addEventListener('submit', function(e) {
-        if (!addToCartVariantInput.value) {
-            e.preventDefault();
-            alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng.');
-        }
-    });
-});
-</script>
-@endpush
+        
+        {{-- Nút gọi nhanh cố định --}}
+        <div class="call-fixed">
+            <a href="tel:0123456789" class="btn btn-success shadow">
+                <i class="fa fa-phone" style="font-size: 24px; color: #fff;"></i>
+            </a>
+        </div>
+<!-- Banner bên trái -->
+<div class="promo-fixed promo-left">
+    <a href="#">
+        <img src="https://png.pngtree.com/template/20200517/ourlarge/pngtree-summer-sale-banner-promotion-template-in-portrait-position-with-bright-design-image_372761.jpg" 
+             alt="Summer Sale">
+    </a>
+</div>
+
+<!-- Banner bên phải -->
+<div class="promo-fixed promo-right">
+    <a href="#">
+        <img src="https://img.pikbest.com/origin/09/06/37/13NpIkbEsTGT5.jpg!w700wp" 
+             alt="Flash Sale">
+    </a>
+</div>
+
+
+
+    @endsection
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const variantButtons = document.querySelectorAll('.variant-option');
+                const selectedVariantInput = document.getElementById('selectedVariantId');
+                const addToCartVariantInput = document.getElementById('addToCartVariantId');
+                const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');
+                const addToCartForm = document.getElementById('addToCartForm');
+                const albumImages = document.querySelectorAll('.variant-album-img-wrapper');
+                const mainImage = document.getElementById('mainImage');
+
+                variantButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const variantId = this.dataset.id;
+
+                        // Cập nhật thông tin
+                        mainImage.src = this.dataset.image;
+                        document.getElementById('priceBlock').innerHTML =
+                            `<span class="text-danger fw-bold">${parseInt(this.dataset.price || 0).toLocaleString('vi-VN')} đ</span>`;
+                        document.getElementById('ram').innerText = this.dataset.ram || '-';
+                        document.getElementById('storage').innerText = this.dataset.storage || '-';
+                        document.getElementById('color').innerText = this.dataset.color || '-';
+                        document.getElementById('stock').innerText = this.dataset.quantity || '-';
+                        selectedVariantInput.value = variantId;
+                        addToCartVariantInput.value = variantId;
+
+                        // Active nút
+                        variantButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
+                        this.classList.add('active', 'btn-primary');
+
+                        // Ẩn/hiện ảnh album đúng phiên bản
+                        albumImages.forEach(img => {
+                            img.style.display = (img.dataset.variant === variantId) ? 'block' :
+                                'none';
+                        });
+                    });
+                });
+
+                // Click ảnh nhỏ -> đổi ảnh to
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('variant-album-img')) {
+                        mainImage.src = e.target.dataset.image;
+                    }
+                });
+
+                // Validate khi mua ngay hoặc thêm giỏ hàng
+                buyNowForm.addEventListener('submit', function(e) {
+                    if (!selectedVariantInput.value) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn phiên bản trước khi mua ngay.');
+                    }
+                });
+                addToCartForm.addEventListener('submit', function(e) {
+                    if (!addToCartVariantInput.value) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ.');
+                    }
+                });
+            });
+
+
+            function changeQty(change) {
+                const input = document.getElementById('quantityInput');
+                let value = parseInt(input.value) || 1;
+                const max = parseInt(input.max);
+                value += change;
+                if (value < 1) value = 1;
+                if (value > max) value = max;
+                input.value = value;
+                document.getElementById('buyNowQuantity').value = value;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const variantButtons = document.querySelectorAll('.variant-option');
+                const selectedVariantInput = document.getElementById('selectedVariantId');
+                const addToCartVariantInput = document.getElementById('addToCartVariantId');
+                const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');
+                const addToCartForm = document.getElementById('addToCartForm');
+
+                variantButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        document.getElementById('mainImage').src = this.dataset.image;
+                        const priceValue = parseInt(this.dataset.price || 0).toLocaleString('vi-VN') +
+                            ' đ';
+                        document.getElementById('priceBlock').innerHTML =
+                            `<span class="text-danger fw-bold">${priceValue}</span>`;
+                        document.getElementById('ram').innerText = this.dataset.ram || '-';
+                        document.getElementById('storage').innerText = this.dataset.storage || '-';
+                        document.getElementById('color').innerText = this.dataset.color || '-';
+                        document.getElementById('stock').innerText = this.dataset.quantity || '-';
+                        selectedVariantInput.value = this.dataset.id;
+                        addToCartVariantInput.value = this.dataset.id;
+                        variantButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
+                        this.classList.add('active', 'btn-primary');
+                    });
+                });
+
+                buyNowForm.addEventListener('submit', function(e) {
+                    if (!selectedVariantInput.value) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn phiên bản trước khi mua ngay.');
+                    }
+                });
+
+                addToCartForm.addEventListener('submit', function(e) {
+                    if (!addToCartVariantInput.value) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng.');
+                    }
+                });
+
+                // Thông báo nổi khi load trang
+                setTimeout(() => {
+                    alert('💡 Đăng ký tài khoản để nhận ngay voucher giảm giá hấp dẫn!');
+                }, 3000);
+            });
+        </script>
+    @endpush
