@@ -63,7 +63,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/add', [ClientCartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
 
-Route::get('/generate-momo-qr', [MomoController::class, 'generateQR'])->name('momo.qr');
+// Gửi yêu cầu thanh toán lên MoMo
+Route::post('/momo_payment', [MomoController::class, 'momo_payment'])->name('momo.payment');
+
+// IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức
+Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
+
+// Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
+Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
+
+
+
+
+
 });
 
 // Khu vực quản trị (admin)

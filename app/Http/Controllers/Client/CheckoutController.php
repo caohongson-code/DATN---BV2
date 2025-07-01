@@ -23,79 +23,69 @@ class CheckoutController extends Controller
 
         $buyNow = session('buy_now');
         $selectedItems = $request->input('selected_items', []);
-
         $cartItems = [];
         $subtotal = 0;
 
-        // Xử lý trường hợp mua ngay
         if ($buyNow) {
             $product = Product::find($buyNow['product_id']);
+            if (!$product) return redirect()->route('home')->with('error', 'Sản phẩm không tồn tại.');
+
             $variant = $buyNow['variant_id'] ? ProductVariant::find($buyNow['variant_id']) : null;
             $price = $variant ? $variant->price : $product->price;
             $quantity = $buyNow['quantity'];
             $subtotal = $price * $quantity;
-
-            $cartItems[] = [
-                'product' => $product,
-                'variant' => $variant,
-                'quantity' => $quantity,
-                'price' => $price,
-                'subtotal' => $subtotal
-            ];
-        }
-        // Xử lý trường hợp chọn sản phẩm từ giỏ hàng
-        elseif (!empty($selectedItems)) {
+            $cartItems[] = compact('product', 'variant', 'quantity', 'price', 'subtotal');
+        } elseif (!empty($selectedItems)) {
             $cart = Cart::where('account_id', $user->id)->where('cart_status_id', 1)->first();
-            if (!$cart) {
-                return redirect()->route('cart.show')->with('error', 'Giỏ hàng của bạn đang trống.');
-            }
+            if (!$cart) return redirect()->route('cart.show')->with('error', 'Giỏ hàng trống.');
 
             $cartDetails = $cart->details()->whereIn('id', $selectedItems)->with(['product', 'variant'])->get();
-            if ($cartDetails->isEmpty()) {
-                return redirect()->route('cart.show')->with('error', 'Không có sản phẩm nào để thanh toán.');
-            }
+            if ($cartDetails->isEmpty()) return redirect()->route('cart.show')->with('error', 'Không có sản phẩm để thanh toán.');
 
             foreach ($cartDetails as $item) {
                 $price = $item->product->discount_price ?? $item->product->price;
-                $subtotal += $price * $item->quantity;
-
+                $lineTotal = $price * $item->quantity;
+                $subtotal += $lineTotal;
                 $cartItems[] = [
                     'cart_detail_id' => $item->id,
-                    'product'        => $item->product,
-                    'variant'        => $item->variant,
-                    'quantity'       => $item->quantity,
-                    'price'          => $price,
-                    'subtotal'       => $price * $item->quantity
+                    'product' => $item->product,
+                    'variant' => $item->variant,
+                    'quantity' => $item->quantity,
+                    'price' => $price,
+                    'subtotal' => $lineTotal
                 ];
             }
-        }
-        // Không có sản phẩm nào
-        else {
-            return redirect()->route('cart.show')->with('error', 'Không có sản phẩm nào để thanh toán.');
+        } else {
+            return redirect()->route('cart.show')->with('error', 'Không có sản phẩm để thanh toán.');
         }
 
-        // Tính voucher & phí ship
         $shippingFee = 30000;
-        $vouchers = Promotion::where('is_active', 1)
-            ->whereDate('start_date', '<=', now())
-            ->whereDate('end_date', '>=', now())
-            ->get();
-
-        $selectedVoucherId = session('selected_voucher_id');
         $discount = 0;
+        $vouchers = Promotion::active()->get();
+        $selectedVoucherId = session('selected_voucher_id');
 
         if ($selectedVoucherId) {
-            $voucher = Promotion::find($selectedVoucherId);
+            $voucher = Promotion::active()->find($selectedVoucherId);
             if ($voucher) {
-                $discount = ($subtotal * $voucher->discount_percent) / 100;
+                $discount = $voucher->discount_type === 'percent'
+                    ? $subtotal * ($voucher->discount_value / 100)
+                    : $voucher->discount_value;
             }
         }
 
         $total = $subtotal + $shippingFee - $discount;
+        $request_id = time() . uniqid();
 
         return view('client.checkout.index', compact(
-            'buyNow', 'cartItems', 'vouchers',
-            'subtotal', 'shippingFee', 'discount', 'total', 'selectedVoucherId'
+            'buyNow',
+            'cartItems',
+            'vouchers',
+            'subtotal',
+            'shippingFee',
+            'discount',
+            'total',
+            'selectedVoucherId',
+            'request_id'
         ));
     }
 
@@ -104,67 +94,44 @@ class CheckoutController extends Controller
         $request->validate([
             'voucher_id' => ['nullable', 'exists:promotions,id'],
             'payment_method' => ['required', 'in:cod,bank,momo'],
+            'selected_items' => ['nullable', 'array'],
         ]);
 
         $user = Auth::user();
         if (!$user || !$user->phone || !$user->address) {
-            return redirect()->back()->with('error', 'Vui lòng cập nhật đầy đủ số điện thoại và địa chỉ nhận hàng.');
+            return redirect()->back()->with('error', 'Vui lòng cập nhật thông tin.');
         }
 
         $buyNow = session('buy_now');
         $selectedItems = $request->input('selected_items', []);
-
         $cartItems = [];
         $subtotal = 0;
 
-        // Xử lý mua ngay
         if ($buyNow) {
             $product = Product::find($buyNow['product_id']);
             $variant = $buyNow['variant_id'] ? ProductVariant::find($buyNow['variant_id']) : null;
             $price = $variant ? $variant->price : $product->price;
             $quantity = $buyNow['quantity'];
             $subtotal = $price * $quantity;
-
-            $cartItems[] = [
-                'product' => $product,
-                'variant' => $variant,
-                'quantity' => $quantity,
-                'price' => $price,
-                'subtotal' => $subtotal
-            ];
-        }
-        // Xử lý từ giỏ hàng
-        elseif (!empty($selectedItems)) {
+            $cartItems[] = compact('product', 'variant', 'quantity', 'price', 'subtotal');
+        } elseif (!empty($selectedItems)) {
             $cart = Cart::where('account_id', $user->id)->where('cart_status_id', 1)->first();
-            if (!$cart) {
-                return redirect()->route('cart.show')->with('error', 'Giỏ hàng của bạn đang trống.');
-            }
-
             $cartDetails = $cart->details()->whereIn('id', $selectedItems)->with(['product', 'variant'])->get();
-            if ($cartDetails->isEmpty()) {
-                return redirect()->route('cart.show')->with('error', 'Không có sản phẩm nào để thanh toán.');
-            }
-
             foreach ($cartDetails as $item) {
                 $price = $item->product->discount_price ?? $item->product->price;
-                $subtotal += $price * $item->quantity;
-
+                $lineTotal = $price * $item->quantity;
+                $subtotal += $lineTotal;
                 $cartItems[] = [
                     'cart_detail_id' => $item->id,
-                    'product'        => $item->product,
-                    'variant'        => $item->variant,
-                    'quantity'       => $item->quantity,
-                    'price'          => $price,
-                    'subtotal'       => $price * $item->quantity
+                    'product' => $item->product,
+                    'variant' => $item->variant,
+                    'quantity' => $item->quantity,
+                    'price' => $price,
+                    'subtotal' => $lineTotal
                 ];
             }
         }
-        // Không có sản phẩm nào
-        else {
-            return redirect()->route('cart.show')->with('error', 'Không có sản phẩm nào để thanh toán.');
-        }
 
-        // Tính voucher & tổng tiền
         $shippingFee = 30000;
         $discount = 0;
         $voucher = null;
@@ -179,47 +146,75 @@ class CheckoutController extends Controller
         }
 
         $total = $subtotal + $shippingFee - $discount;
+        $requestId = $request->input('request_id') ?? time() . uniqid();
+        $paymentMethod = $request->payment_method;
 
-        // Lưu đơn hàng
+        $orderId = $this->createOrder(
+            $user,
+            $cartItems,
+            $subtotal,
+            $discount,
+            $shippingFee,
+            $voucher,
+            $selectedItems,
+            $paymentMethod,
+            $requestId
+        );
+
+       if ($paymentMethod === 'momo') {
+    return view('client.checkout.momo_redirect', [
+        'request_id' => $requestId,
+        'total' => $total,
+        'orderId' => $orderId,
+    ]);
+}
+
+
+        return redirect()->route('home')->with('success', '✅ Đặt hàng thành công!');
+    }
+
+    public function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $selectedItems = [], $paymentMethod = 'momo', $requestId = null)
+    {
+        $total = $subtotal + $shippingFee - $discount;
+        $orderStatus = $paymentMethod === 'momo' ? 3 : 4;
+
         $orderId = DB::table('orders')->insertGetId([
-            'account_id'        => $user->id,
-            'payment_method_id' => $this->getPaymentMethodId($request->payment_method),
-            'shipping_zone_id'  => 1,
-            'order_status_id'   => 1,
-            'voucher_id'        => $voucher?->id,
-            'voucher_code'      => $voucher?->code,
-            'shipping_fee'      => $shippingFee,
-            'recipient_name'    => $user->full_name,
-            'recipient_phone'   => $user->phone,
-            'recipient_email'   => $user->email,
+            'account_id' => $user->id,
+            'payment_method_id' => $this->getPaymentMethodId($paymentMethod),
+            'shipping_zone_id' => 1,
+            'order_status_id' => $orderStatus,
+            'voucher_id' => $voucher?->id,
+            'voucher_code' => $voucher?->code,
+            'shipping_fee' => $shippingFee,
+            'recipient_name' => $user->full_name,
+            'recipient_phone' => $user->phone,
+            'recipient_email' => $user->email,
             'recipient_address' => $user->address,
-            'total_amount'      => $total,
-            'order_date'        => now(),
-            'created_at'        => now(),
-            'updated_at'        => now(),
+            'total_amount' => $total,
+            'order_date' => now(),
+            'momo_request_id' => $requestId,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // Chi tiết đơn hàng
         foreach ($cartItems as $item) {
             DB::table('order_details')->insert([
-                'order_id'           => $orderId,
-                'product_variant_id' => $item['variant'] ? $item['variant']->id : null,
-                'quantity'           => $item['quantity'],
-                'unit_price'         => $item['price'],
-                'total_price'        => $item['subtotal'],
-                'created_at'         => now(),
-                'updated_at'         => now(),
+                'order_id' => $orderId,
+                'product_variant_id' => $item['variant']?->id,
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['price'],
+                'total_price' => $item['subtotal'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
-        // Nếu từ giỏ hàng thì xóa sản phẩm đã chọn
         if (!empty($selectedItems)) {
             CartDetail::whereIn('id', $selectedItems)->delete();
         }
 
         session()->forget('buy_now');
-
-        return redirect()->route('home')->with('success', '✅ Đặt hàng thành công!');
+        return $orderId;
     }
 
     private function getPaymentMethodId($code)

@@ -23,18 +23,29 @@ class Promotion extends Model
         'is_active',
     ];
 
-
     protected $casts = [
         'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        'is_active' => 'boolean',
+        'end_date'   => 'datetime',
+        'is_active'  => 'boolean',
     ];
+
     public function products()
     {
         return $this->belongsToMany(Product::class);
     }
+
     public function categories()
-{
-    return $this->belongsToMany(Category::class, 'category_promotion');
-}
+    {
+        return $this->belongsToMany(Category::class, 'category_promotion');
+    }
+
+    /**
+     * Scope lọc khuyến mãi đang hoạt động
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 1)
+                     ->whereDate('start_date', '<=', now())
+                     ->whereDate('end_date', '>=', now());
+    }
 }
