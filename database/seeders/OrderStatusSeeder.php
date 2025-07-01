@@ -4,49 +4,35 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 
 class OrderStatusSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('order_statuses')->insert([
-            [
-                'id' => 1,
-                'status_name' => 'Chờ xác nhận',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'id' => 2,
-                'status_name' => 'Đã xác nhận',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'id' => 3,
-                'status_name' => 'Đang giao hàng',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'id' => 4,
-                'status_name' => 'Đã giao',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'id' => 5,
-                'status_name' => 'Đã huỷ',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'id' => 6,
-                'status_name' => 'Hoàn trả / Hoàn tiền',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-        ]);
+        $now = Carbon::now();
+
+        $statuses = [
+            1 => 'Chờ xác nhận',
+            2 => 'Đã xác nhận',
+            3 => 'Chờ thanh toán',
+            4 => 'Đã thanh toán',
+            5 => 'Đang chuẩn bị hàng',
+            6 => 'Đang giao hàng',
+            7 => 'Đã giao hàng',
+            8 => 'Trả hàng / Hoàn tiền',
+            9 => 'Đã huỷ',
+        ];
+
+        foreach ($statuses as $id => $name) {
+            DB::table('order_statuses')->updateOrInsert(
+                ['id' => $id],
+                [
+                    'status_name' => $name,
+                    'updated_at' => $now,
+                    'created_at' => $now
+                ]
+            );
+        }
     }
 }
