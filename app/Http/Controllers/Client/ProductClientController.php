@@ -15,7 +15,7 @@ class ProductClientController extends Controller
 
 public function show($id)
 {
-    $product = Product::with(['variants.ram', 'variants.storage', 'variants.color'])->findOrFail($id);
+    $product = Product::with(['variants.images','variants.ram', 'variants.storage', 'variants.color'])->findOrFail($id);
 
     // Lấy các sản phẩm liên quan (trừ chính nó)
     $relatedProducts = Product::where('category_id', $product->category_id)
