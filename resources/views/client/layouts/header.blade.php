@@ -169,7 +169,7 @@
                                     </li>
                                 @else
                                     <li>
-                                        <a href="{{ route('taikhoan.showLoginForm') }}">
+                                        <a href="{{ route('login') }}">
                                             <span class="iconTop icon-4-top"></span>
                                             <span class="title-info-top user_tk">Đăng nhập</span>
                                         </a>

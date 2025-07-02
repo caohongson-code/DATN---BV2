@@ -18,8 +18,9 @@
             <label for="gender" class="form-label">Giới tính</label>
             <select name="gender" class="form-control">
                 <option value="">-- Chọn --</option>
-                <option value="male" {{ Auth::user()->gender === 'male' ? 'selected' : '' }}>Nam</option>
-                <option value="female" {{ Auth::user()->gender === 'female' ? 'selected' : '' }}>Nữ</option>
+                <option value="1" {{ Auth::user()->gender == 1 ? 'selected' : '' }}>Nam</option>
+                <option value="2" {{ Auth::user()->gender == 2 ? 'selected' : '' }}>Nữ</option>
+
             </select>
         </div>
         <div class="mb-3">

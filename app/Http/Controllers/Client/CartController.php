@@ -22,7 +22,8 @@ class CartController extends Controller
 
         $user = Auth::user();
         if (!$user) {
-            return redirect()->route('taikhoan.showLoginForm')->with('error', 'Bạn cần đăng nhập để mua hàng.');
+            // return redirect()->route('taikhoan.showLoginForm')->with('error', 'Bạn cần đăng nhập để mua hàng.');
+            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để mua hàng.');
         }
 
         $product = Product::findOrFail($request->product_id);
@@ -80,10 +81,10 @@ class CartController extends Controller
 
     public function show()
     {
-        $user = auth()->user();
-
+        // $user = auth()->user();
+        $user = Auth::user();
         if (!$user) {
-            return redirect()->route('taikhoan.showLoginForm')->with('error', 'Bạn cần đăng nhập để xem giỏ hàng.');
+            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để xem giỏ hàng.');
         }
 
         $cart = Cart::with(['details.product', 'details.variant', 'status'])

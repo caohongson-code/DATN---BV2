@@ -24,7 +24,7 @@ class UserProfileController extends Controller
         $request->validate([
             'full_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
-            'gender' => 'nullable|in:male,female',
+            'gender'        => 'nullable|in:1,2',
             'date_of_birth' => 'nullable|date',
             'address' => 'nullable|string|max:255',
         ]);

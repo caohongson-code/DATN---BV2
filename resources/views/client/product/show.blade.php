@@ -1,14 +1,27 @@
 @extends('client.layouts.app')
 
 @section('content')
-        <style>
+    <style>
+        /* Tổng thể container sản phẩm */
+        .container.my-5 {
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Ảnh sản phẩm chính */
+
         #mainImageWrapper {
             width: 100%;
             height: 420px;
             overflow: hidden;
             border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            background-color: #f8f9fa;
+
+            border: 1px solid #e0e0e0;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+
         }
 
         #mainImage {
@@ -19,14 +32,18 @@
         }
 
         #mainImageWrapper:hover #mainImage {
-            transform: scale(1.1);
+            transform: scale(1.05);
+
         }
 
         /* Tiêu đề sản phẩm */
         .product-title {
-            margin-bottom: 20px;
-            font-size: 1.75rem;
-            color: #212529;
+
+            margin-bottom: 16px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+
         }
 
         /* Giá sản phẩm */
@@ -36,82 +53,11 @@
             color: #d70018;
         }
 
-        .container.my-5 {
-            background: #ffffff;
-            padding: 40px 30px;
-            border-radius: 16px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-        }
+        .product-price s {
+            color: #999;
+            font-size: 16px;
 
-        .variant-option {
-            border-radius: 25px !important;
-            padding: 8px 16px;
-            transition: all 0.2s ease;
-            font-weight: 500;
         }
-
-        .variant-option.active {
-            background-color: #0d6efd !important;
-            color: #fff !important;
-            border-color: #0d6efd !important;
-        }
-
-        .table-bordered th,
-        .table-bordered td {
-            vertical-align: middle;
-            font-size: 0.95rem;
-        }
-
-        .table {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .btn-primary {
-            border-radius: 8px;
-        }
-
-        .btn-outline-secondary {
-            border-radius: 8px;
-        }
-
-        .card-title a {
-            font-weight: 600;
-        }
-
-        .bg-light.p-3.rounded {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            background-color: #f1f3f5 !important;
-        }
-
-        hr {
-            border-top: 2px solid #dee2e6;
-        }
-
-        select.form-select {
-            border-radius: 8px;
-        }
-
-        textarea.form-control {
-            border-radius: 8px;
-        }
-
-        .form-label {
-            font-weight: 500;
-        }
-
-        .btn-success {
-            border-radius: 8px;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        }
-
         /* Bảng thông số kỹ thuật */
         .table.table-sm th {
             width: 100px;
@@ -179,8 +125,7 @@
         .btn-primary:hover {
             background-color: #b30014;
         }
-
-        .btn-success {
+.btn-success {
             background-color: #28a745;
             border: none;
             color: #fff;
@@ -307,7 +252,7 @@
 }
 
 .variant-album-img-wrapper {
-    width: 70px;
+width: 70px;
     height: 70px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -409,7 +354,7 @@
 
                 <div class="mb-3">
                     <strong class="d-block mb-1">Số lượng còn:</strong>
-                    <span id="stock" class="fs-6">{{ $product->quantity }}</span>
+<span id="stock" class="fs-6">{{ $product->quantity }}</span>
                 </div>
 
                 <table class="table table-bordered table-sm w-75">
@@ -446,27 +391,25 @@
 
                 <div class="mt-4 d-flex gap-3 align-items-end">
                     <form action="{{ route('cart.add') }}" method="POST" id="addToCartForm">
-    @csrf
-    <input type="hidden" name="product_id" value="{{ $product->id }}">
-    <input type="hidden" name="product_variant_id" id="addToCartVariantId">
-    
-  <div class="quantity-wrapper d-flex align-items-center gap-2">
-    <button type="button" class="btn btn-outline-secondary rounded-circle quantity-btn" onclick="changeQty(-1)">
-       -
-    </button>
 
-    <input type="number" name="quantity" id="quantityInput" value="1" min="1"
-           class="form-control text-center quantity-input" style="width: 70px;">
-           
-    <button type="button" class="btn btn-outline-secondary rounded-circle quantity-btn" onclick="changeQty(1)">
-       +
-    </button>
-</div>
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <input type="hidden" name="product_variant_id" id="addToCartVariantId">
+                        <div class="input-group" style="max-width: 120px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQty(-1)">-</button>
+                            <input type="number" name="quantity" id="quantityInput" value="1" min="1"
+                                class="form-control text-center">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1)">+</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">
+                            <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
+                        </button>
+                    </form>
 
 
                     <form action="{{ route('cart.buyNow') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+<input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="variant_id" id="selectedVariantId">
                         <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
                         <button type="submit" class="btn btn-primary">
@@ -529,7 +472,7 @@
                             <div class="card-body p-2">
                                 <h6 class="card-title mb-1">
                                     <a href="{{ route('product.show', $item->id) }}"
-                                        class="text-dark text-decoration-none">{{ $item->product_name }}</a>
+class="text-dark text-decoration-none">{{ $item->product_name }}</a>
                                 </h6>
                                 <p class="mb-0 text-danger fw-semibold">
                                     @if ($item->discount_price)
@@ -597,7 +540,7 @@
 
                 variantButtons.forEach(button => {
                     button.addEventListener('click', function() {
-                        const variantId = this.dataset.id;
+const variantId = this.dataset.id;
 
                         // Cập nhật thông tin
                         mainImage.src = this.dataset.image;
@@ -657,7 +600,7 @@
             }
 
             document.addEventListener('DOMContentLoaded', () => {
-                const variantButtons = document.querySelectorAll('.variant-option');
+const variantButtons = document.querySelectorAll('.variant-option');
                 const selectedVariantInput = document.getElementById('selectedVariantId');
                 const addToCartVariantInput = document.getElementById('addToCartVariantId');
                 const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');

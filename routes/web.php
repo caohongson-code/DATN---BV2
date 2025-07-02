@@ -35,7 +35,7 @@ Route::get('/home', [ProductClientController::class, 'index'])->name('home');
 Route::get('/product/{id}', [ProductClientController::class, 'show'])->name('product.show');
 
 // Đăng nhập / đăng ký dùng chung
-Route::get('/login', [AccountController::class, 'showLoginForm'])->name('taikhoan.showLoginForm');
+Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AccountController::class, 'login'])->name('taikhoan.login');
 Route::post('/register', [AccountController::class, 'register'])->name('taikhoan.register');
 

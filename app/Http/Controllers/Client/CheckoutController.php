@@ -18,7 +18,7 @@ class CheckoutController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return redirect()->route('taikhoan.showLoginForm')->with('error', 'Vui lòng đăng nhập để thanh toán.');
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thanh toán.');
         }
 
         $buyNow = session('buy_now');
@@ -162,11 +162,11 @@ class CheckoutController extends Controller
         );
 
        if ($paymentMethod === 'momo') {
-    return view('client.checkout.momo_redirect', [
-        'request_id' => $requestId,
-        'total' => $total,
-        'orderId' => $orderId,
-    ]);
+        return view('client.checkout.momo_redirect', [
+            'request_id' => $requestId,
+            'total' => $total,
+            'orderId' => $orderId,
+        ]);
 }
 
 

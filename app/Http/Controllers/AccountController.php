@@ -136,33 +136,34 @@ class AccountController extends Controller
         return view('admin.auth.login');
     }
 
-    public function login(Request $request)
+   public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
         ]);
 
         $account = Account::where('email', $request->email)->first();
 
         if ($account && Hash::check($request->password, $account->password)) {
+
+            // Laravel auth
+            Auth::login($account);
+
             if (in_array($account->role_id, [1, 2])) {
                 session(['admin_id' => $account->id]);
                 return redirect()->route('accounts.index')->with('success', 'Đăng nhập quản trị thành công!');
             } else {
-                session(['user_id' => $account->id]);
-                $products = Product::paginate(10);
-                return view('client.home', compact('products'))->with('success', 'Đăng nhập người dùng thành công!');
+                return redirect()->route('home')->with('success', 'Đăng nhập người dùng thành công!');
             }
         }
 
         return redirect()->back()->with('error', 'Email hoặc mật khẩu không đúng');
     }
-
     public function logout(Request $request)
     {
         $request->session()->forget(['admin_id', 'user_id']);
-        return redirect()->route('taikhoan.showLoginForm')->with('success', 'Đăng xuất thành công!');
+        return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
     }
     public function register(Request $request)
     {
@@ -191,8 +192,8 @@ class AccountController extends Controller
             $user = Account::create($data);
             Mail::to($user->email)->send(new ThongBaoTaoTaiKhoan($user, $plainPassword));
             DB::commit();
-
-            return redirect()->route('taikhoan.showLoginForm')->with('success', 'Đăng ký thành công!');
+            return redirect()->route('login')->with('success', 'Đăng ký thành công!');
+            // return redirect()->route('taikhoan.showLoginForm')->with('success', 'Đăng ký thành công!');
         } catch (Exception $e) {
             DB::rollback();
             return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());

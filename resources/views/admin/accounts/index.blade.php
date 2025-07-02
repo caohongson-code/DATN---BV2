@@ -71,7 +71,8 @@
                             <td>{{ $nv->email }}</td>
                             <td>{{ $nv->role->role_name }}</td>
                             <td>
-                                @if (session('admin_id') == 3)
+                                {{-- @if (session('admin_id') == 3) --}}
+                                @if ($admin && $admin->role_id == 1)
                                 <a href="{{ route('accounts.edit', $nv->id) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i>Sửa</a>
                                 <form action="{{ route('accounts.destroy', $nv->id) }}" method="POST" style="display:inline">
