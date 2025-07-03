@@ -43,6 +43,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
         {
             return $this->belongsTo(PaymentMethod::class);
         }
+        public function paymentStatus(): BelongsTo
+        {
+            return $this->belongsTo(PaymentStatus::class, 'payment_status_id');
+        }
 
         public function orderStatus(): BelongsTo
         {

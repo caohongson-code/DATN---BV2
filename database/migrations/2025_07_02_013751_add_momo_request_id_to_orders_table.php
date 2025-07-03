@@ -18,7 +18,7 @@ return new class extends Migration
 
 public function down()
 {
-    Schema::table('orders', function (Blueprint $table) {
+        Schema::table('orders', function (Blueprint $table) {
         $table->dropColumn('momo_request_id');
     });
 }

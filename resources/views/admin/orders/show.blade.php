@@ -6,7 +6,7 @@
 <div class="container-fluid px-4">
     <div class="card shadow-sm border-0 rounded-3 mb-4">
         <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-            <h4 class="fw-bold mb-0"><i class="fas fa-file-invoice me-2 text-primary"></i> Chi tiết đơn hàng #{{ $order->id }}</h4>
+            <h4 class="fw-bold mb-0"><i class="fas fa-file-invoice me-2"></i> Chi tiết đơn hàng #{{ $order->id }}</h4>
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('admin.orders.index') }}">Đơn hàng</a></li>
                 <li class="breadcrumb-item active">Chi tiết</li>
@@ -54,12 +54,13 @@
                         <div class="card-body">
                             <p><strong>Ngày đặt:</strong> {{ $order->order_date?->format('d/m/Y H:i') }}</p>
                             <p><strong>Trạng thái:</strong>
-                                <span class="badge bg-{{ $order->orderStatus->color ?? 'secondary' }}">
+                                <span>
                                     {{ $order->orderStatus->status_name }}
                                 </span>
                             </p>
                             <p><strong>Phương thức thanh toán:</strong> {{ $order->paymentMethod->method_name ?? 'Không có' }}</p>
-                            @if($order->voucher_code)
+                        <p><strong>Trạng thái thanh toán:</strong> {{ $order->paymentStatus->status_name ?? 'Không có' }}</p>
+                           @if($order->voucher_code)
                                 <p><strong>Mã giảm giá:</strong> {{ $order->voucher_code }}</p>
                             @endif
                             <p><strong>Ghi chú:</strong> {{ $order->note ?? 'Không có' }}</p>
@@ -80,19 +81,52 @@
                                 <div class="row align-items-end">
                                     <div class="col-md-4">
                                         <label for="order_status_id" class="form-label">Trạng thái đơn</label>
-                                        <select name="order_status_id" class="form-select">
+                                        <select name="order_status_id" class="form-select @error('order_status_id') is-invalid @endif" id="order_status_id">
                                             @foreach($statuses as $status)
-                                                <option value="{{ $status->id }}" {{ $order->order_status_id == $status->id ? 'selected' : '' }}>
+                                                @php
+                                                    $disabled = '';
+                                                    // Không cho phép quay lại "Chờ xác nhận" (ID 1) nếu đã qua ID 1
+                                                    if ($order->order_status_id > 1 && $status->id == 1) {
+                                                        $disabled = 'disabled';
+                                                    }
+                                                    // Không cho phép quay lại "Đang xác nhận" (ID 2) nếu đã qua ID 2
+                                                    if ($order->order_status_id > 2 && $status->id == 2) {
+                                                        $disabled = 'disabled';
+                                                    }
+                                                    // Không cho phép quay lại "Đang giao" (ID 3) nếu đã qua ID 3
+                                                    if ($order->order_status_id > 3 && $status->id == 3) {
+                                                        $disabled = 'disabled';
+                                                    }
+                                                    // Không cho phép hủy nếu đã "Đang giao" (ID 3) trở lên
+                                                    if ($order->order_status_id >= 3 && $status->id == 5) {
+                                                        $disabled = 'disabled';
+                                                    }
+                                                    $selected = $order->order_status_id == $status->id ? 'selected' : '';
+                                                @endphp
+                                                <option value="{{ $status->id }}" {{ $selected }} {{ $disabled }}>
                                                     {{ $status->status_name }}
                                                 </option>
                                             @endforeach
                                         </select>
+                                        @error('order_status_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @endif
                                     </div>
                                     <div class="col-md-2">
                                         <button class="btn btn-primary w-100 mt-3 mt-md-0">Cập nhật</button>
                                     </div>
                                 </div>
                             </form>
+                            @if ($order->order_status_id > 1)
+                                <div class="mt-2">
+                                    <small class="text-danger">* Lưu ý: Không thể quay lại trạng thái thấp hơn sau khi đã xác nhận.</small>
+                                </div>
+                            @endif
+                            @if ($order->order_status_id >= 3)
+                                <div class="mt-2">
+                                    <small class="text-danger">* Lưu ý: Đơn hàng đang trong trạng thái "Đang giao" hoặc cao hơn không thể chuyển thành "Đã hủy".</small>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
