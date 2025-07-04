@@ -56,7 +56,6 @@ Route::middleware('auth')->group(function () {
     })->name('user.orders');
     //
     Route::get('/user/profile', [UserProfileController::class, 'show'])->name('user.profile');
-    Route::get('/user/profile/edit', [UserProfileController::class, 'edit'])->name('user.profile.edit');
     Route::post('/user/profile/update', [UserProfileController::class, 'update'])->name('user.profile.update');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     //

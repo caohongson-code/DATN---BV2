@@ -106,7 +106,7 @@ class MomoController extends Controller
             $realOrderId = explode('-', $fullOrderId)[0];
 
             DB::table('orders')->where('id', $realOrderId)->update([
-                'order_status_id' => 4, 
+                'payment_status_id ' => 2, 
                 'updated_at' => now(),
             ]);
         }
@@ -138,7 +138,7 @@ class MomoController extends Controller
             $realOrderId = explode('-', $fullOrderId)[0];
 
             DB::table('orders')->where('id', $realOrderId)->update([
-                'order_status_id' => 4, 
+                'payment_status_id' => 2, 
                 'updated_at' => now(),
             ]);
         }

@@ -9,37 +9,44 @@ use Illuminate\Support\Facades\DB;
 
 class UserProfileController extends Controller
 {
-    public function show()
+     public function show(Request $request)
     {
-        return view('client.user.profile');
-    }
+        // Chỉ lưu URL trước nếu chưa có, và không phải trang hiện tại
+        if (!$request->session()->has('user_return_url')) {
+            $previous = url()->previous();
 
-    public function edit()
-    {
-        return view('client.user.profile');
+            if (!str_contains($previous, route('user.profile'))) {
+                session(['user_return_url' => $previous]);
+            }
+        }
+
+        return view('client.user.dashboard');
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'full_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'gender' => 'nullable|in:male,female',
+            'full_name'     => 'required|string|max:255',
+            'phone'         => 'nullable|string|max:20',
+            'gender'        => 'nullable|in:male,female',
             'date_of_birth' => 'nullable|date',
-            'address' => 'nullable|string|max:255',
+            'address'       => 'nullable|string|max:255',
         ]);
 
-        $userId = Auth::id();
-
-        DB::table('accounts')->where('id', $userId)->update([
-            'full_name'     => $request->input('full_name'),
-            'phone'         => $request->input('phone'),
-            'gender'        => $request->input('gender'),
-            'date_of_birth' => $request->input('date_of_birth'),
-            'address'       => $request->input('address'),
+        DB::table('accounts')->where('id', Auth::id())->update([
+            'full_name'     => $request->full_name,
+            'phone'         => $request->phone,
+            'gender'        => $request->gender,
+            'date_of_birth' => $request->date_of_birth,
+            'address'       => $request->address,
             'updated_at'    => now(),
         ]);
 
-        return redirect()->route('user.profile')->with('success', 'Cập nhật thông tin thành công!');
+        // Quay lại URL cũ nếu có, sau đó xoá session
+        $redirectBack = session('user_return_url') ?? route('user.profile');
+        session()->forget('user_return_url');
+
+        return redirect($redirectBack)->with('success', 'Cập nhật thông tin thành công!');
     }
+  
 }
