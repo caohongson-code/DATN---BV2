@@ -3,7 +3,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPaymentStatusIdToOrdersTable extends Migration
+class AddPaymentStatusIdToOrdersTable1 extends Migration
 {
     public function up()
     {

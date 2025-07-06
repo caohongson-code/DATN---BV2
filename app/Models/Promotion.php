@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Builder;
+
 class Promotion extends Model
 {
     use HasFactory;
@@ -29,6 +31,16 @@ class Promotion extends Model
         'is_active'  => 'boolean',
     ];
 
+
+    // // 💡 Local scope `active`
+    // public function scopeActive(Builder $query)
+    // {
+    //     return $query->where('is_active', true)
+    //                  ->where('start_date', '<=', now())
+    //                  ->where('end_date', '>=', now());
+    // }
+
+
     public function products()
     {
         return $this->belongsToMany(Product::class);
@@ -48,4 +60,5 @@ class Promotion extends Model
                      ->whereDate('start_date', '<=', now())
                      ->whereDate('end_date', '>=', now());
     }
+
 }

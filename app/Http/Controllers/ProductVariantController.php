@@ -88,6 +88,8 @@ class ProductVariantController extends Controller
         return redirect()->route('variants.index')->with('success', 'Tạo biến thể thành công.');
     }
 
+
+
     public function edit(ProductVariant $variant)
     {
         return view('admin.variants.edit', [
@@ -136,6 +138,7 @@ class ProductVariantController extends Controller
 
         return redirect()->route('variants.index')->with('success', 'Cập nhật biến thể thành công.');
     }
+
 
     public function destroy(ProductVariant $variant)
     {

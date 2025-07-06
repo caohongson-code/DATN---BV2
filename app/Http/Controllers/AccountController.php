@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ThongBaoTaoTaiKhoan;
 use App\Models\Account;
 use App\Models\Product;
 use App\Models\Role;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class AccountController extends Controller
@@ -21,19 +23,20 @@ class AccountController extends Controller
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
             $accounts->where(function ($q) use ($keyword) {
-                $q->where('full_name', 'like', "%{$keyword}%");
+                $q->where('full_name', 'like', "%{$keyword}%")
+                  ->orWhere('email', 'like', "%{$keyword}%");
             });
         }
 
         $listQT = $accounts->orderByDesc('id')->paginate(3)->withQueryString();
-
         $admin = Auth::user();
-return view('admin.accounts.index', compact('listQT', 'admin'));
 
+        return view('admin.accounts.index', compact('listQT', 'admin'));
     }
 
     public function create()
     {
+
         $roles = Role::all();
         return view('admin.accounts.create', compact('roles'));
     }
@@ -69,11 +72,10 @@ return view('admin.accounts.index', compact('listQT', 'admin'));
                 $data['avatar'] = $request->file('avatar')->store('uploads/quantri', 'public');
             }
 
-            $data['password'] = bcrypt('1234'); // mật khẩu mặc định
+            $data['password'] = bcrypt('1234');
+             Account::create($data);
 
-            Account::create($data);
             DB::commit();
-
             return redirect()->route('accounts.index')->with('success', 'Tạo tài khoản thành công!');
         } catch (Exception $e) {
             DB::rollback();
@@ -91,37 +93,27 @@ return view('admin.accounts.index', compact('listQT', 'admin'));
 
     public function update(Request $request, $id)
     {
-        try {
-            $account = Account::findOrFail($id);
+        $data = $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'full_name' => 'required|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'email' => 'required|email|unique:accounts,email,' . $id,
+            'phone' => 'nullable|string|max:10',
+            'gender' => 'required|in:0,1',
+            'address' => 'nullable|string',
+        ]);
 
+        try {
             DB::beginTransaction();
 
-            $data = $request->validate([
-                'role_id' => 'required|exists:roles,id',
-                'full_name' => 'required|string|max:255',
-                'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'date_of_birth' => 'nullable|date',
-                'email' => 'required|email',
-                'phone' => 'nullable|string|max:10',
-                'gender' => 'required|in:0,1',
-                'address' => 'nullable|string',
-            ]);
-
-            if ($request->hasFile('avatar')) {
-                $data['avatar'] = $request->file('avatar')->store('uploads/quantri', 'public');
-                if ($account->avatar) {
-                    Storage::disk('public')->delete($account->avatar);
-                }
-            }
-
+            $account = Account::findOrFail($id);
             $account->update($data);
 
             DB::commit();
-
             return redirect()->route('accounts.index')->with('success', 'Cập nhật thành công!');
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->route('accounts.index')->with('error', 'Lỗi: ' . $e->getMessage());
+            return redirect()->route('accounts.index')->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
@@ -129,18 +121,14 @@ return view('admin.accounts.index', compact('listQT', 'admin'));
     {
         $account = Account::findOrFail($id);
 
-        if ($account) {
-            $filePath = $account->avatar;
-            $account->delete();
+        $filePath = $account->avatar;
+        $account->delete();
 
-            if ($filePath && Storage::disk('public')->exists($filePath)) {
-                Storage::disk('public')->delete($filePath);
-            }
-
-            return redirect()->route('accounts.index')->with('success', 'Xoá thành công!');
+        if ($filePath && Storage::disk('public')->exists($filePath)) {
+            Storage::disk('public')->delete($filePath);
         }
 
-        return redirect()->route('accounts.index')->with('error', 'Tài khoản không tồn tại!');
+        return redirect()->route('accounts.index')->with('success', 'Xoá thành công!');
     }
 
     public function showLoginForm()
@@ -148,42 +136,35 @@ return view('admin.accounts.index', compact('listQT', 'admin'));
         return view('admin.auth.login');
     }
 
-    public function login(Request $request)
+   public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
-        ], [
-            'email.required' => 'Vui lòng nhập email.',
-            'email.email' => 'Email không đúng định dạng.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
         ]);
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            $request->session()->regenerate();
+        $account = Account::where('email', $request->email)->first();
 
-            $user = Auth::user();
+        if ($account && Hash::check($request->password, $account->password)) {
 
-            if (in_array($user->role_id, [1, 2])) {
+            // Laravel auth
+            Auth::login($account);
+
+            if (in_array($account->role_id, [1, 2])) {
+                session(['admin_id' => $account->id]);
                 return redirect()->route('accounts.index')->with('success', 'Đăng nhập quản trị thành công!');
+            } else {
+                return redirect()->route('home')->with('success', 'Đăng nhập người dùng thành công!');
             }
-
-            return redirect()->route('home')->with('success', 'Đăng nhập người dùng thành công!');
         }
 
-        return back()->with('error', 'Email hoặc mật khẩu không đúng');
+        return redirect()->back()->with('error', 'Email hoặc mật khẩu không đúng');
     }
-
     public function logout(Request $request)
     {
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('taikhoan.showLoginForm')->with('success', 'Đăng xuất thành công!');
+        $request->session()->forget(['admin_id', 'user_id']);
+        return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
     }
-
     public function register(Request $request)
     {
         $request->validate([
@@ -203,16 +184,16 @@ return view('admin.accounts.index', compact('listQT', 'admin'));
 
         try {
             DB::beginTransaction();
-
+            $plainPassword = $request->password;
             $data = $request->only(['full_name', 'email', 'password']);
-            $data['password'] = bcrypt($data['password']);
+            $data['password'] = bcrypt($plainPassword);
             $data['role_id'] = 3; // Người dùng mặc định
 
-            Account::create($data);
-
+            $user = Account::create($data);
+            Mail::to($user->email)->send(new ThongBaoTaoTaiKhoan($user, $plainPassword));
             DB::commit();
-
-            return redirect()->route('taikhoan.showLoginForm')->with('success', 'Đăng ký thành công!');
+            return redirect()->route('login')->with('success', 'Đăng ký thành công!');
+            // return redirect()->route('taikhoan.showLoginForm')->with('success', 'Đăng ký thành công!');
         } catch (Exception $e) {
             DB::rollback();
             return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());

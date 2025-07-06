@@ -82,6 +82,7 @@
     <link rel="stylesheet" href="{{ asset('client/css/0wplpl_sAxn.css') }}">
     <link rel="stylesheet" href="{{ asset('client/css/appLib.css') }}">
     <link rel="stylesheet" href="{{ asset('client/css/bootstrap-3.3.5.min.css') }}">
+
     <link rel="stylesheet" href="{{ asset('client/css/flipclock.css') }}">
     <link rel="stylesheet" href="{{ asset('client/css/font-awesome-4.7.0.min.css') }}">
     <link rel="stylesheet" href="{{ asset('client/css/jquery.fancybox.css') }}">
@@ -93,6 +94,7 @@
     <link rel="stylesheet" href="{{ asset('client/css/styles.css') }}">
     <link rel="stylesheet" href="{{ asset('client/css/Ye5WURwlpsv.css') }}">
     <link rel="stylesheet" href="{{ asset('client/css/zh-SzDq3GxE.css') }}">
+
 </head>
 
 <body class="tp_background tp_text_color">
@@ -169,7 +171,7 @@
                                     </li>
                                 @else
                                     <li>
-                                        <a href="{{ route('taikhoan.showLoginForm') }}">
+                                        <a href="{{ route('login') }}">
                                             <span class="iconTop icon-4-top"></span>
                                             <span class="title-info-top user_tk">Đăng nhập</span>
                                         </a>
@@ -272,11 +274,19 @@
         </section>
     </div>
 
-    <!-- JS Scripts -->
+     <!-- JS bắt buộc -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ asset('client/js/bootstrap-3.3.5.min.js') }}"></script>
+
+    <!-- Các script khác -->
     <script defer src="{{ asset('client/js/slick.js') }}"></script>
     <script defer src="{{ asset('client/js/flipclock.js') }}"></script>
     <script defer src="{{ asset('client/js/promotion.js') }}"></script>
     <script defer src="{{ asset('client/js/index.js') }}"></script>
+
+    <!-- Scripts đẩy từ các view con -->
+    @stack('scripts')
+    @yield('scripts')
 </body>
 
 </html>

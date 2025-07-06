@@ -10,17 +10,14 @@ class ColorController extends Controller
     public function index()
     {
         $colors = Color::all();
-        return view('admin.colors.index', [
-            'colors' => $colors,
-            'type' => 'Màu sắc',
-            'routePrefix' => 'colors',
-        ]);
+
+    return view('admin.colors.index', compact('colors'));
     }
 
     public function create()
     {
         return view('admin.colors.create', [
-            'type' => 'Màu sắc',
+            'type'        => 'Màu sắc',
             'routePrefix' => 'colors',
         ]);
     }
@@ -29,42 +26,60 @@ class ColorController extends Controller
     {
         $request->validate([
             'value' => 'required|string|max:255|unique:colors,value',
+            'code'  => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ], [
+            'code.regex' => 'Mã màu phải đúng định dạng HEX (ví dụ: #FF0000).',
         ]);
 
-        Color::create(['value' => $request->value]);
+        Color::create([
+            'value' => $request->value,
+            'code'  => $request->code,
+        ]);
 
-        return redirect()->route('colors.index')->with('success', 'Thêm màu sắc thành công.');
+        return redirect()
+            ->route('colors.index')
+            ->with('success', 'Thêm màu sắc thành công.');
     }
 
     public function edit($id)
     {
-        $colors = Color::findOrFail($id);
+        $color = Color::findOrFail($id);
 
         return view('admin.colors.edit', [
-            'colors' => $colors,
-            'type' => 'Màu sắc',
+            'color'       => $color,
+            'type'        => 'Màu sắc',
             'routePrefix' => 'colors',
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $colors = Color::findOrFail($id);
+        $color = Color::findOrFail($id);
 
         $request->validate([
-            'value' => 'required|string|max:255|unique:colors,value,' . $colors->id,
+            'value' => 'required|string|max:255|unique:colors,value,' . $color->id,
+            'code'  => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ], [
+            'code.regex' => 'Mã màu phải đúng định dạng HEX (ví dụ: #FF0000).',
         ]);
 
-        $colors->update(['value' => $request->value]);
+        $color->update([
+            'value' => $request->value,
+            'code'  => $request->code,
+        ]);
 
-        return redirect()->route('colors.index')->with('success', 'Cập nhật màu sắc thành công.');
+        return redirect()
+            ->route('colors.index')
+            ->with('success', 'Cập nhật màu sắc thành công.');
     }
 
     public function destroy($id)
     {
-        $colors = Color::findOrFail($id);
-        $colors->delete();
+        $color = Color::findOrFail($id);
+        $color->delete();
 
-        return redirect()->route('colors.index')->with('success', 'Xóa màu sắc thành công.');
+        return redirect()
+            ->route('colors.index')
+            ->with('success', 'Xóa màu sắc thành công.');
     }
 }

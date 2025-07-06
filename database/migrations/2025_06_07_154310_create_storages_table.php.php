@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('storages')) {
     Schema::create('storages', function (Blueprint $table) {
     $table->id();
     $table->string('value');
@@ -18,6 +19,7 @@ return new class extends Migration
     });
 
     }
+}
 
     /**
      * Reverse the migrations.

@@ -43,7 +43,7 @@
                     <tbody>
                         @foreach ($cart->details as $item)
                             @php
-                                $price = $item->product->discount_price ?? $item->product->price;
+                                $price = $item->variant?->price ?? $item->product->discount_price ?? $item->product->price;
                                 $subtotal = $item->quantity * $price;
                             @endphp
                             <tr>

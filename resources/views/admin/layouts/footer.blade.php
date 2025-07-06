@@ -1,3 +1,5 @@
-<footer class="text-center py-3 mt-2 border-top">
-    <small>© 2025 - Bảng điều khiển quản trị | PhoneStore</small>
-</footer>
+<div class="text-center" style="font-size: 13px">
+    <p><b>Copyright
+      <script>document.write(new Date().getFullYear());</script>
+      Phần mềm quản lý bán hàng | Dev By POW POW</b></p>
+  </div>

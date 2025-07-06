@@ -20,15 +20,17 @@ class UserProfileController extends Controller
             }
         }
 
-        return view('client.user.dashboard');
+        return view('client.user.profile');
     }
 
     public function update(Request $request)
     {
         $request->validate([
+
             'full_name'     => 'required|string|max:255',
             'phone'         => 'nullable|string|max:20',
             'gender'        => 'nullable|in:male,female',
+
             'date_of_birth' => 'nullable|date',
             'address'       => 'nullable|string|max:255',
         ]);

@@ -18,7 +18,7 @@ class CheckoutController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return redirect()->route('taikhoan.showLoginForm')->with('error', 'Vui lòng đăng nhập để thanh toán.');
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thanh toán.');
         }
 
         $buyNow = session('buy_now');
@@ -43,13 +43,22 @@ class CheckoutController extends Controller
             if ($cartDetails->isEmpty()) return redirect()->route('cart.show')->with('error', 'Không có sản phẩm để thanh toán.');
 
             foreach ($cartDetails as $item) {
-                $price = $item->product->discount_price ?? $item->product->price;
+                $variant = $item->variant;
+
+                // ✅ Ưu tiên lấy giá từ sản phẩm biến thể
+                if ($variant && $variant->price) {
+                    $price = $variant->price;
+                } else {
+                    $price = $item->product->discount_price ?? $item->product->price;
+                }
+
                 $lineTotal = $price * $item->quantity;
                 $subtotal += $lineTotal;
+
                 $cartItems[] = [
                     'cart_detail_id' => $item->id,
                     'product' => $item->product,
-                    'variant' => $item->variant,
+                    'variant' => $variant,
                     'quantity' => $item->quantity,
                     'price' => $price,
                     'subtotal' => $lineTotal
@@ -118,13 +127,21 @@ class CheckoutController extends Controller
             $cart = Cart::where('account_id', $user->id)->where('cart_status_id', 1)->first();
             $cartDetails = $cart->details()->whereIn('id', $selectedItems)->with(['product', 'variant'])->get();
             foreach ($cartDetails as $item) {
-                $price = $item->product->discount_price ?? $item->product->price;
+                $variant = $item->variant;
+
+                if ($variant && $variant->price) {
+                    $price = $variant->price;
+                } else {
+                    $price = $item->product->discount_price ?? $item->product->price;
+                }
+
                 $lineTotal = $price * $item->quantity;
                 $subtotal += $lineTotal;
+
                 $cartItems[] = [
                     'cart_detail_id' => $item->id,
                     'product' => $item->product,
-                    'variant' => $item->variant,
+                    'variant' => $variant,
                     'quantity' => $item->quantity,
                     'price' => $price,
                     'subtotal' => $lineTotal
@@ -161,13 +178,13 @@ class CheckoutController extends Controller
             $requestId
         );
 
-       if ($paymentMethod === 'momo') {
-    return view('client.checkout.momo_redirect', [
-        'request_id' => $requestId,
-        'total' => $total,
-        'orderId' => $orderId,
-    ]);
-}
+        if ($paymentMethod === 'momo') {
+            return view('client.checkout.momo_redirect', [
+                'request_id' => $requestId,
+                'total' => $total,
+                'orderId' => $orderId,
+            ]);
+        }
 
 
         return redirect()->route('home')->with('success', '✅ Đặt hàng thành công!');
@@ -176,7 +193,7 @@ class CheckoutController extends Controller
     public function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $selectedItems = [], $paymentMethod = 'momo', $requestId = null)
     {
         $total = $subtotal + $shippingFee - $discount;
-        $payment_status= $paymentMethod === 'momo' ? 1 : 2;
+        $payment_status = $paymentMethod === 'momo' ? 1 : 2;
 
         $orderId = DB::table('orders')->insertGetId([
             'account_id' => $user->id,

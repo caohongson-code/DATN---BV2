@@ -12,13 +12,16 @@
         }
 
         /* Ảnh sản phẩm chính */
+
         #mainImageWrapper {
             width: 100%;
             height: 420px;
             overflow: hidden;
             border-radius: 12px;
+
             border: 1px solid #e0e0e0;
             box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+
         }
 
         #mainImage {
@@ -30,14 +33,17 @@
 
         #mainImageWrapper:hover #mainImage {
             transform: scale(1.05);
+
         }
 
         /* Tiêu đề sản phẩm */
         .product-title {
+
             margin-bottom: 16px;
             font-size: 24px;
             font-weight: 600;
             color: #1a1a1a;
+
         }
 
         /* Giá sản phẩm */
@@ -50,6 +56,7 @@
         .product-price s {
             color: #999;
             font-size: 16px;
+
         }
 
         /* Bảng thông số kỹ thuật */
@@ -239,95 +246,101 @@
                 display: none;
             }
         }
+
         #albumWrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
-}
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
 
-.variant-album-img-wrapper {
-    width: 70px;
-    height: 70px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    display: none;
-    transition: transform 0.3s;
-}
+        .variant-album-img-wrapper {
+            width: 70px;
+            height: 70px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            display: none;
+            transition: transform 0.3s;
+        }
 
-.variant-album-img-wrapper:hover {
-    transform: scale(1.05);
-}
+        .variant-album-img-wrapper:hover {
+            transform: scale(1.05);
+        }
 
-.variant-album-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.promo-fixed {
-    position: fixed;
-    width: 200px; /* Chiều rộng thống nhất */
-    height: 300px; /* Chiều cao thống nhất */
-    z-index: 9999;
-    padding: 0;
-    background: none;
-    border: none;
-    box-shadow: none;
-}
+        .variant-album-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-.promo-left {
-    left: 20px;
-    bottom: 100px;
-}
+        .promo-fixed {
+            position: fixed;
+            width: 200px;
+            /* Chiều rộng thống nhất */
+            height: 300px;
+            /* Chiều cao thống nhất */
+            z-index: 9999;
+            padding: 0;
+            background: none;
+            border: none;
+            box-shadow: none;
+        }
 
-.promo-right {
-    right: 20px;
-    bottom: 100px;
-}
+        .promo-left {
+            left: 20px;
+            bottom: 100px;
+        }
 
-.promo-fixed img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Cắt đều, không méo, tràn khung */
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    transition: transform 0.3s;
-}
+        .promo-right {
+            right: 20px;
+            bottom: 100px;
+        }
 
-.promo-fixed img:hover {
-    transform: scale(1.05);
-}
+        .promo-fixed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Cắt đều, không méo, tràn khung */
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+        }
 
-@media (max-width: 768px) {
-    .promo-left, .promo-right {
-        display: none;
-    }
-}
+        .promo-fixed img:hover {
+            transform: scale(1.05);
+        }
 
+        @media (max-width: 768px) {
 
+            .promo-left,
+            .promo-right {
+                display: none;
+            }
+        }
     </style>
 
     <div class="container my-5">
         <div class="row g-4">
             <div class="col-md-5">
-    <div id="mainImageWrapper">
-        <img id="mainImage" src="{{ asset('storage/' . $product->image) }}" class="img-fluid"
-            alt="{{ $product->product_name }}">
-    </div>
-
-    <div id="albumWrapper" class="d-flex flex-wrap gap-2 mt-3">
-        @foreach ($product->variants as $variant)
-            @foreach ($variant->images as $img)
-                <div class="variant-album-img-wrapper" data-variant="{{ $variant->id }}" style="display: none;">
-                    <img src="{{ asset('storage/' . $img->image) }}" alt="Ảnh phụ"
-                        class="variant-album-img" data-image="{{ asset('storage/' . $img->image) }}">
+                <div id="mainImageWrapper">
+                    <img id="mainImage" src="{{ asset('storage/' . $product->image) }}" class="img-fluid"
+                        alt="{{ $product->product_name }}">
                 </div>
-            @endforeach
-        @endforeach
-    </div>
-</div>
+
+                <div id="albumWrapper" class="d-flex flex-wrap gap-2 mt-3">
+                    @foreach ($product->variants as $variant)
+                        @foreach ($variant->images as $img)
+                            <div class="variant-album-img-wrapper" data-variant="{{ $variant->id }}"
+                                style="display: none;">
+                                <img src="{{ asset('storage/' . $img->image) }}" alt="Ảnh phụ" class="variant-album-img"
+                                    data-image="{{ asset('storage/' . $img->image) }}">
+                            </div>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
 
 
 
@@ -386,6 +399,7 @@
 
                 <div class="mt-4 d-flex gap-3 align-items-end">
                     <form action="{{ route('cart.add') }}" method="POST" id="addToCartForm">
+
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="product_variant_id" id="addToCartVariantId">
@@ -399,6 +413,7 @@
                             <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
                         </button>
                     </form>
+
 
                     <form action="{{ route('cart.buyNow') }}" method="POST">
                         @csrf
@@ -493,30 +508,27 @@
 
 
 
-        
+
         {{-- Nút gọi nhanh cố định --}}
         <div class="call-fixed">
             <a href="tel:0123456789" class="btn btn-success shadow">
                 <i class="fa fa-phone" style="font-size: 24px; color: #fff;"></i>
             </a>
         </div>
-<!-- Banner bên trái -->
-<div class="promo-fixed promo-left">
-    <a href="#">
-        <img src="https://png.pngtree.com/template/20200517/ourlarge/pngtree-summer-sale-banner-promotion-template-in-portrait-position-with-bright-design-image_372761.jpg" 
-             alt="Summer Sale">
-    </a>
-</div>
+        <!-- Banner bên trái -->
+        <div class="promo-fixed promo-left">
+            <a href="#">
+                <img src="https://png.pngtree.com/template/20200517/ourlarge/pngtree-summer-sale-banner-promotion-template-in-portrait-position-with-bright-design-image_372761.jpg"
+                    alt="Summer Sale">
+            </a>
+        </div>
 
-<!-- Banner bên phải -->
-<div class="promo-fixed promo-right">
-    <a href="#">
-        <img src="https://img.pikbest.com/origin/09/06/37/13NpIkbEsTGT5.jpg!w700wp" 
-             alt="Flash Sale">
-    </a>
-</div>
-
-
+        <!-- Banner bên phải -->
+        <div class="promo-fixed promo-right">
+            <a href="#">
+                <img src="https://img.pikbest.com/origin/09/06/37/13NpIkbEsTGT5.jpg!w700wp" alt="Flash Sale">
+            </a>
+        </div>
 
     @endsection
 

@@ -13,13 +13,14 @@ class CategoryController extends Controller
         $query = Category::query();
 
         // Xử lý tìm kiếm
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where('category_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+        if ($request->has('keyword') && !empty($request->keyword)) {
+            $keyword = $request->keyword;
+            $query->where('category_name', 'like', "%{$keyword}%")
+                  ->orWhere('description', 'like', "%{$keyword}%");
         }
 
-        $categories = $query->get();
+        $categories = $query->orderByDesc('id')->paginate(3)->withQueryString();
+
         return view('admin.categories.index', compact('categories'));
     }
     // Hiển thị form tạo danh mục mới

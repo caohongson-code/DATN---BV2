@@ -10,11 +10,25 @@ class RoleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+  
+
+    public function index(Request $request)
     {
-        $roles = Role::all();
+        $query = Role::query();
+
+        // Nếu có tìm kiếm
+        if ($request->has('search') && !empty(trim($request->search))) {
+            $search = trim($request->search);
+            $query->where('role_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+        }
+
+        // Sử dụng phân trang
+        $roles = $query->orderByDesc('id')->paginate(5)->withQueryString();
+
         return view('admin.roles.index', compact('roles'));
     }
+
 
 
     /**
