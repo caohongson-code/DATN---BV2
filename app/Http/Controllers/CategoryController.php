@@ -8,12 +8,21 @@ use App\Models\Category;
 class CategoryController extends Controller
 {
     // Hiển thị danh sách danh mục
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::all();
+        $query = Category::query();
+
+        // Xử lý tìm kiếm
+        if ($request->has('keyword') && !empty($request->keyword)) {
+            $keyword = $request->keyword;
+            $query->where('category_name', 'like', "%{$keyword}%")
+                  ->orWhere('description', 'like', "%{$keyword}%");
+        }
+
+        $categories = $query->orderByDesc('id')->paginate(3)->withQueryString();
+
         return view('admin.categories.index', compact('categories'));
     }
-
     // Hiển thị form tạo danh mục mới
     public function create()
     {

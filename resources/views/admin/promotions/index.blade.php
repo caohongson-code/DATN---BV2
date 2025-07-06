@@ -16,11 +16,8 @@
                     <th>Thời gian</th>
                     <th>Giới hạn</th>
                     <th>Trạng thái</th>
-<<<<<<< HEAD
                     <th>Sản phẩm áp dụng</th>
                     <th>Danh mục áp dụng</th>
-=======
->>>>>>> be89ce2cbccc5cd0cc791b738965a2f68a61ae19
                     <th>Hành động</th>
                 </tr>
             </thead>
@@ -44,7 +41,6 @@
                                 {{ $promotion->is_active ? 'Đang áp dụng' : 'Đã tắt' }}
                             </span>
                         </td>
-<<<<<<< HEAD
 
                         {{-- ✅ Sản phẩm áp dụng: theo ưu tiên --}}
                         <td>
@@ -74,8 +70,6 @@
                             @endif
                         </td>
 
-=======
->>>>>>> be89ce2cbccc5cd0cc791b738965a2f68a61ae19
                         <td>
                             <a href="{{ route('promotions.edit', $promotion) }}" class="btn btn-sm btn-primary mb-1">Sửa</a>
                             <form action="{{ route('promotions.destroy', $promotion) }}" method="POST" style="display:inline">
@@ -86,11 +80,7 @@
                     </tr>
                 @empty
                     <tr>
-<<<<<<< HEAD
                         <td colspan="10">Không có khuyến mãi nào.</td>
-=======
-                        <td colspan="9">Không có khuyến mãi nào.</td>
->>>>>>> be89ce2cbccc5cd0cc791b738965a2f68a61ae19
                     </tr>
                 @endforelse
             </tbody>

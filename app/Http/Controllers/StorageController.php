@@ -7,15 +7,21 @@ use Illuminate\Http\Request;
 
 class StorageController extends Controller
 {
-    public function index()
-    {
-        $storages = Storage::all();
-        return view('admin.storages.index', [
-            'storages' => $storages,
-            'type' => 'Storage',
-            'routePrefix' => 'storages',
-        ]);
+    public function index(Request $request)
+{
+    $query = Storage::query();
+
+    if ($request->has('keyword') && !empty($request->keyword)) {
+        $query->where('value', 'like', '%' . $request->keyword . '%');
     }
+    $storages = $query->orderByDesc('id')->paginate(10)->withQueryString();
+    return view('admin.storages.index', [
+        'storages' => $storages,
+        'type' => 'Storage',
+        'routePrefix' => 'storages',
+    ]);
+}
+
 
     public function create()
     {

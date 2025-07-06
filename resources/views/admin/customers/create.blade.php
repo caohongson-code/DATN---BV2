@@ -1,120 +1,132 @@
 @extends('admin.layouts.app')
 
+@section('title', 'Tạo tài khoản khách hàng')
+
 @section('content')
-<h1>Create New Account</h1>
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        {{-- Header với tiêu đề và nút quay lại --}}
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold mb-0">Tạo tài khoản khách hàng</h4>
+            <a href="{{ route('customers.index') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
+            </a>
+        </div>
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+        <div class="card-body">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="row">
+                    {{-- Họ và tên --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Họ và tên</label>
+                        <input type="text" name="full_name" value="{{ old('full_name') }}" class="form-control">
+                        @error('full_name') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Ảnh đại diện --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Ảnh đại diện</label>
+                        <input type="file" name="avatar" class="form-control">
+                        @error('avatar') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Ngày sinh --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Ngày sinh</label>
+                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" class="form-control">
+                        @error('date_of_birth') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email" name="email" value="{{ old('email') }}" class="form-control">
+                        @error('email') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Số điện thoại --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Số điện thoại</label>
+                        <input type="text" name="phone" value="{{ old('phone') }}" maxlength="10" class="form-control">
+                        @error('phone') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Giới tính --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold d-block">Giới tính</label>
+                        <div class="d-flex gap-3">
+                            <input type="radio" class="btn-check" name="gender" id="gender-male" value="1" {{ old('gender') == '1' ? 'checked' : '' }}>
+                            <label class="gender-option" for="gender-male">👨 Nam</label>
+
+                            <input type="radio" class="btn-check" name="gender" id="gender-female" value="0" {{ old('gender') == '0' ? 'checked' : '' }}>
+                            <label class="gender-option" for="gender-female">👩 Nữ</label>
+                        </div>
+                        @error('gender') <p class="text-danger mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Địa chỉ --}}
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-semibold">Địa chỉ</label>
+                        <textarea name="address" class="form-control">{{ old('address') }}</textarea>
+                        @error('address') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Mật khẩu --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Mật khẩu</label>
+                        <input type="password" name="password" class="form-control">
+                        @error('password') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Nhập lại mật khẩu --}}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Nhập lại mật khẩu</label>
+                        <input type="password" name="password_confirmation" class="form-control">
+                        @error('password_confirmation') <p class="text-danger">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-2">
+                    <i class="fas fa-user-plus me-1"></i> Tạo tài khoản
+                </button>
+            </form>
+        </div>
     </div>
-@endif
-
-<form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-
-    {{-- Role
-    <div class="mb-3">
-        <label for="role_id" class="form-label">Role</label>
-        <select name="role_id" class="form-control" >
-            <option value="">-- Select Role --</option>
-            @foreach($roles as $role)
-                <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
-                    {{ $role->role_name }}
-                </option>
-            @endforeach
-        </select>
-        @error('role_id')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div> --}}
-
-    {{-- Full Name --}}
-    <div class="mb-3">
-        <label for="full_name" class="form-label">Full Name</label>
-        <input type="text" name="full_name" class="form-control" value="{{ old('full_name') }}">
-        @error('full_name')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- Avatar --}}
-    <div class="mb-3">
-        <label for="avatar" class="form-label">Avatar (Hình ảnh)</label>
-        <input type="file" name="avatar" class="form-control">
-        @error('avatar')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- Date of Birth --}}
-    <div class="mb-3">
-        <label for="date_of_birth" class="form-label">Date of Birth</label>
-        <input type="date" name="date_of_birth" class="form-control" value="{{ old('date_of_birth') }}">
-        @error('date_of_birth')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- Email --}}
-    <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
-        @error('email')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- Phone --}}
-    <div class="mb-3">
-        <label for="phone" class="form-label">Phone</label>
-        <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" maxlength="10">
-        @error('phone')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- Gender --}}
-    <div class="mb-3">
-        <label for="gender" class="form-label">Gender</label>
-        <select name="gender" class="form-control" >
-            <option value="">-- Select Gender --</option>
-            <option value="1" {{ old('gender') == '1' ? 'selected' : '' }}>Nam</option>
-            <option value="0" {{ old('gender') == '0' ? 'selected' : '' }}>Nữ</option>
-        </select>
-        @error('gender')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- Address --}}
-    <div class="mb-3">
-        <label for="address" class="form-label">Address</label>
-        <textarea name="address" class="form-control">{{ old('address') }}</textarea>
-        @error('address')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-
-    {{-- mật khẩu  --}}
-    <div class="mb-3">
-        <label for="password" class="form-label" >Mật khẩu</label>
-        <input type="password" name="password" class="form-control" value="{{old('password')}}" >
-        @error('password')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror</p>
-    </div>
-     {{-- Confirm Password --}}
-     <div class="mb-3">
-        <label for="password_confirmation" class="form-label">Nhập lại mật khẩu</label>
-        <input type="password" name="password_confirmation" class="form-control">
-        @error('password_confirmation')
-            <p class="text-danger">{{ $message }}</p>
-        @enderror
-    </div>
-    <button type="submit" class="btn btn-primary">Create</button>
-</form>
+</div>
 @endsection
+
+{{-- CSS custom cho gender-option --}}
+<style>
+    .gender-option {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 50px;
+        border: 2px solid #ccc;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+        user-select: none;
+    }
+
+    .btn-check:checked + .gender-option {
+        background-color: #0d6efd;
+        color: #fff;
+        border-color: #0d6efd;
+        box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
+    }
+
+    .gender-option:hover {
+        border-color: #0d6efd;
+    }
+</style>

@@ -7,14 +7,20 @@ use Illuminate\Http\Request;
 
 class RamController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $rams = Ram::all();
-        return view('admin.rams.index', [
-            'rams' => $rams,
-            'type' => 'RAM',
-            'routePrefix' => 'rams',
-        ]);
+        $query = Ram::query();
+
+    if ($request->filled('keyword')) {
+        $query->where('value', 'like', '%' . $request->keyword . '%');
+    }
+    $rams = $query->orderByDesc('id')->paginate(5)->withQueryString();
+
+    return view('admin.rams.index', [
+        'rams' => $rams,
+        'type' => 'RAM',
+        'routePrefix' => 'rams',
+    ]);
     }
 
     public function create()

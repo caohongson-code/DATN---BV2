@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Session;
 use App\Models\Account;
 use Carbon\Laravel\ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,12 +22,18 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        View::composer('*', function ($view) {
-            if (Session::has('admin_id')) {
-                $admin = Account::find(Session::get('admin_id'));
+        {
+            View::composer('admin.*', function ($view) {
+                $adminId = session('admin_id');
+                $admin = null;
+
+                if (!empty($adminId)) {
+                    $admin = Account::find($adminId);
+                }
+
                 $view->with('admin', $admin);
-            }
-        });
-}
+            });
+        
+
+    }
 }

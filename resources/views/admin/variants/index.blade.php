@@ -64,6 +64,7 @@
         </div>
     </form>
 
+
     <div class="accordion" id="variantAccordion">
         @forelse($products as $product)
             <div class="accordion-item mb-2">
