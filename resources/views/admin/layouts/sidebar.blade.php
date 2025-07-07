@@ -1,16 +1,16 @@
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
   <div class="app-sidebar__user">
-    <img class="app-sidebar__user-avatar" src="{{ asset('storage/' . $admin->avatar) }}" width="50px" alt="User Image">
+    {{-- <img class="app-sidebar__user-avatar" src="{{ asset('storage/' . $admin->avatar) }}" width="50px" alt="User Image"> --}}
     <div>
-      <p class="app-sidebar__user-name"><b>{{ $admin->full_name }}</b></p>
+      {{-- <p class="app-sidebar__user-name"><b>{{ $admin->full_name }}</b></p> --}}
       <p class="app-sidebar__user-designation">Chào mừng bạn trở lại</p>
     </div>
   </div>
   <hr>
   <ul class="app-menu">
     <li>
-      <a class="app-menu__item {{ request()->is('admin/pos*') ? 'active' : '' }}" href="{{ url('admin/pos') }}">
+      <a class="app-menu__item {{ request()->is('admin/dashboard') ? 'active' : '' }}" href="{{ url('admin/dashboard') }}">
         <i class='app-menu__icon bx bx-cart-alt'></i>
         <span class="app-menu__label">POS Bán Hàng</span>
       </a>

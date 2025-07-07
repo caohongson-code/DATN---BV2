@@ -1,4 +1,5 @@
 @extends('admin.layouts.app')
+
 @section('title', 'Danh sách màu')
 
 @section('content')

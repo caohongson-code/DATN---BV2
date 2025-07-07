@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ColorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $colors = Color::all();
 
