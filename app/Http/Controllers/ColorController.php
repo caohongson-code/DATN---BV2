@@ -7,9 +7,17 @@ use Illuminate\Http\Request;
 
 class ColorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $colors = Color::all();
+        $query = Color::query();
+
+        if ($request->filled('keyword')) {
+            $query->where('value', 'like', '%' . $request->keyword . '%');
+        }
+
+        $colors = $query->orderByDesc('id')->paginate(10)->withQueryString();
+
+        return view('admin.colors.index', compact('colors'));
 
     return view('admin.colors.index', compact('colors'));
     }
