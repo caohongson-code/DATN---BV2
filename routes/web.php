@@ -22,6 +22,7 @@ use App\Http\Controllers\Client\ProductClientController;
 use App\Http\Controllers\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Client\ProductVariantController as ClientProductVariantController;
 use App\Http\Controllers\Client\UserProfileController;
+use App\Http\Controllers\DashboardControlle;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 
@@ -90,6 +91,7 @@ Route::prefix('admin')->group(function () {
     Route::resource('customers', CustomersControllerr::class);
     Route::resource('accounts', AccountController::class);
     Route::resource('roles', RoleController::class);
+    Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('dashboard');
     Route::resource('carts', CartController::class)->only(['index', 'show', 'destroy']);
     Route::resource('cart-details', CartDetailController::class);
     Route::delete('/admin/cart-details/{id}', [CartDetailController::class, 'destroy'])->name('cart-details.destroy');

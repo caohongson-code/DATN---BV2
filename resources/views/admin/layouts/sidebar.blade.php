@@ -10,7 +10,7 @@
   <hr>
   <ul class="app-menu">
     <li>
-      <a class="app-menu__item {{ request()->is('admin/pos*') ? 'active' : '' }}" href="{{ url('admin/pos') }}">
+      <a class="app-menu__item {{ request()->is('admin/dashboard*') ? 'active' : '' }}" href="{{ url('admin/dashboard') }}">
         <i class='app-menu__icon bx bx-cart-alt'></i>
         <span class="app-menu__label">POS Bán Hàng</span>
       </a>
