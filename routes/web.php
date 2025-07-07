@@ -63,6 +63,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/orders', [ClientOrderController::class, 'show'])->name('user.orders');
     Route::get('/user/orders/{id}', [ClientOrderController::class, 'detail'])->name('user.orders.detail');
     Route::post('/client/orders/{id}/cancel', [ClientOrderController::class, 'ajaxCancel'])->name('client.orders.cancel');
+    Route::post('/orders/return-refund/{id}', [ClientOrderController::class, 'requestReturnRefund'])->name('orders.return_refund');
+
 
     Route::post('/client/reviews', [ReviewController::class, 'store'])->name('client.reviews.store');
 

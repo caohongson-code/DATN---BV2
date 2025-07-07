@@ -2,15 +2,15 @@
 @extends('client.layouts.app')
 
 @section('content')
+@push('styles')
 <style>
-    <style>
     .tab-pane {
         display: block !important;
         opacity: 1 !important;
     }
 </style>
+@endpush
 
-</style>
 <div class="container py-5">
     <div class="row">
         <!-- Sidebar -->

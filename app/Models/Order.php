@@ -77,4 +77,8 @@ class Order extends Model
     {
         return $this->belongsTo(OrderStatus::class, 'order_status_id');
     }
+    public function returnRequest()
+    {
+        return $this->hasOne(ReturnRequest::class);
+    }
 }

@@ -1,6 +1,8 @@
 @extends('client.layouts.app')
 
 @section('content')
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         /* Tổng thể container sản phẩm */
         .container.my-5 {
@@ -533,6 +535,8 @@
     @endsection
 
     @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const variantButtons = document.querySelectorAll('.variant-option');
