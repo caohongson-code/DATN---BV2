@@ -82,7 +82,7 @@ class MomoController extends Controller
 
     public function handleMomoIpn(Request $request)
     {
-       
+
         // ✅ Lưu giao dịch lại
         MomoTransaction::create([
             'partner_code'  => $request->input('partnerCode'),
@@ -106,7 +106,7 @@ class MomoController extends Controller
             $realOrderId = explode('-', $fullOrderId)[0];
 
             DB::table('orders')->where('id', $realOrderId)->update([
-                'payment_status_id ' => 2, 
+                'payment_status_id ' => 2,
                 'updated_at' => now(),
             ]);
         }
@@ -116,34 +116,33 @@ class MomoController extends Controller
 
     public function handleMomoRedirect(Request $request)
     {
-         MomoTransaction::create([
-            'partner_code'  => $request->input('partnerCode'),
-            'order_id'      => $request->input('orderId'),
-            'request_id'    => $request->input('requestId'),
-            'amount'        => $request->input('amount'),
-            'order_info'    => $request->input('orderInfo'),
-            'order_type'    => $request->input('orderType'),
-            'trans_id'      => $request->input('transId'),
-            'result_code'   => $request->input('resultCode'),
-            'message'       => $request->input('message'),
-            'pay_type'      => $request->input('payType'),
-            'response_time' => now(),
-            'extra_data'    => $request->input('extraData'),
-            'signature'     => $request->input('signature'),
-        ]);
+       $fullOrderId = $request->input('orderId');
+$realOrderId = explode('-', $fullOrderId)[0];
 
-        // ✅ Cập nhật đơn hàng nếu thanh toán thành công
-        if ($request->input('resultCode') == 0) {
-            $fullOrderId = $request->input('orderId');
-            $realOrderId = explode('-', $fullOrderId)[0];
+MomoTransaction::create([
+    'partner_code'  => $request->input('partnerCode'),
+    'order_id'      => $realOrderId, // ✅ Sửa chỗ này
+    'request_id'    => $request->input('requestId'),
+    'amount'        => $request->input('amount'),
+    'order_info'    => $request->input('orderInfo'),
+    'order_type'    => $request->input('orderType'),
+    'trans_id'      => $request->input('transId'),
+    'result_code'   => $request->input('resultCode'),
+    'message'       => $request->input('message'),
+    'pay_type'      => $request->input('payType'),
+    'response_time' => now(),
+    'extra_data'    => $request->input('extraData'),
+    'signature'     => $request->input('signature'),
+]);
 
-            DB::table('orders')->where('id', $realOrderId)->update([
-                'payment_status_id' => 2, 
-                'updated_at' => now(),
-            ]);
-        }
-        return $request->input('resultCode') == 0
-            ? redirect('/home')->with('success', '✅ Thanh toán thành công! Đơn hàng đã được tạo.')
-            : redirect('/checkout')->with('error', '❌ Thanh toán thất bại hoặc bị huỷ.');
+// ✅ Cập nhật trạng thái đơn hàng nếu thanh toán thành công
+if ($request->input('resultCode') == 0) {
+    DB::table('orders')->where('id', $realOrderId)->update([
+        'payment_status_id' => 2,
+        'updated_at' => now(),
+    ]);
+}
+
+return redirect()->route('momo.result', ['orderId' => $realOrderId]);
     }
 }

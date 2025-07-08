@@ -59,7 +59,7 @@
                                 </span>
                             </p>
                             <p><strong>Phương thức thanh toán:</strong> {{ $order->paymentMethod->method_name ?? 'Không có' }}</p>
-                        <p><strong>Trạng thái thanh toán:</strong> {{ $order->paymentStatus->status_name ?? 'Không có' }}</p>
+                        <p><strong>Trạng thái thanh toán:</strong> {{ $order->paymentStatus->name ?? 'Không có' }}</p>
                            @if($order->voucher_code)
                                 <p><strong>Mã giảm giá:</strong> {{ $order->voucher_code }}</p>
                             @endif

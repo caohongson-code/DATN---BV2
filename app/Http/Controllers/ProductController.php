@@ -23,9 +23,9 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('product_name', 'like', "%{$search}%")
-                  ->orWhereHas('category', function ($q) use ($search) {
-                      $q->where('category_name', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('category_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -119,48 +119,61 @@ class ProductController extends Controller
     }
 
     // Cập nhật sản phẩm
-public function update(Request $request, $id)
-{
-    $product = Product::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
 
-    $request->validate([
-        'product_name' => 'required|string|max:255',
-        'price' => 'required|numeric|min:0',
-        'category_id' => 'required|exists:categories,id',
-        'description' => 'nullable|string',
-    ]);
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+        ]);
 
-    // Cập nhật thông tin sản phẩm
-    $product->update([
-        'product_name' => $request->product_name,
-        'price' => $request->price,
-        'category_id' => $request->category_id,
-        'description' => $request->description,
-    ]);
+        // Cập nhật thông tin sản phẩm
+        $product->update([
+            'product_name' => $request->product_name,
+            'price' => $request->price,
+            'category_id' => $request->category_id,
+            'description' => $request->description,
+        ]);
 
-    $variantsData = $request->variants ?? [];
+        $variantsData = $request->variants ?? [];
 
-    // Lưu danh sách ID biến thể đã được xử lý (dùng để xoá những cái không còn)
-    $processedVariantIds = [];
+        // Lưu danh sách ID biến thể đã được xử lý (dùng để xoá những cái không còn)
+        $processedVariantIds = [];
 
-    foreach ($variantsData as $index => $variantData) {
-        $variantId = $variantData['id'] ?? null;
+        foreach ($variantsData as $index => $variantData) {
+            $variantId = $variantData['id'] ?? null;
 
-        // Kiểm tra xem có ảnh mới không
-        $imagePath = null;
-        if ($request->hasFile("color_images.{$variantData['color_id']}")) {
-            $file = $request->file("color_images.{$variantData['color_id']}");
-            $imagePath = $file->store('product_variants', 'public');
-        } else {
-            // Nếu không có ảnh mới, lấy ảnh cũ
-            $imagePath = $variantData['old_image'] ?? null;
-        }
+            // Kiểm tra xem có ảnh mới không
+            $imagePath = null;
+            if ($request->hasFile("color_images.{$variantData['color_id']}")) {
+                $file = $request->file("color_images.{$variantData['color_id']}");
+                $imagePath = $file->store('product_variants', 'public');
+            } else {
+                // Nếu không có ảnh mới, lấy ảnh cũ
+                $imagePath = $variantData['old_image'] ?? null;
+            }
 
-        if ($variantId) {
-            // Nếu có ID → Cập nhật biến thể cũ
-            $variant = ProductVariant::find($variantId);
-            if ($variant) {
-                $variant->update([
+            if ($variantId) {
+                // Nếu có ID → Cập nhật biến thể cũ
+                $variant = ProductVariant::find($variantId);
+                if ($variant) {
+                    $variant->update([
+                        'color_id' => $variantData['color_id'],
+                        'ram_id' => $variantData['ram_id'],
+                        'storage_id' => $variantData['storage_id'],
+                        'price' => $variantData['price'],
+                        'quantity' => $variantData['quantity'],
+                        'image' => $imagePath,
+                    ]);
+                    $processedVariantIds[] = $variantId;
+                }
+            } else {
+                // Nếu không có ID → Thêm mới biến thể
+                $newVariant = ProductVariant::create([
+                    'product_id' => $product->id,
                     'color_id' => $variantData['color_id'],
                     'ram_id' => $variantData['ram_id'],
                     'storage_id' => $variantData['storage_id'],
@@ -168,41 +181,28 @@ public function update(Request $request, $id)
                     'quantity' => $variantData['quantity'],
                     'image' => $imagePath,
                 ]);
-                $processedVariantIds[] = $variantId;
+                $processedVariantIds[] = $newVariant->id;
             }
-        } else {
-            // Nếu không có ID → Thêm mới biến thể
-            $newVariant = ProductVariant::create([
-                'product_id' => $product->id,
-                'color_id' => $variantData['color_id'],
-                'ram_id' => $variantData['ram_id'],
-                'storage_id' => $variantData['storage_id'],
-                'price' => $variantData['price'],
-                'quantity' => $variantData['quantity'],
-                'image' => $imagePath,
-            ]);
-            $processedVariantIds[] = $newVariant->id;
         }
+
+
+        $variantsToDelete = ProductVariant::where('product_id', $product->id)
+            ->whereNotIn('id', $processedVariantIds)
+            ->get();
+
+        foreach ($variantsToDelete as $variant) {
+            // Xoá ảnh cũ nếu có
+            if ($variant->image && StorageFacade::disk('public')->exists($variant->image)) {
+                StorageFacade::disk('public')->delete($variant->image);
+            }
+            $variant->delete();
+        }
+        return redirect()->route('products.index')->with('success', 'Cập nhật sản phẩm thành công!');
     }
-
-    
-$variantsToDelete = ProductVariant::where('product_id', $product->id)
-->whereNotIn('id', $processedVariantIds)
-->get();
-
-foreach ($variantsToDelete as $variant) {
-// Xoá ảnh cũ nếu có
-if ($variant->image && StorageFacade::disk('public')->exists($variant->image)) {
-    StorageFacade::disk('public')->delete($variant->image);
-}
-$variant->delete();
-}
-    return redirect()->route('products.index')->with('success', 'Cập nhật sản phẩm thành công!');
-}
 
 
     // Xóa sản phẩm
-public function destroy($id)
+    public function destroy($id)
     {
         $product = Product::with(['variants.images'])->findOrFail($id);
 

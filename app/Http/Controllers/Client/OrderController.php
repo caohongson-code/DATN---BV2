@@ -37,22 +37,39 @@ class OrderController extends Controller
     }
     public function ajaxCancel($id)
     {
-        $order = Order::where('id', $id)->where('account_id', auth()->id())->first();
+        $order = Order::where('id', $id)
+            ->where('account_id', auth()->id())
+            ->first();
 
         if (!$order) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy đơn hàng'
+            ], 404);
         }
 
         if ($order->order_status_id != 1) {
-            return response()->json(['success' => false, 'message' => 'Chỉ có thể huỷ đơn hàng khi đang chờ xác nhận.'], 400);
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ có thể huỷ đơn hàng khi đang chờ xác nhận.'
+            ], 400);
         }
 
         $order->order_status_id = 7; // Đã huỷ
+
+        // Nếu phương thức thanh toán là MoMo (id = 3) thì cập nhật trạng thái hoàn tiền
+        if ($order->payment_method_id == 3) {
+            $order->payment_status_id = 4; // Hoàn tiền
+        }
+
         $order->save();
 
-        return response()->json(['success' => true, 'message' => 'Đã huỷ đơn hàng thành công.']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã huỷ đơn hàng thành công.'
+        ]);
     }
-    // Chi tiết đơn hàng
+
     public function detail($id)
     {
         $order = Order::with([
@@ -99,8 +116,9 @@ class OrderController extends Controller
             'images' => json_encode($imagePaths),
         ]);
 
-        // Cập nhật trạng thái đơn hàng
+        // Cập nhật trạng thái đơn hàng và trạng thái thanh toán
         $order->order_status_id = 6; // Trả hàng / Hoàn tiền
+        $order->payment_status_id = 4; // Hoàn tiền
         $order->save();
 
         return response()->json([

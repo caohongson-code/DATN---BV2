@@ -1,68 +1,50 @@
 @extends('client.user.dashboard')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 @section('dashboard-content')
     @push('styles')
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
         <style>
-            .nav-tabs>li>a {
+            .nav-tabs {
+                gap: 0;
+                /* Xóa khoảng cách nếu dùng flex */
+                margin-bottom: 0;
+            }
+
+            .nav-tabs .nav-item {
+                margin-right: 2px;
+                /* Giảm khoảng cách giữa các tab */
+            }
+
+            .nav-tabs .nav-link {
                 font-weight: bold;
                 color: #333;
-                padding: 10px 16px;
+                padding: 8px 12px;
+                /* Giảm padding ngang */
+                border: 1px solid #dee2e6;
+                border-bottom: none;
+                border-radius: 0.375rem 0.375rem 0 0;
+                background-color: #f9f9f9;
             }
 
-            .nav-tabs>li.active>a {
+            .nav-tabs .nav-link.active {
                 background-color: #337ab7;
                 color: #fff !important;
-                border-radius: 4px 4px 0 0;
+                border-color: #337ab7 #337ab7 transparent;
             }
 
-            .panel-order {
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                overflow: hidden;
+            .card.order-item {
                 transition: box-shadow 0.2s ease-in-out;
             }
 
-            .panel-order:hover {
+            .card.order-item:hover {
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            }
-
-            .panel-order .panel-heading {
-                background-color: #f7f7f7;
-                font-weight: bold;
-                font-size: 14px;
-                padding: 12px 15px;
-                border-bottom: 1px solid #ddd;
-            }
-
-            .panel-order .panel-body {
-                padding: 15px;
-            }
-
-            .media-object {
-                border-radius: 4px;
-                box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-            }
-
-            .media-body h4 {
-                font-size: 16px;
-                font-weight: 600;
-            }
-
-            .btn-xs {
-                padding: 5px 10px;
-                font-size: 12px;
-                border-radius: 3px;
-            }
-
-            .tab-content {
-                margin-top: 20px;
             }
 
             .rating-stars {
                 font-size: 22px;
                 color: #ccc;
-                /* Màu sao mặc định */
                 cursor: pointer;
             }
 
@@ -70,14 +52,67 @@
                 margin-right: 5px;
                 transition: color 0.2s;
                 color: #ccc;
-                /* màu xám mặc định */
             }
 
             .rating-stars .star.hovered,
             .rating-stars .star.selected,
             .rating-stars .star.fa-star {
                 color: #f5b301 !important;
-                /* vàng nổi bật */
+            }
+
+            .order-action-buttons .btn {
+                min-width: 130px;
+                /* hoặc width: 130px nếu muốn tuyệt đối */
+                margin: 0 4px 6px 0;
+                text-align: center;
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+
+            .rating-stars .star {
+                margin-right: 5px;
+                color: #ccc;
+                transition: color 0.3s, transform 0.2s ease-in-out;
+            }
+
+            .rating-stars .star.hovered,
+            .rating-stars .star.selected,
+            .rating-stars .star.fa-star {
+                color: #f5b301 !important;
+                transform: scale(1.2);
+            }
+
+            .btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+                transition: all 0.2s ease-in-out;
+            }
+
+            .card.order-item {
+                border: 1px solid #dee2e6;
+                border-radius: 0.5rem;
+                overflow: hidden;
+            }
+
+            .card.order-item .card-header {
+                background-color: #f1f1f1;
+                font-size: 15px;
+                font-weight: 500;
+            }
+
+            .nav-tabs {
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                border-bottom: none;
+            }
+
+            .nav-tabs .nav-link.active {
+                border-bottom: 2px solid transparent;
+                border-radius: 0.5rem 0.5rem 0 0;
+            }
+
+            .modal-content {
+                border-radius: 0.75rem;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             }
         </style>
     @endpush
@@ -96,36 +131,38 @@
             'Đã hủy',
         ];
         $statusMap = [0 => null, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7];
-        $maxVisible = 5;
+        $maxVisible = 10;
     @endphp
 
-    <ul class="nav nav-tabs" role="tablist" id="orderTabs">
+    <ul class="nav nav-tabs" id="orderTabs" role="tablist">
         @foreach ($statusLabels as $index => $label)
-            <li role="presentation" class="{{ $index === 0 ? 'active' : '' }}">
-                <a href="#tab-{{ $index }}" data-toggle="tab">{{ $label }}</a>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @if ($index === 0) active @endif" data-bs-toggle="tab"
+                    data-bs-target="#tab-{{ $index }}" type="button" role="tab">{{ $label }}</button>
             </li>
         @endforeach
     </ul>
 
-    <div class="tab-content">
+    <div class="tab-content pt-3">
         @foreach ($statusLabels as $index => $label)
             @php
                 $statusId = $statusMap[$index];
                 $filteredOrders = is_null($statusId) ? $orders : $orders->where('order_status_id', $statusId);
             @endphp
-            <div role="tabpanel" class="tab-pane fade {{ $index === 0 ? 'in active' : '' }}" id="tab-{{ $index }}">
+            <div class="tab-pane fade @if ($index === 0) show active @endif" id="tab-{{ $index }}"
+                role="tabpanel">
                 @if ($filteredOrders->count())
-                    @foreach ($filteredOrders as $key => $order)
-                        <div class="panel panel-default panel-order order-item {{ $key >= $maxVisible ? 'd-none' : '' }}"
-                            data-id="{{ $order->id }}" style="margin-bottom: 15px;">
-                            <div class="panel-heading">
+                    @foreach ($filteredOrders->values() as $key => $order)
+                        <div class="card mb-3 order-item {{ $key >= $maxVisible ? 'd-none' : '' }}"
+                            data-id="{{ $order->id }}">
+
+                            <div class="card-header">
                                 <strong>Mã đơn hàng:</strong> Đơn #{{ $key + 1 }} |
                                 <strong>Trạng thái:</strong> <span
-                                    class="text-primary status-label">{{ $order->orderStatus->status_name ?? 'Không rõ' }}</span>
-                                |
+                                    class="text-primary">{{ $order->orderStatus->status_name ?? 'Không rõ' }}</span> |
                                 <strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}
                             </div>
-                            <div class="panel-body">
+                            <div class="card-body">
                                 @foreach ($order->orderDetails as $item)
                                     @php
                                         $variant = $item->productVariant;
@@ -134,16 +171,14 @@
                                             ? asset('storage/' . $product->image)
                                             : asset('images/default.jpg');
                                     @endphp
-                                    <div class="media"
-                                        style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
-                                        <div class="media-left">
-                                            <img class="media-object img-thumbnail" src="{{ $image }}"
-                                                style="width: 80px; height: 80px; object-fit: cover;">
-                                        </div>
-                                        <div class="media-body">
-                                            <h4 class="media-heading">{{ $product->product_name ?? 'Không rõ sản phẩm' }}
-                                            </h4>
-                                            <p>Số lượng: {{ $item->quantity }}</p>
+                                    <div class="d-flex mb-3 border-bottom pb-2">
+                                        <img src="{{ $image }}" class="img-thumbnail me-3"
+                                            style="width: 80px; height: 80px; object-fit: cover;">
+                                        <div>
+                                            <h5>{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h5>
+                                            <p>Giá: {{ number_format($item->unit_price, 0, ',', '.') }}₫ x
+                                                {{ $item->quantity }}</p>
+
                                             @if ($order->order_status_id == 5)
                                                 @php
                                                     $key = $order->id . '-' . $item->product_variant_id;
@@ -151,28 +186,48 @@
                                                 @endphp
 
                                                 @if ($alreadyReviewed)
-                                                    <span class="label label-default">Đã đánh giá</span>
+                                                    <span class="badge bg-secondary">Đã đánh giá</span>
                                                 @else
-                                                    <button class="btn btn-success btn-xs btn-review"
+                                                    <button class="btn btn-success btn-sm btn-review"
                                                         data-variant-id="{{ $item->product_variant_id }}"
                                                         data-product-name="{{ $product->product_name }}"
-                                                        data-order-id="{{ $order->id }}">
-                                                        Đánh giá
-                                                    </button>
+                                                        data-order-id="{{ $order->id }}">Đánh giá</button>
                                                 @endif
                                             @endif
-
                                         </div>
                                     </div>
                                 @endforeach
-                                <div class="text-right">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span
+                                            class="badge 
+            @switch($order->payment_status_id)
+                @case(1) bg-warning text-dark @break
+                @case(2) bg-success @break
+                @case(3) bg-danger @break
+                @case(4) bg-info text-dark @break
+                @default bg-secondary
+            @endswitch">
+                                            {{ $order->paymentStatus->name ?? 'Không rõ' }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <strong>Tổng tiền:</strong>
+                                        {{ number_format($order->total_amount, 0, ',', '.') }}₫
+                                    </div>
+                                </div>
+
+                                <div class="text-end order-action-buttons d-flex flex-wrap justify-content-end">
+
+
+
                                     <a href="{{ route('user.orders.detail', $order->id) }}"
-                                        class="btn btn-primary btn-xs">Xem chi tiết</a>
+                                        class="btn btn-primary btn-sm">Xem chi tiết</a>
                                     @if ($order->order_status_id == 1)
-                                        <button class="btn btn-danger btn-xs cancel-order-btn">Huỷ đơn</button>
+                                        <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
                                     @endif
                                     @if ($order->order_status_id == 5)
-                                        <button class="btn btn-warning btn-xs return-order-btn">Trả hàng/Hoàn tiền</button>
+                                        <button class="btn btn-warning btn-sm return-order-btn">Trả hàng/Hoàn tiền</button>
                                     @endif
                                 </div>
                             </div>
@@ -190,202 +245,220 @@
             </div>
         @endforeach
     </div>
-    <!-- Modal đánh giá -->
-    <div id="reviewModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel">
-        <div class="modal-dialog" role="document">
-            <form method="POST" action="{{ route('client.reviews.store') }}">
+
+    {{-- Modal đánh giá --}}
+    <div id="reviewModal" class="modal fade" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ route('client.reviews.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="product_variant_id" id="reviewVariantId">
                 <input type="hidden" name="order_id" id="reviewOrderId">
                 <input type="hidden" name="rating" id="selectedRating" value="0">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title" id="reviewModalLabel">Đánh giá sản phẩm: <span
-                                id="reviewProductName"></span></h4>
+                        <h5 class="modal-title" id="reviewModalLabel">Đánh giá sản phẩm: <span
+                                id="reviewProductName"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label>Chọn số sao</label>
-                            <!-- Phần star icons trong modal -->
+                        <div class="mb-3">
+                            <label class="form-label">Chọn số sao</label>
                             <div id="starRating" class="rating-stars">
                                 @for ($i = 1; $i <= 5; $i++)
-                                    <i class="fa fa-star-o star" data-value="{{ $i }}"
+                                    <i class="far fa-star star" data-value="{{ $i }}"
                                         style="font-size: 24px; cursor: pointer;"></i>
                                 @endfor
                             </div>
+
                         </div>
-                        <div class="form-group">
-                            <label>Nội dung đánh giá</label>
+                        <div class="mb-3">
+                            <label class="form-label">Nội dung đánh giá</label>
                             <textarea name="comment" class="form-control" rows="4" placeholder="Nội dung đánh giá..." required></textarea>
                         </div>
-                        <div class="form-group">
-                            <label>Ảnh đánh giá (tùy chọn)</label>
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh đánh giá (tùy chọn)</label>
                             <input type="file" name="image" accept="image/*" class="form-control">
                         </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Gửi đánh giá</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-
-    <!-- Modal trả hàng -->
-    <div id="returnModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel">
-        <div class="modal-dialog" role="document">
+    {{-- Modal trả hàng --}}
+    <div id="returnModal" class="modal fade" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
             <form id="returnRefundForm" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="order_id" id="returnOrderId">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title" id="returnModalLabel">Trả hàng & Hoàn tiền</h4>
+                        <h5 class="modal-title" id="returnModalLabel">Trả hàng & Hoàn tiền</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label>Lý do trả hàng</label>
+                        <div class="mb-3">
+                            <label class="form-label">Lý do trả hàng</label>
                             <textarea name="reason" class="form-control" rows="4" required></textarea>
                         </div>
-                        <div class="form-group">
-                            <label>Ảnh sản phẩm lỗi</label>
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh sản phẩm lỗi</label>
                             <input type="file" name="images[]" multiple class="form-control" accept="image/*">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-warning">Gửi yêu cầu</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-
-    @push('scripts')
-        <!-- jQuery tương thích Bootstrap 3 -->
-        <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                // Huỷ đơn
-                $('.cancel-order-btn').click(function() {
-                    const panel = $(this).closest('.panel-order');
-                    const orderId = panel.data('id');
-                    if (!confirm('Bạn có chắc muốn huỷ đơn hàng này?')) return;
-
-                    $.post(`/client/orders/${orderId}/cancel`, {
-                        _token: '{{ csrf_token() }}'
-                    }, function(res) {
-                        alert(res.message);
-                        if (res.success) location.reload();
-                    });
-                });
-
-                // Mở modal đánh giá
-                $('.btn-review').click(function() {
-                    $('#reviewVariantId').val($(this).data('variant-id'));
-                    $('#reviewOrderId').val($(this).data('order-id'));
-                    $('#reviewProductName').text($(this).data('product-name'));
-                    $('#reviewModal').modal('show');
-
-                    // Reset sao khi mở lại modal
-                    currentRating = 0;
-                    $('#selectedRating').val(0);
-                    $('#starRating .star')
-                        .removeClass('fa-star selected hovered')
-                        .addClass('fa-star-o');
-                });
-
-                // Mở modal trả hàng
-                $('.return-order-btn').click(function() {
-                    const orderId = $(this).closest('.panel-order').data('id');
-                    $('#returnOrderId').val(orderId);
-                    $('#returnModal').modal('show');
-                });
-
-                // Gửi yêu cầu trả hàng
-                $('#returnRefundForm').submit(function(e) {
-                    e.preventDefault();
-                    const formData = new FormData(this);
-                    const orderId = $('#returnOrderId').val();
-
-                    $.ajax({
-                        url: `/orders/return-refund/${orderId}`,
-                        type: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(res) {
-                            alert(res.message);
-                            if (res.success) location.reload();
-                        },
-                        error: function(xhr) {
-                            alert(xhr.responseJSON?.message || 'Lỗi khi gửi yêu cầu trả hàng.');
-                        }
-                    });
-                });
-
-                // Xem thêm / Ẩn bớt đơn hàng
-                $('.tab-content').on('click', '.btn-show-more', function() {
-                    const $btn = $(this);
-                    const $tabPane = $btn.closest('.tab-pane');
-                    const hiddenOrders = $tabPane.find('.order-item.d-none');
-
-                    if (hiddenOrders.length > 0) {
-                        hiddenOrders.removeClass('d-none');
-                        $btn.text('Ẩn bớt');
+@endsection
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show more toggle
+            document.querySelectorAll('.btn-show-more').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabPane = this.closest('.tab-pane');
+                    const hiddenOrders = tabPane.querySelectorAll('.order-item.d-none');
+                    if (hiddenOrders.length) {
+                        hiddenOrders.forEach(el => el.classList.remove('d-none'));
+                        this.textContent = 'Ẩn bớt';
                     } else {
-                        $tabPane.find('.order-item').each(function(index) {
-                            if (index >= {{ $maxVisible }}) $(this).addClass('d-none');
+                        tabPane.querySelectorAll('.order-item').forEach((el, index) => {
+                            if (index >= {{ $maxVisible }}) el.classList.add('d-none');
                         });
-                        $btn.text('Xem thêm');
+                        this.textContent = 'Xem thêm';
                     }
                 });
+            });
 
-                // ⭐ Hiệu ứng đánh giá sao
-                let currentRating = 0;
+            // Cancel order
+            document.querySelectorAll('.cancel-order-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.order-item');
+                    const orderId = card.dataset.id;
+                    if (confirm('Bạn có chắc muốn huỷ đơn hàng này?')) {
+                        fetch(`/client/orders/${orderId}/cancel`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                },
+                            })
+                            .then(res => res.json())
+                            .then(res => {
+                                alert(res.message);
+                                if (res.success) location.reload();
+                            });
+                    }
+                });
+            });
 
-                // Hover sao
-                $('#starRating').on('mouseenter', '.star', function() {
-                    const hoverValue = $(this).data('value');
-                    $('#starRating .star').each(function() {
-                        const val = $(this).data('value');
-                        if (val <= hoverValue) {
-                            $(this).addClass('hovered');
+            // Open review modal
+            document.querySelectorAll('.btn-review').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.getElementById('reviewVariantId').value = this.dataset.variantId;
+                    document.getElementById('reviewOrderId').value = this.dataset.orderId;
+                    document.getElementById('reviewProductName').textContent = this.dataset
+                        .productName;
+                    new bootstrap.Modal(document.getElementById('reviewModal')).show();
+
+                    // Reset stars
+                    document.getElementById('selectedRating').value = 0;
+                    document.querySelectorAll('#starRating .star').forEach(star => {
+                        star.classList.remove('fas', 'selected', 'hovered');
+                        star.classList.add('far');
+                    });
+
+                });
+            });
+
+            // Star rating
+            let currentRating = 0;
+            const stars = document.querySelectorAll('#starRating .star');
+
+            stars.forEach(star => {
+                star.addEventListener('mouseenter', () => {
+                    const val = parseInt(star.dataset.value);
+                    stars.forEach(s => {
+                        if (parseInt(s.dataset.value) <= val) {
+                            s.classList.add('hovered');
+                            s.classList.remove('far');
+                            s.classList.add('fas');
                         } else {
-                            $(this).removeClass('hovered');
+                            s.classList.remove('hovered');
+                            s.classList.remove('fas');
+                            s.classList.add('far');
                         }
                     });
-                }).on('mouseleave', '.star', function() {
-                    $('#starRating .star').removeClass('hovered');
                 });
 
-                // Click chọn sao
-                $('#starRating').on('click', '.star', function() {
-                    currentRating = $(this).data('value');
-                    $('#selectedRating').val(currentRating);
+                star.addEventListener('mouseleave', () => {
+                    stars.forEach(s => {
+                        s.classList.remove('hovered');
+                        if (!s.classList.contains('selected')) {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+                });
 
-                    $('#starRating .star').each(function() {
-                        const val = $(this).data('value');
-                        if (val <= currentRating) {
-                            $(this)
-                                .removeClass('fa-star-o')
-                                .addClass('fa-star selected');
+                star.addEventListener('click', () => {
+                    currentRating = parseInt(star.dataset.value);
+                    document.getElementById('selectedRating').value = currentRating;
+                    stars.forEach(s => {
+                        if (parseInt(s.dataset.value) <= currentRating) {
+                            s.classList.add('selected');
+                            s.classList.remove('far');
+                            s.classList.add('fas');
                         } else {
-                            $(this)
-                                .removeClass('fa-star selected')
-                                .addClass('fa-star-o');
+                            s.classList.remove('selected');
+                            s.classList.remove('fas');
+                            s.classList.add('far');
                         }
                     });
                 });
             });
-        </script>
-    @endpush
-@endsection
+
+            // Return modal
+            document.querySelectorAll('.return-order-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.getElementById('returnOrderId').value = this.closest('.order-item')
+                        .dataset.id;
+                    new bootstrap.Modal(document.getElementById('returnModal')).show();
+                });
+            });
+
+            // Submit return form
+            const returnForm = document.getElementById('returnRefundForm');
+            returnForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const orderId = document.getElementById('returnOrderId').value;
+                fetch(`/orders/return-refund/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        alert(res.message);
+                        if (res.success) location.reload();
+                    })
+                    .catch(err => {
+                        alert('Đã xảy ra lỗi.');
+                    });
+            });
+        });
+    </script>
+@endpush

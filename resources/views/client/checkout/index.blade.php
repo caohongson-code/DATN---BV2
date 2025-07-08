@@ -27,7 +27,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="card mb-4">
                             <div class="card-header bg-success text-white">📦 Thông tin sản phẩm</div>

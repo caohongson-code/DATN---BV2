@@ -13,12 +13,13 @@ class ReviewController extends Controller
 public function store(Request $request)
 {
     $request->validate([
-        'product_variant_id' => 'required|exists:product_variants,id',
-        'order_id' => 'required|exists:orders,id',
-        'content' => 'required|string|max:1000',
-        'rating' => 'required|integer|min:1|max:5',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // hỗ trợ ảnh
-    ]);
+    'product_variant_id' => 'required|exists:product_variants,id',
+    'order_id' => 'required|exists:orders,id',
+    'comment' => 'required|string|max:1000', // ✅ Đúng theo form
+    'rating' => 'required|integer|min:1|max:5',
+    'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+]);
+
 
     $user = Auth::user();
     if (!$user) {

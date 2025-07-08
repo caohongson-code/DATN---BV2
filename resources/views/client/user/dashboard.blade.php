@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <!-- Nội dung -->
+        <!-- Nội dung động -->
         <div class="col-md-9">
             <div class="card shadow-sm rounded-3">
                 <div class="card-body">

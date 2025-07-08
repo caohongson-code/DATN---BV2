@@ -10,6 +10,22 @@
         </div>
 
         <div class="card-body">
+            {{-- Tabs lọc trạng thái --}}
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link {{ request('order_status_id') == '' ? 'active' : '' }}"
+                       href="{{ route('admin.orders.index') }}">Tất cả</a>
+                </li>
+                @foreach($statuses as $status)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request('order_status_id') == $status->id ? 'active' : '' }}"
+                           href="{{ route('admin.orders.index', ['order_status_id' => $status->id]) }}">
+                            {{ $status->status_name }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+
             {{-- Thông báo --}}
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -21,7 +37,7 @@
                     <div class="col-md-4">
                         <label for="search" class="form-label">Tìm kiếm</label>
                         <input type="text" name="search" class="form-control"
-                            placeholder="Tên, email khách hàng..." value="{{ request('search') }}">
+                               placeholder="Tên, email khách hàng..." value="{{ request('search') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Trạng thái đơn</label>
@@ -40,7 +56,7 @@
                     </div>
                     <div class="col-md-2">
                         <button class="btn btn-primary w-100">
-                            <i class="fas fa-search me-1"></i> Tìm kiếm
+<i class="fas fa-search me-1"></i> Tìm kiếm
                         </button>
                     </div>
                 </div>
@@ -94,7 +110,7 @@
                                 <td>
                                     @if ($order->cart && $order->cart->statusModel)
                                         <span class="badge
-                                            @switch($order->cart->statusModel->name)
+@switch($order->cart->statusModel->name)
                                                 @case('active') bg-success @break
                                                 @case('ordered') bg-primary @break
                                                 @case('cancelled') bg-danger @break
@@ -139,7 +155,7 @@
 
             {{-- Pagination --}}
             <div class="d-flex justify-content-center mt-4">
-                {{ $orders->links('pagination::bootstrap-5') }}
+                {{ $orders->appends(request()->query())->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>

@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <title>PowPow - Trang chủ</title>
 </head>
+    @stack('scripts')
+    @yield('scripts')
 <body>
     @include('client.layouts.header')
-
-    <main class="container py-4">
+    {{-- khong can 2 cai duoi ko can mo ra dau --}}
+    
+     <main class="container py-4">
         @yield('content')
-    </main>
-
-    @include('client.layouts.footer')
-
+    </main> 
    
 
-
+     @include('client.layouts.footer')
     
 </body>
 </html>

@@ -10,16 +10,20 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up()
-{
-    Schema::table('orders', function (Blueprint $table) {
-        $table->string('momo_request_id')->nullable();
-    });
-}
-
-public function down()
-{
+    {
         Schema::table('orders', function (Blueprint $table) {
-        $table->dropColumn('momo_request_id');
-    });
-}
+            if (!Schema::hasColumn('orders', 'momo_request_id')) {
+                $table->string('momo_request_id')->nullable();
+            }
+        });
+    }
+
+    public function down()
+    {
+        Schema::table('orders', function (Blueprint $table) {
+            if (Schema::hasColumn('orders', 'momo_request_id')) {
+                $table->dropColumn('momo_request_id');
+            }
+        });
+    }
 };

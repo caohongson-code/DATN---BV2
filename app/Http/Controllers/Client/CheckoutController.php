@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\CartDetail;
 use App\Models\Cart;
+use App\Models\MomoTransaction;
 use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
@@ -239,4 +240,33 @@ class CheckoutController extends Controller
     {
         return DB::table('payment_methods')->where('code', $code)->value('id') ?? 1;
     }
+  public function momoResult($orderId)
+{
+    $momo_trans = MomoTransaction::where('order_id', $orderId)->first();
+    $order = DB::table('orders')->where('id', $orderId)->first();
+
+    $order_details = DB::table('order_details')
+        ->join('product_variants', 'order_details.product_variant_id', '=', 'product_variants.id')
+        ->join('products', 'product_variants.product_id', '=', 'products.id')
+        ->leftJoin('rams', 'product_variants.ram_id', '=', 'rams.id')
+        ->leftJoin('storages', 'product_variants.storage_id', '=', 'storages.id')
+        ->leftJoin('colors', 'product_variants.color_id', '=', 'colors.id')
+        ->select(
+            'products.product_name as product_name',
+            'rams.value as ram',
+            'storages.value as storage',
+            'colors.value as color',
+            'order_details.quantity',
+            'order_details.unit_price',
+            'order_details.total_price'
+        )
+        ->where('order_details.order_id', $orderId)
+        ->get();
+
+    $result_code = $momo_trans->result_code ?? 99;
+
+    return view('client.checkout.momo_result', compact('momo_trans', 'result_code', 'order', 'order_details'));
+}
+
+
 }

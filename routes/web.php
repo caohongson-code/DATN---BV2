@@ -26,6 +26,7 @@ use App\Http\Controllers\Client\ReviewController;
 use App\Http\Controllers\Client\UserProfileController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
+use App\Http\Controllers\DashboardControlle;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -75,7 +76,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
 
     // Gửi yêu cầu thanh toán lên MoMo
+    // Gửi yêu cầu thanh toán lên MoMo
     Route::post('/momo_payment', [MomoController::class, 'momo_payment'])->name('momo.payment');
+
+    // IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức
+    Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
+
+    // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
+    Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
+    Route::get('/momo/result/{orderId}', [CheckoutController::class, 'momoResult'])->name('momo.result');
+
+
+    // Hiển thị tất cả sản phẩm (client)
+    Route::get('/products', [ProductClientController::class, 'index'])->name('product.all');
+
 
     // IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức
     Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
@@ -106,4 +120,5 @@ Route::prefix('admin')->group(function () {
     Route::get('/admin/orders/place/{cartId}', [OrderController::class, 'placeOrderFromCart'])->name('admin.orders.place');
     Route::post('/variants/{id}/images', [ProductVariantImageController::class, 'storeImages'])->name('admin.variant.images.store');
     Route::delete('/variant-images/{id}', [ProductVariantImageController::class, 'deleteImage'])->name('admin.variant.images.delete');
+    Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('dashboard');
 });
