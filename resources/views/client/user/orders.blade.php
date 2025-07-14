@@ -227,19 +227,25 @@
                                         <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
                                     @endif
                                     @if ($order->order_status_id == 5)
-                                        @if (!$order->user_confirmed_delivery)
-                                            <button class="btn btn-success btn-sm btn-confirm-received"
-                                                data-id="{{ $order->id }}">
-                                                Tôi đã nhận hàng
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm btn-report-issue"
-                                                data-id="{{ $order->id }}">
-                                                Chưa nhận được hàng
-                                            </button>
-                                        @else
-                                            <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
-                                        @endif
-                                    @endif
+    @if (!$order->user_confirmed_delivery)
+        <button class="btn btn-success btn-sm btn-confirm-received"
+            data-id="{{ $order->id }}">
+            Tôi đã nhận hàng
+        </button>
+
+        @if (!isset($deliveryIssues[$order->id]))
+            <button class="btn btn-outline-danger btn-sm btn-report-issue"
+                data-id="{{ $order->id }}">
+                Chưa nhận được hàng
+            </button>
+        @else
+            <span class="text-info fw-bold">Đã gửi phản hồi</span>
+        @endif
+    @else
+        <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
+    @endif
+@endif
+
 
 
                                     @if ($order->order_status_id == 5 || $order->order_status_id == 6)
@@ -487,7 +493,7 @@
                         s.classList.toggle('fas', parseInt(s.dataset.value) <=
                             currentRating);
                         s.classList.toggle('far', parseInt(s.dataset.value) >
-                        currentRating);
+                            currentRating);
                     });
                 });
             });
@@ -528,7 +534,7 @@
                                 if (modalInstance) modalInstance.hide();
 
                                 const card = document.querySelector(
-                                `.order-item[data-id="${orderId}"]`);
+                                    `.order-item[data-id="${orderId}"]`);
                                 const returnBtn = card?.querySelector('.return-order-btn');
                                 if (returnBtn) {
                                     returnBtn.outerHTML = `
@@ -623,10 +629,23 @@
                     .then(res => res.json())
                     .then(res => {
                         alert(res.message);
+
+                        // Đóng modal
                         const modalEl = document.getElementById('deliveryIssueModal');
                         const modal = bootstrap.Modal.getInstance(modalEl);
                         if (modal) modal.hide();
+
+                        // Cập nhật UI: thay nút bằng dòng chữ "Đã phản hồi"
+                        const orderId = document.getElementById('issueOrderId').value;
+                        const card = document.querySelector(`.order-item[data-id="${orderId}"]`);
+                        const reportBtn = card?.querySelector('.btn-report-issue');
+
+                        if (reportBtn) {
+                            reportBtn.outerHTML =
+                                `<span class="text-info fw-bold">Đã gửi phản hồi</span>`;
+                        }
                     })
+
                     .catch(() => alert('Có lỗi xảy ra khi gửi phản hồi.'));
             });
 

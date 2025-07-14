@@ -29,6 +29,7 @@ class Order extends Model
         'order_date',
         'total_amount',
         "cart_id",
+        'user_confirmed_delivery',
     ];
 
     // 👇 Đây là phần bạn thiếu để dùng format() với order_date

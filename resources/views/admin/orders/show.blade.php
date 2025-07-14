@@ -98,9 +98,11 @@
                                                         $disabled = 'disabled';
                                                     }
                                                     // Không cho phép hủy nếu đã "Đang giao" (ID 3) trở lên
-                                                    if ($order->order_status_id >= 3 && $status->id == 5) {
-                                                        $disabled = 'disabled';
-                                                    }
+                                                    // Không cho hủy nếu đã từ "Đang giao" trở lên
+if ($order->order_status_id >= 3 && $status->id == 7) {
+    $disabled = 'disabled';
+}
+
                                                     $selected = $order->order_status_id == $status->id ? 'selected' : '';
                                                 @endphp
                                                 <option value="{{ $status->id }}" {{ $selected }} {{ $disabled }}>

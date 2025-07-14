@@ -82,6 +82,9 @@ class OrderController extends Controller
 
         $newStatusId = (int) $request->order_status_id;
         $oldStatusId = $order->order_status_id;
+        if ($newStatusId === 5) {
+            $order->payment_status_id = 2; // Đã thanh toán
+        }
 
         $FINAL_STATUS_IDS = [5, 6, 7]; // 5: Đã giao, 6: Trả hàng / Hoàn tiền, 7: Đã huỷ
 
@@ -134,11 +137,17 @@ class OrderController extends Controller
                 return $detail->quantity * ($detail->price ?? 0);
             }) ?? 0;
 
-            // Cập nhật tổng tiền đơn hàng (sản phẩm + phí ship)
+            // Cập nhật tổng tiền đơn hàng
             $order->total_amount = $totalProductAmount + $order->shipping_fee;
+
+            // ✅ Nếu chuyển sang "Đã giao" và người dùng đã xác nhận → cập nhật trạng thái thanh toán
+            if ($newStatusId === 5 && $order->user_confirmed_delivery) {
+                $order->payment_status_id = 2; // Đã thanh toán
+            }
 
             $order->save();
             // OrderStatusUpdated::dispatch($order);
+
             DB::commit();
 
             return redirect()->route('admin.orders.show', $order->id)
