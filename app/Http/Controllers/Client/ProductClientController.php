@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
 
 class ProductClientController extends Controller
@@ -27,7 +28,12 @@ public function show($id)
                             ->take(4)
                             ->get();
 
-    return view('client.product.show', compact('product', 'relatedProducts'));
+    $reviews = Review::with(['account', 'variant.ram', 'variant.storage', 'variant.color'])
+                    ->where('product_id', $product->id)
+                    ->latest()
+                    ->get();
+
+    return view('client.product.show', compact('product', 'relatedProducts', 'reviews'));
 }
 
     public function categoryPage($id = null)

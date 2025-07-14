@@ -194,7 +194,7 @@ class CheckoutController extends Controller
     public function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $selectedItems = [], $paymentMethod = 'momo', $requestId = null)
     {
         $total = $subtotal + $shippingFee - $discount;
-        $payment_status = $paymentMethod === 'momo' ? 1 : 2;
+        $payment_status = $paymentMethod === 'momo' ? 2 : 1;
 
         $orderId = DB::table('orders')->insertGetId([
             'account_id' => $user->id,

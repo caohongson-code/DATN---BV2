@@ -88,6 +88,35 @@
             @endif
         </div>
     </div>
+@if ($order->order_status_id == 6 && $returnRequest)
+    <hr>
+    <h4 class="mb-3">🔁 Yêu cầu trả hàng / hoàn tiền</h4>
+    <p><strong>Lý do:</strong> {{ $returnRequest->reason }}</p>
+
+    @php
+        $images = json_decode($returnRequest->images ?? '[]', true);
+    @endphp
+
+    @if (!empty($images))
+        <p><strong>Ảnh minh hoạ:</strong></p>
+        <div class="row">
+            @foreach ($images as $img)
+                <div class="col-md-3 mb-2">
+                    <img src="{{ asset('storage/' . $img) }}" class="img-fluid rounded border" alt="Ảnh trả hàng">
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    <p><strong>Trạng thái xử lý:</strong>
+        @switch($returnRequest->status)
+            @case('pending') <span class="badge bg-warning text-dark">Chờ duyệt</span> @break
+            @case('approved') <span class="badge bg-success">Đã chấp nhận</span> @break
+            @case('rejected') <span class="badge bg-danger">Đã từ chối</span> @break
+            @default <span class="badge bg-secondary">Không xác định</span>
+        @endswitch
+    </p>
+@endif
 
     <a href="{{ route('user.orders') }}" class="btn btn-default">
         ← Quay lại danh sách đơn hàng

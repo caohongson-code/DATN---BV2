@@ -29,6 +29,7 @@ class Order extends Model
         'order_date',
         'total_amount',
         "cart_id",
+        'user_confirmed_delivery',
     ];
 
     // 👇 Đây là phần bạn thiếu để dùng format() với order_date
@@ -80,5 +81,9 @@ class Order extends Model
     public function returnRequest()
     {
         return $this->hasOne(ReturnRequest::class);
+    }
+    public function deliveryIssues()
+    {
+        return $this->hasMany(OrderDeliveryIssue::class);
     }
 }
