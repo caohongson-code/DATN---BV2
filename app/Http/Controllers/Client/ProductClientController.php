@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Order;
+use Illuminate\Support\Facades\Auth;
 
 class ProductClientController extends Controller
 {

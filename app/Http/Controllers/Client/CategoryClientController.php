@@ -33,7 +33,7 @@ class CategoryClientController extends Controller
             $query->orderBy('price', 'desc');
         }
 
-        $products = $query->get();
+        $products = $query->paginate(9);
 
         return view('client.categories.index', compact('categories', 'products', 'selectedCategory'));
     }

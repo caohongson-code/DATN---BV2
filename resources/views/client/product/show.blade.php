@@ -419,9 +419,9 @@
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="product_variant_id" id="addToCartVariantId">
-                        <div class="input-group" style="max-width: 120px;">
+                        <div class="input-group" ;>
                             <button class="btn btn-outline-secondary" type="button" onclick="changeQty(-1)">-</button>
-                            <input type="number" name="quantity" id="quantityInput" value="1" min="1"
+                            <input type="number" name="quantity" id="quantityInput" value="1" min="1" max="{{ $product->quantity }}"
                                 class="form-control text-center">
                             <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1)">+</button>
                         </div>
@@ -457,7 +457,7 @@
         @php $user = auth()->user(); @endphp
 
         @if ($user)
-            <form action="" method="POST">
+            <form action="" method="POST"></form>
                 @csrf
                 <div class="mb-2">
                     <label for="rating" class="form-label">Đánh giá sao:</label>
@@ -572,6 +572,9 @@
                         document.getElementById('storage').innerText = this.dataset.storage || '-';
                         document.getElementById('color').innerText = this.dataset.color || '-';
                         document.getElementById('stock').innerText = this.dataset.quantity || '-';
+                        document.getElementById('quantityInput').max = this.dataset.quantity;
+                        document.getElementById('quantityInput').value = 1;
+                        document.getElementById('buyNowQuantity').value = 1;
                         selectedVariantInput.value = variantId;
                         addToCartVariantInput.value = variantId;
 
@@ -613,7 +616,7 @@
             function changeQty(change) {
                 const input = document.getElementById('quantityInput');
                 let value = parseInt(input.value) || 1;
-                const max = parseInt(input.max);
+                const max = parseInt(input.max) || 9999; // fallback nếu max không hợp lệ
                 value += change;
                 if (value < 1) value = 1;
                 if (value > max) value = max;
