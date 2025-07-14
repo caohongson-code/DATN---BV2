@@ -28,5 +28,18 @@ public function show($id)
     return view('client.product.show', compact('product', 'relatedProducts'));
 }
 
+    public function categoryPage($id = null)
+    {
+        $categories = \App\Models\Category::all();
+        if ($id) {
+            $products = \App\Models\Product::where('category_id', $id)->get();
+            $selectedCategory = $id;
+        } else {
+            $products = \App\Models\Product::all();
+            $selectedCategory = null;
+        }
+        return view('client.categories.index', compact('categories', 'products', 'selectedCategory'));
+    }
+
 
 }

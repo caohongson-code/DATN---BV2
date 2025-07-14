@@ -2685,7 +2685,7 @@
                         <a href="#"><span>Giới thiệu</span></a>
                     </li>
                     <li class="menu-item">
-                        <a href="{{ route('product.all') }}"><span>Sản phẩm</span></a>
+                        <a href="{{ route('client.categories') }}"><span>Sản phẩm</span></a>
                     </li>
                     <li class="menu-item">
                         <a href="#"><span>Tin tức</span></a>
@@ -2791,7 +2791,7 @@
                                     <a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a>
                                 </li>
                                 <li class="nav-item dropdown">
-                                    <a href="{{ route('product.all') }}" class="nav-link dropdown-toggle"
+                                    <a href="{{ route('client.categories') }}" class="nav-link dropdown-toggle"
                                         data-toggle="dropdown">Sản phẩm</a>
                                     {{-- Có thể thêm dropdown ở đây nếu cần --}}
                                 </li>

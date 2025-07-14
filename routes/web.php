@@ -27,6 +27,7 @@ use App\Http\Controllers\Client\UserProfileController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
+use App\Http\Controllers\Client\CategoryClientController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -36,6 +37,8 @@ Route::get('/', function () {
 // Trang người dùng (client)
 Route::get('/home', [ProductClientController::class, 'index'])->name('home');
 Route::get('/product/{id}', [ProductClientController::class, 'show'])->name('product.show');
+Route::get('/categories', [CategoryClientController::class, 'index'])->name('client.categories');
+Route::get('/categories/{id}', [CategoryClientController::class, 'index'])->name('client.categories.filter');
 
 // Đăng nhập / đăng ký dùng chung
 Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');

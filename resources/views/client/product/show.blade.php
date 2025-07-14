@@ -321,6 +321,21 @@
                 display: none;
             }
         }
+        .product-price-main {
+            font-size: 30px;
+            color: #e11d48;
+            font-weight: 670;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .product-price-old {
+            font-size: 17px;
+            color: #888;
+            text-decoration: line-through;
+            display: inline-block;
+            margin-left: 2px;
+            vertical-align: middle;
+        }
     </style>
 
     <div class="container my-5">
@@ -353,11 +368,10 @@
                     <strong class="d-block text-muted mb-1">Giá:</strong>
                     <div id="priceBlock" class="d-flex flex-column align-items-start">
                         @if ($product->discount_price)
-                            <span class="text-muted"><s>{{ number_format($product->price, 0, ',', '.') }} đ</s></span>
-                            <span class="text-danger fw-bold">{{ number_format($product->discount_price, 0, ',', '.') }}
-                                đ</span>
+                            <span class="product-price-main">{{ number_format($product->discount_price, 0, ',', '.') }} đ</span>
+                            <span class="product-price-old">{{ number_format($product->price, 0, ',', '.') }} đ</span>
                         @else
-                            <span class="text-danger fw-bold">{{ number_format($product->price, 0, ',', '.') }} đ</span>
+                            <span class="product-price-main">{{ number_format($product->price, 0, ',', '.') }} đ</span>
                         @endif
                     </div>
                 </div>
@@ -553,7 +567,7 @@
                         // Cập nhật thông tin
                         mainImage.src = this.dataset.image;
                         document.getElementById('priceBlock').innerHTML =
-                            `<span class="text-danger fw-bold">${parseInt(this.dataset.price || 0).toLocaleString('vi-VN')} đ</span>`;
+                            `<span class="product-price-main">${parseInt(this.dataset.price || 0).toLocaleString('vi-VN')} đ</span>`;
                         document.getElementById('ram').innerText = this.dataset.ram || '-';
                         document.getElementById('storage').innerText = this.dataset.storage || '-';
                         document.getElementById('color').innerText = this.dataset.color || '-';
@@ -620,7 +634,7 @@
                         const priceValue = parseInt(this.dataset.price || 0).toLocaleString('vi-VN') +
                             ' đ';
                         document.getElementById('priceBlock').innerHTML =
-                            `<span class="text-danger fw-bold">${priceValue}</span>`;
+                            `<span class="product-price-main">${priceValue}</span>`;
                         document.getElementById('ram').innerText = this.dataset.ram || '-';
                         document.getElementById('storage').innerText = this.dataset.storage || '-';
                         document.getElementById('color').innerText = this.dataset.color || '-';
