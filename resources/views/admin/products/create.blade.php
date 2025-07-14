@@ -76,6 +76,11 @@
                         <input type="number" class="form-control" id="quantity" name="quantity"
                             value="{{ old('quantity') }}" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả chi tiết</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ old('description') }}</textarea>
+                    </div>
+
 
                     {{-- Trạng thái --}}
                     <div class="mb-4">
@@ -136,8 +141,7 @@
                     </div>
 
                     <hr>
-                    <h4>Hình ảnh theo màu</h4>
-                    <div id="colorImageContainer"></div>
+                   
 
                     <hr>
                     <h4>Danh sách biến thể</h4>
@@ -298,3 +302,11 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 </style>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#description'))
+        .catch(error => {
+            console.error(error);
+        });
+</script>

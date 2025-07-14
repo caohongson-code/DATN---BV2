@@ -12,6 +12,8 @@ use App\Models\ShippingZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Events\OrderStatusUpdated;
+use App\Models\ReturnRequest;
 
 class OrderController extends Controller
 {
@@ -26,9 +28,9 @@ class OrderController extends Controller
         ]);
 
         if ($request->search) {
-            $query->whereHas('account', function($q) use ($request) {
+            $query->whereHas('account', function ($q) use ($request) {
                 $q->where('full_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+                    ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -50,103 +52,103 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders', 'statuses', 'totalAmountAll'));
     }
 
-  public function show($id)
-{
-    $order = Order::with([
-        'orderDetails.productVariant.product',
-        'orderDetails.productVariant.ram',
-        'orderDetails.productVariant.storage',
-        'orderDetails.productVariant.color',
-        'orderStatus',
-        'paymentMethod',
-        'shippingZone',
-        'paymentStatus'
-    ])->findOrFail($id);
+    public function show($id)
+    {
+        $order = Order::with([
+            'orderDetails.productVariant.product',
+            'orderDetails.productVariant.ram',
+            'orderDetails.productVariant.storage',
+            'orderDetails.productVariant.color',
+            'orderStatus',
+            'paymentMethod',
+            'shippingZone',
+            'paymentStatus'
+        ])->findOrFail($id);
 
-    $statuses = OrderStatus::all();
-    $paymentMethods = PaymentMethod::all();
-    $shippingZones = ShippingZone::all();
-    $paymentStatus = PaymentStatus::all();
+        $statuses = OrderStatus::all();
+        $paymentMethods = PaymentMethod::all();
+        $shippingZones = ShippingZone::all();
+        $paymentStatus = PaymentStatus::all();
 
-    return view('admin.orders.show', compact('order', 'statuses', 'paymentMethods', 'shippingZones','paymentStatus'));
-}
+        return view('admin.orders.show', compact('order', 'statuses', 'paymentMethods', 'shippingZones', 'paymentStatus'));
+    }
     public function update(Request $request, $id)
-{
-    $order = Order::with('orderStatus', 'orderDetails')->findOrFail($id);
+    {
+        $order = Order::with('orderStatus', 'orderDetails')->findOrFail($id);
 
-    $request->validate([
-        'order_status_id' => 'required|exists:order_statuses,id',
-    ]);
+        $request->validate([
+            'order_status_id' => 'required|exists:order_statuses,id',
+        ]);
 
-    $newStatusId = (int) $request->order_status_id;
-    $oldStatusId = $order->order_status_id;
+        $newStatusId = (int) $request->order_status_id;
+        $oldStatusId = $order->order_status_id;
 
-    $FINAL_STATUS_IDS = [5, 6, 7]; // 5: Đã giao, 6: Trả hàng / Hoàn tiền, 7: Đã huỷ
+        $FINAL_STATUS_IDS = [5, 6, 7]; // 5: Đã giao, 6: Trả hàng / Hoàn tiền, 7: Đã huỷ
 
-    // Không cho phép update nếu đã vào trạng thái cuối
-    if (in_array($oldStatusId, $FINAL_STATUS_IDS)) {
-        return back()->with('error', 'Đơn hàng đã hoàn tất hoặc bị huỷ. Không thể cập nhật nữa.');
-    }
-
-    // Chỉ cho phép cập nhật tuần tự
-    $allowedNextStatus = [];
-
-    switch ($oldStatusId) {
-        case 1:
-            $allowedNextStatus = [2, 7]; // từ Chờ xác nhận → Đã xác nhận hoặc Hủy
-            break;
-        case 2:
-            $allowedNextStatus = [3];    // từ Đã xác nhận → Đang chuẩn bị hàng
-            break;
-        case 3:
-            $allowedNextStatus = [4];    // từ Đang chuẩn bị hàng → Đang giao
-            break;
-        case 4:
-            $allowedNextStatus = [5];    // từ Đang giao → Đã giao
-            break;
-        case 5:
-            $allowedNextStatus = [6];    // từ Đã giao → Trả hàng
-            break;
-    }
-
-    if (!in_array($newStatusId, $allowedNextStatus)) {
-        return back()->with('error', 'Chuyển trạng thái không hợp lệ. Vui lòng tuân thủ quy trình.');
-    }
-
-    DB::beginTransaction();
-
-    try {
-        // Cập nhật trạng thái mới
-        $order->order_status_id = $newStatusId;
-
-        // Cập nhật phí vận chuyển
-        if ($order->shipping_zone_id) {
-            $shippingZone = ShippingZone::find($order->shipping_zone_id);
-            $order->shipping_fee = $shippingZone?->shipping_fee ?? 30000;
-        } elseif (is_null($order->shipping_fee)) {
-            $order->shipping_fee = 30000;
+        // Không cho phép update nếu đã vào trạng thái cuối
+        if (in_array($oldStatusId, $FINAL_STATUS_IDS)) {
+            return back()->with('error', 'Đơn hàng đã hoàn tất hoặc bị huỷ. Không thể cập nhật nữa.');
         }
 
-        // Tính tổng tiền sản phẩm
-        $totalProductAmount = $order->orderDetails->sum(function ($detail) {
-            return $detail->quantity * ($detail->price ?? 0);
-        }) ?? 0;
+        // Chỉ cho phép cập nhật tuần tự
+        $allowedNextStatus = [];
 
-        // Cập nhật tổng tiền đơn hàng (sản phẩm + phí ship)
-        $order->total_amount = $totalProductAmount + $order->shipping_fee;
+        switch ($oldStatusId) {
+            case 1:
+                $allowedNextStatus = [2, 7]; // từ Chờ xác nhận → Đã xác nhận hoặc Hủy
+                break;
+            case 2:
+                $allowedNextStatus = [3];    // từ Đã xác nhận → Đang chuẩn bị hàng
+                break;
+            case 3:
+                $allowedNextStatus = [4];    // từ Đang chuẩn bị hàng → Đang giao
+                break;
+            case 4:
+                $allowedNextStatus = [5];    // từ Đang giao → Đã giao
+                break;
+            case 5:
+                $allowedNextStatus = [6];    // từ Đã giao → Trả hàng
+                break;
+        }
 
-        $order->save();
+        if (!in_array($newStatusId, $allowedNextStatus)) {
+            return back()->with('error', 'Chuyển trạng thái không hợp lệ. Vui lòng tuân thủ quy trình.');
+        }
 
-        DB::commit();
+        DB::beginTransaction();
 
-        return redirect()->route('admin.orders.show', $order->id)
-            ->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error("Lỗi cập nhật trạng thái đơn hàng #$id: " . $e->getMessage());
-        return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        try {
+            // Cập nhật trạng thái mới
+            $order->order_status_id = $newStatusId;
+
+            // Cập nhật phí vận chuyển
+            if ($order->shipping_zone_id) {
+                $shippingZone = ShippingZone::find($order->shipping_zone_id);
+                $order->shipping_fee = $shippingZone?->shipping_fee ?? 30000;
+            } elseif (is_null($order->shipping_fee)) {
+                $order->shipping_fee = 30000;
+            }
+
+            // Tính tổng tiền sản phẩm
+            $totalProductAmount = $order->orderDetails->sum(function ($detail) {
+                return $detail->quantity * ($detail->price ?? 0);
+            }) ?? 0;
+
+            // Cập nhật tổng tiền đơn hàng (sản phẩm + phí ship)
+            $order->total_amount = $totalProductAmount + $order->shipping_fee;
+
+            $order->save();
+            // OrderStatusUpdated::dispatch($order);
+            DB::commit();
+
+            return redirect()->route('admin.orders.show', $order->id)
+                ->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Lỗi cập nhật trạng thái đơn hàng #$id: " . $e->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        }
     }
-}
 
     public function placeOrderFromCart($cartId)
     {
@@ -220,5 +222,34 @@ class OrderController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Lỗi đặt hàng: ' . $e->getMessage());
         }
+    }
+    public function listReturnRequests()
+    {
+        $requests = ReturnRequest::with('order.account')->orderBy('created_at', 'desc')->get();
+
+        return view('admin.orders.return-requests', compact('requests'));
+    }
+    public function approveReturnRequest($id)
+    {
+        $request = ReturnRequest::findOrFail($id);
+        $order = $request->order;
+
+        // Cập nhật trạng thái đơn hàng và thanh toán
+        $order->order_status_id = 6; // Trả hàng / Hoàn tiền
+        $order->payment_status_id = 4; // Hoàn tiền
+        $order->save();
+
+        $request->status = 'approved';
+        $request->save();
+
+        return redirect()->back()->with('success', 'Đã duyệt yêu cầu trả hàng.');
+    }
+    public function rejectReturnRequest($id)
+    {
+        $request = ReturnRequest::findOrFail($id);
+        $request->status = 'rejected';
+        $request->save();
+
+        return redirect()->back()->with('error', 'Đã từ chối yêu cầu trả hàng.');
     }
 }

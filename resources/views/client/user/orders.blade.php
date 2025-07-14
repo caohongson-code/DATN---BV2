@@ -227,8 +227,46 @@
                                         <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
                                     @endif
                                     @if ($order->order_status_id == 5)
-                                        <button class="btn btn-warning btn-sm return-order-btn">Trả hàng/Hoàn tiền</button>
+                                        @if (!$order->user_confirmed_delivery)
+                                            <button class="btn btn-success btn-sm btn-confirm-received"
+                                                data-id="{{ $order->id }}">
+                                                Tôi đã nhận hàng
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm btn-report-issue"
+                                                data-id="{{ $order->id }}">
+                                                Chưa nhận được hàng
+                                            </button>
+                                        @else
+                                            <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
+                                        @endif
                                     @endif
+
+
+                                    @if ($order->order_status_id == 5 || $order->order_status_id == 6)
+                                        @php
+                                            $returnRequest = $returnedOrders[$order->id] ?? null;
+                                        @endphp
+
+                                        @if ($returnRequest)
+                                            @if ($returnRequest->status === 'pending')
+                                                <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
+                                                <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
+                                                    data-id="{{ $returnRequest->id }}">
+                                                    Hủy yêu cầu
+                                                </button>
+                                            @elseif ($returnRequest->status === 'rejected')
+                                                <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
+                                            @elseif ($returnRequest->status === 'approved')
+                                                <span class="text-success fw-bold">Yêu cầu đã được duyệt</span>
+                                            @endif
+                                        @else
+                                            <button class="btn btn-warning btn-sm return-order-btn">Trả hàng/Hoàn
+                                                tiền</button>
+                                        @endif
+                                    @endif
+
+
+
                                 </div>
                             </div>
                         </div>
@@ -318,12 +356,44 @@
             </form>
         </div>
     </div>
+    {{-- Modal báo sự cố giao hàng --}}
+    <div id="deliveryIssueModal" class="modal fade" tabindex="-1" aria-labelledby="deliveryIssueModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="deliveryIssueForm">
+                @csrf
+                <input type="hidden" name="order_id" id="issueOrderId">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deliveryIssueModalLabel">Báo sự cố giao hàng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả vấn đề</label>
+                            <textarea name="reason" class="form-control" rows="4" placeholder="Mô tả lý do bạn chưa nhận được hàng..."
+                                required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Gửi phản hồi</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 @endsection
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Show more toggle
+            const maxVisible = {{ $maxVisible }};
+
+            // ================================
+            // Toggle "Xem thêm" đơn hàng
+            // ================================
             document.querySelectorAll('.btn-show-more').forEach(button => {
                 button.addEventListener('click', function() {
                     const tabPane = this.closest('.tab-pane');
@@ -333,14 +403,16 @@
                         this.textContent = 'Ẩn bớt';
                     } else {
                         tabPane.querySelectorAll('.order-item').forEach((el, index) => {
-                            if (index >= {{ $maxVisible }}) el.classList.add('d-none');
+                            if (index >= maxVisible) el.classList.add('d-none');
                         });
                         this.textContent = 'Xem thêm';
                     }
                 });
             });
 
-            // Cancel order
+            // ================================
+            // Huỷ đơn hàng
+            // ================================
             document.querySelectorAll('.cancel-order-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const card = this.closest('.order-item');
@@ -362,7 +434,9 @@
                 });
             });
 
-            // Open review modal
+            // ================================
+            // Mở modal đánh giá
+            // ================================
             document.querySelectorAll('.btn-review').forEach(button => {
                 button.addEventListener('click', function() {
                     document.getElementById('reviewVariantId').value = this.dataset.variantId;
@@ -377,27 +451,20 @@
                         star.classList.remove('fas', 'selected', 'hovered');
                         star.classList.add('far');
                     });
-
                 });
             });
 
-            // Star rating
+            // ================================
+            // Star Rating
+            // ================================
             let currentRating = 0;
             const stars = document.querySelectorAll('#starRating .star');
-
             stars.forEach(star => {
                 star.addEventListener('mouseenter', () => {
                     const val = parseInt(star.dataset.value);
                     stars.forEach(s => {
-                        if (parseInt(s.dataset.value) <= val) {
-                            s.classList.add('hovered');
-                            s.classList.remove('far');
-                            s.classList.add('fas');
-                        } else {
-                            s.classList.remove('hovered');
-                            s.classList.remove('fas');
-                            s.classList.add('far');
-                        }
+                        s.classList.toggle('fas', parseInt(s.dataset.value) <= val);
+                        s.classList.toggle('far', parseInt(s.dataset.value) > val);
                     });
                 });
 
@@ -415,20 +482,19 @@
                     currentRating = parseInt(star.dataset.value);
                     document.getElementById('selectedRating').value = currentRating;
                     stars.forEach(s => {
-                        if (parseInt(s.dataset.value) <= currentRating) {
-                            s.classList.add('selected');
-                            s.classList.remove('far');
-                            s.classList.add('fas');
-                        } else {
-                            s.classList.remove('selected');
-                            s.classList.remove('fas');
-                            s.classList.add('far');
-                        }
+                        s.classList.toggle('selected', parseInt(s.dataset.value) <=
+                            currentRating);
+                        s.classList.toggle('fas', parseInt(s.dataset.value) <=
+                            currentRating);
+                        s.classList.toggle('far', parseInt(s.dataset.value) >
+                        currentRating);
                     });
                 });
             });
 
-            // Return modal
+            // ================================
+            // Mở modal Trả hàng/Hoàn tiền
+            // ================================
             document.querySelectorAll('.return-order-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     document.getElementById('returnOrderId').value = this.closest('.order-item')
@@ -437,28 +503,133 @@
                 });
             });
 
-            // Submit return form
+            // ================================
+            // Gửi yêu cầu trả hàng
+            // ================================
             const returnForm = document.getElementById('returnRefundForm');
-            returnForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                const orderId = document.getElementById('returnOrderId').value;
-                fetch(`/orders/return-refund/${orderId}`, {
+            if (returnForm) {
+                returnForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    const orderId = document.getElementById('returnOrderId').value;
+
+                    fetch(`{{ route('orders.return_refund', ':id') }}`.replace(':id', orderId), {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.success) {
+                                const returnModalEl = document.getElementById('returnModal');
+                                const modalInstance = bootstrap.Modal.getInstance(returnModalEl);
+                                if (modalInstance) modalInstance.hide();
+
+                                const card = document.querySelector(
+                                `.order-item[data-id="${orderId}"]`);
+                                const returnBtn = card?.querySelector('.return-order-btn');
+                                if (returnBtn) {
+                                    returnBtn.outerHTML = `
+                            <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
+                            <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn" data-id="${res.return_request_id}">
+                                Hủy yêu cầu
+                            </button>
+                        `;
+
+                                    // Gắn sự kiện click lại cho nút "Hủy yêu cầu" vừa tạo
+                                    const cancelBtn = card.querySelector('.cancel-return-request-btn');
+                                    if (cancelBtn) {
+                                        cancelBtn.addEventListener('click', handleCancelReturnRequest);
+                                    }
+                                }
+                            }
+
+                            alert(res.message);
+                        })
+                        .catch(() => alert('Đã xảy ra lỗi khi gửi yêu cầu trả hàng.'));
+                });
+            }
+
+            // ================================
+            // Huỷ yêu cầu trả hàng (dùng lại hàm)
+            // ================================
+            function handleCancelReturnRequest() {
+                if (!confirm('Bạn có chắc muốn hủy yêu cầu trả hàng này không?')) return;
+
+                const id = this.dataset.id;
+
+                fetch(`/return-request/${id}/cancel`, {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: formData
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        }
                     })
                     .then(res => res.json())
                     .then(res => {
                         alert(res.message);
                         if (res.success) location.reload();
                     })
-                    .catch(err => {
-                        alert('Đã xảy ra lỗi.');
-                    });
+                    .catch(() => alert('Có lỗi xảy ra khi hủy yêu cầu.'));
+            }
+
+            // Gắn sự kiện hủy yêu cầu cho các nút đã có
+            document.querySelectorAll('.cancel-return-request-btn').forEach(button => {
+                button.addEventListener('click', handleCancelReturnRequest);
             });
+            // Xác nhận đã nhận hàng
+            document.querySelectorAll('.btn-confirm-received').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    if (confirm('Xác nhận bạn đã nhận được hàng?')) {
+                        fetch(`/orders/${id}/confirm-received`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                },
+                            })
+                            .then(res => res.json())
+                            .then(res => {
+                                alert(res.message);
+                                location.reload();
+                            });
+                    }
+                });
+            });
+
+            // Báo sự cố giao hàng
+            document.querySelectorAll('.btn-report-issue').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.getElementById('issueOrderId').value = this.dataset.id;
+                    new bootstrap.Modal(document.getElementById('deliveryIssueModal')).show();
+                });
+            });
+
+            document.getElementById('deliveryIssueForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch(`/orders/report-issue`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        alert(res.message);
+                        const modalEl = document.getElementById('deliveryIssueModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    })
+                    .catch(() => alert('Có lỗi xảy ra khi gửi phản hồi.'));
+            });
+
         });
     </script>
 @endpush

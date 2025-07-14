@@ -443,30 +443,47 @@
         @php $user = auth()->user(); @endphp
 
         @if ($user)
-            <form action="" method="POST">
-                @csrf
-                <div class="mb-2">
-                    <label for="rating" class="form-label">Đánh giá sao:</label>
-                    <select name="rating" id="rating" class="form-select" required>
-                        <option value="">Chọn sao</option>
-                        @for ($i = 5; $i >= 1; $i--)
-                            <option value="{{ $i }}">{{ $i }} sao</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="mb-2">
-                    <label for="comment" class="form-label">Nội dung bình luận:</label>
-                    <textarea name="comment" id="comment" rows="3" class="form-control" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-success">Gửi đánh giá</button>
-            </form>
+           
         @else
             <p>Vui lòng <a href="{{ route('taikhoan.login') }}">đăng nhập</a> để đánh giá và bình luận.</p>
         @endif
 
         <div class="mt-4">
-            <p>Chưa có đánh giá nào.</p>
-        </div>
+    @if ($reviews->isEmpty())
+        <p>Chưa có đánh giá nào.</p>
+    @else
+        @foreach ($reviews as $review)
+            <div class="border rounded p-3 mb-3 bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ $review->account->name ?? 'Người dùng' }}</strong>
+                    <small class="text-muted">{{ $review->created_at->format('d/m/Y H:i') }}</small>
+                </div>
+                <div class="text-warning mb-1">
+                    @for ($i = 1; $i <= 5; $i++)
+                        <i class="fa{{ $i <= $review->rating ? 's' : 'r' }} fa-star"></i>
+                    @endfor
+                </div>
+
+                {{-- Nếu bạn muốn hiển thị phiên bản đã mua --}}
+                @if ($review->variant)
+                    <p class="text-muted mb-1">
+                        Phiên bản: {{ $review->variant->ram->value ?? '?' }} / {{ $review->variant->storage->value ?? '?' }} / {{ $review->variant->color->value ?? '?' }}
+                    </p>
+                @endif
+
+                <p class="mb-1">{{ $review->comment }}</p>
+
+                @if ($review->image)
+                    <div class="mt-2">
+                        <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá"
+                            style="max-height: 120px; border-radius: 6px;">
+                    </div>
+                @endif
+            </div>
+        @endforeach
+    @endif
+</div>
+
 
         @if ($relatedProducts->count())
             <hr class="my-5">

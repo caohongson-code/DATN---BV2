@@ -65,7 +65,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/orders/{id}', [ClientOrderController::class, 'detail'])->name('user.orders.detail');
     Route::post('/client/orders/{id}/cancel', [ClientOrderController::class, 'ajaxCancel'])->name('client.orders.cancel');
     Route::post('/orders/return-refund/{id}', [ClientOrderController::class, 'requestReturnRefund'])->name('orders.return_refund');
+    Route::post('/return-request/{id}/cancel', [ClientOrderController::class, 'cancelReturnRequest'])->name('return.cancel');
+ Route::post('/orders/{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('orders.confirm_received');
 
+    Route::post('/orders/report-issue', [ClientOrderController::class, 'reportDeliveryIssue']);
 
     Route::post('/client/reviews', [ReviewController::class, 'store'])->name('client.reviews.store');
 
@@ -121,4 +124,10 @@ Route::prefix('admin')->group(function () {
     Route::post('/variants/{id}/images', [ProductVariantImageController::class, 'storeImages'])->name('admin.variant.images.store');
     Route::delete('/variant-images/{id}', [ProductVariantImageController::class, 'deleteImage'])->name('admin.variant.images.delete');
     Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('dashboard');
+    // Hiển thị danh sách yêu cầu hoàn trả
+    Route::get('admin/return-requests', [OrderController::class, 'listReturnRequests'])->name('admin.return_requests.index');
+    // Duyệt yêu cầu
+    Route::get('admin/return-requests/{id}/approve', [OrderController::class, 'approveReturnRequest'])->name('admin.return_requests.approve');
+    // Từ chối yêu cầu
+    Route::get('admin/return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
 });
