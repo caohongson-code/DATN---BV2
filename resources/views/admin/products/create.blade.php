@@ -145,6 +145,7 @@
 
                     <hr>
                     <h4>Danh sách biến thể</h4>
+                    <div id="colorImageContainer"></div>
                     <div id="variantTableContainer"></div>
 
                     <button type="submit" class="btn btn-primary mt-3">Thêm sản phẩm và biến thể</button>

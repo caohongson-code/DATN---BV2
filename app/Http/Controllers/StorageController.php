@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Storage;
+use App\Models\StorageOption;
 use Illuminate\Http\Request;
 
 class StorageController extends Controller
 {
     public function index(Request $request)
 {
-    $query = Storage::query();
+    $query = StorageOption::query();
 
     if ($request->has('keyword') && !empty($request->keyword)) {
         $query->where('value', 'like', '%' . $request->keyword . '%');
@@ -37,14 +38,14 @@ class StorageController extends Controller
             'value' => 'required|string|max:255|unique:storages,value',
         ]);
 
-        Storage::create(['value' => $request->value]);
+        StorageOption::create(['value' => $request->value]);
 
         return redirect()->route('storages.index')->with('success', 'Thêm dung lượng thành công.');
     }
 
     public function edit($id)
     {
-        $storages = Storage::findOrFail($id);
+        $storages = StorageOption::findOrFail($id);
 
         return view('admin.storages.edit', [
             'storages' => $storages,
@@ -55,7 +56,7 @@ class StorageController extends Controller
 
     public function update(Request $request, $id)
     {
-        $storages = Storage::findOrFail($id);
+        $storages = StorageOption::findOrFail($id);
 
         $request->validate([
             'value' => 'required|string|max:255|unique:storages,value,' . $storages->id,
@@ -68,7 +69,7 @@ class StorageController extends Controller
 
     public function destroy($id)
     {
-        $storages = Storage::findOrFail($id);
+        $storages = StorageOption::findOrFail($id);
         $storages->delete();
 
         return redirect()->route('storages.index')->with('success', 'Xóa dung lượng thành công.');

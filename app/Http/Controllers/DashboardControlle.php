@@ -11,18 +11,27 @@ use Illuminate\Http\Request;
 class DashboardControlle extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Hiển thị trang dashboard admin.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $range = $request->query('range', 'monthly'); // Lọc theo ngày/tháng/năm
+
         $totalCustomers = Account::where('role_id', 3)->count();
         $totalProducts = Product::count();
-        $totalOrders = Order::count();
+        $totalOrders = Order::where('order_status_id', 1)->count();
         $lowStockCount = ProductVariant::where('quantity', '<', 5)->count();
-        $recentOrders = Order::with(['account', 'orderStatus'])->latest()->take(4)->get();
+
+        $recentOrders = Order::with(['account', 'orderStatus'])
+        ->where('order_status_id',1)
+            ->latest()
+            ->take(4)
+            ->get();
+
         $newCustomers = Account::latest()->take(4)->get();
-        $barChartData = $this->getBarChartData();
-        $lineChartData = $this->getLineChartData(); // nếu có
+
+        $barChartData = $this->getChartData($range);
+        $lineChartData = $barChartData; // Dùng chung để demo
 
         return view('admin.dashboard.index', compact(
             'totalCustomers',
@@ -32,91 +41,77 @@ class DashboardControlle extends Controller
             'recentOrders',
             'newCustomers',
             'barChartData',
-            'lineChartData'
+            'lineChartData',
+            'range'
         ));
     }
 
-    private function getBarChartData()
+    /**
+     * Tạo dữ liệu biểu đồ theo dạng lọc (ngày / tháng / năm).
+     */
+    private function getChartData($range)
     {
-        $orders = Order::selectRaw('MONTH(order_date) as month, SUM(total_amount) as revenue')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->pluck('revenue', 'month')
-            ->toArray();
+        $query = Order::query();
 
-        $labels = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
-        $data = [];
+        switch ($range) {
+            case 'daily':
+                $query = $query->selectRaw('DATE(order_date) as label, SUM(total_amount) as revenue')
+                               ->groupByRaw('DATE(order_date)')
+                               ->orderBy('label');
+                break;
 
-        for ($i = 1; $i <= 12; $i++) {
-            $data[] = $orders[$i] ?? 0;
+            case 'yearly':
+                $query = $query->selectRaw('YEAR(order_date) as label, SUM(total_amount) as revenue')
+                               ->groupByRaw('YEAR(order_date)')
+                               ->orderBy('label');
+                break;
+
+            case 'monthly':
+            default:
+                $query = $query->selectRaw('MONTH(order_date) as label, SUM(total_amount) as revenue')
+                               ->groupByRaw('MONTH(order_date)')
+                               ->orderBy('label');
+                break;
+        }
+
+        $results = $query->pluck('revenue', 'label')->toArray();
+
+        if ($range === 'daily') {
+            $labels = [];
+            $data = [];
+            $start = now()->subDays(29)->startOfDay();
+            for ($date = $start->copy(); $date <= now(); $date->addDay()) {
+                $label = $date->format('Y-m-d');
+                $labels[] = $label;
+                $data[] = $results[$label] ?? 0;
+            }
+        } elseif ($range === 'yearly') {
+            $currentYear = now()->year;
+            $labels = [];
+            $data = [];
+            for ($i = $currentYear - 4; $i <= $currentYear; $i++) {
+                $labels[] = "Năm $i";
+                $data[] = $results[$i] ?? 0;
+            }
+        } else {
+            $labels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                       'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+            $data = [];
+            for ($i = 1; $i <= 12; $i++) {
+                $data[] = $results[$i] ?? 0;
+            }
         }
 
         return [
             'labels' => $labels,
             'datasets' => [
                 [
-                    'label' => 'Doanh thu theo tháng',
+                    'label' => 'Doanh thu',
                     'backgroundColor' => 'rgba(54, 162, 235, 0.6)',
                     'borderColor' => 'rgba(54, 162, 235, 1)',
                     'data' => $data
                 ]
             ]
         ];
-    }
-
-
-    private function getLineChartData()
-    {
-        return $this->getBarChartData();
-    }
-
-
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }
