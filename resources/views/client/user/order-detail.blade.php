@@ -49,6 +49,10 @@
             @if ($order->shippingZone)
                 <p><strong>Khu vực giao hàng:</strong> {{ $order->shippingZone->name }}</p>
             @endif
+            @if ($order->tracking_number)
+    <p><strong>Mã vận chuyển:</strong> <span class="text-primary">{{ $order->tracking_number }}</span></p>
+@endif
+
 
             <hr>
 

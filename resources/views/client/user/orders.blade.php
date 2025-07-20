@@ -227,50 +227,74 @@
                                         <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
                                     @endif
                                     @if ($order->order_status_id == 5)
-    @if (!$order->user_confirmed_delivery)
-        <button class="btn btn-success btn-sm btn-confirm-received"
-            data-id="{{ $order->id }}">
-            Tôi đã nhận hàng
-        </button>
+                                        @if (!$order->user_confirmed_delivery)
+                                            <button class="btn btn-success btn-sm btn-confirm-received"
+                                                data-id="{{ $order->id }}">
+                                                Tôi đã nhận hàng
+                                            </button>
 
-        @if (!isset($deliveryIssues[$order->id]))
-            <button class="btn btn-outline-danger btn-sm btn-report-issue"
-                data-id="{{ $order->id }}">
-                Chưa nhận được hàng
-            </button>
-        @else
-            <span class="text-info fw-bold">Đã gửi phản hồi</span>
-        @endif
-    @else
-        <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
-    @endif
-@endif
-
-
-
-                                    @if ($order->order_status_id == 5 || $order->order_status_id == 6)
-                                        @php
-                                            $returnRequest = $returnedOrders[$order->id] ?? null;
-                                        @endphp
-
-                                        @if ($returnRequest)
-                                            @if ($returnRequest->status === 'pending')
-                                                <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
-                                                <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
-                                                    data-id="{{ $returnRequest->id }}">
-                                                    Hủy yêu cầu
+                                            @if (!isset($deliveryIssues[$order->id]))
+                                                <button class="btn btn-outline-danger btn-sm btn-report-issue"
+                                                    data-id="{{ $order->id }}">
+                                                    Chưa nhận được hàng
                                                 </button>
-                                            @elseif ($returnRequest->status === 'rejected')
-                                                <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
-                                            @elseif ($returnRequest->status === 'approved')
-                                                <span class="text-success fw-bold">Yêu cầu đã được duyệt</span>
+                                            @else
+                                                <span class="text-info fw-bold">Đã gửi phản hồi</span>
                                             @endif
                                         @else
-                                            <button class="btn btn-warning btn-sm return-order-btn">Trả hàng/Hoàn
-                                                tiền</button>
+                                            <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
                                         @endif
                                     @endif
 
+
+
+                                  @if ($order->order_status_id == 5 || $order->order_status_id == 6)
+    @php
+        $returnRequest = $returnedOrders[$order->id] ?? null;
+        $latestProgress = null;
+        if ($returnRequest && isset($progresses[$returnRequest->id])) {
+            $latestProgress = $progresses[$returnRequest->id]->last();
+        }
+    @endphp
+
+    @if ($returnRequest)
+        @if ($returnRequest->status === 'pending')
+            <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
+            <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
+                data-id="{{ $returnRequest->id }}">
+                Hủy yêu cầu
+            </button>
+
+        @elseif ($returnRequest->status === 'rejected')
+            <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
+
+        @elseif ($returnRequest->status === 'approved' && (!$latestProgress || $latestProgress->status === 'approved'))
+            <a href="{{ route('user.return.enter_tracking', $returnRequest->id) }}"
+                class="btn btn-sm btn-outline-primary">
+                Người tiêu dùng hoàn hàng
+            </a>
+
+        @else
+            @php
+                // Chuyển trạng thái tiến trình sang tiếng Việt theo trạng thái mới bạn cung cấp
+                $statusVN = match($latestProgress->status ?? '') {
+                    'pending'       => 'Đang chờ xử lý',
+                    'approved'      => 'Đã duyệt',
+                    'rejected'      => 'Đã từ chối',
+                    'shipped_back'  => 'Đã gửi hàng trả lại',
+                    'received'      => 'Đã nhận hàng',
+                    'checking'      => 'Đang kiểm tra',
+                    'refunded'      => 'Đã hoàn tiền',
+                    default         => '...'
+                };
+            @endphp
+            <span class="text-secondary">Trạng thái trả hàng: {{ $statusVN }}</span>
+        @endif
+
+    @else
+        <button class="btn btn-warning btn-sm return-order-btn">Trả hàng/Hoàn tiền</button>
+    @endif
+@endif
 
 
                                 </div>

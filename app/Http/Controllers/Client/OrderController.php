@@ -11,7 +11,8 @@ use Illuminate\Http\Request;
 use App\Models\ReturnRequest;
 use App\Models\Review;
 use Carbon\Carbon;
-
+use App\Models\ShopInfo;
+use App\Models\ReturnRequestProgress; 
 class OrderController extends Controller
 {
 
@@ -57,6 +58,7 @@ class OrderController extends Controller
 
     // ✅ Lấy các phản hồi giao hàng nếu có
     $deliveryIssues = OrderDeliveryIssue::whereIn('order_id', $orders->pluck('id'))->get()->keyBy('order_id');
+$progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrders->pluck('id'))->get()->groupBy('return_request_id');
 
     // ✅ Truyền sang view
     return view('client.user.orders', compact(
@@ -64,7 +66,8 @@ class OrderController extends Controller
         'statuses',
         'reviewedMap',
         'returnedOrders',
-        'deliveryIssues' // ✅ truyền biến mới
+        'deliveryIssues', // ✅ truyền biến mới
+        'progresses',
     ));
 }
 
@@ -247,4 +250,68 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Chúng tôi đã ghi nhận phản hồi của bạn.']);
     }
+  public function submitTrackingCode(Request $request, $returnRequestId)
+{
+    $request->validate([
+        'tracking_number' => 'required|string|max:255',
+        'shipping_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+    ]);
+
+    $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);
+    $order = $returnRequest->order;
+
+    // ❗ Kiểm tra mã vận đơn người dùng nhập có khớp với cái admin cung cấp hay không
+    if ($order->tracking_number !== $request->tracking_number) {
+        return redirect()->back()->withErrors(['tracking_number' => 'Mã vận đơn không khớp với thông tin đã cung cấp.']);
+    }
+
+    // ✅ Upload ảnh shipping
+    $imagePaths = [];
+    if ($request->hasFile('shipping_images')) {
+        foreach ($request->file('shipping_images') as $image) {
+            $path = $image->store('return_shipping', 'public');
+            $imagePaths[] = $path;
+        }
+    }
+
+    // ✅ Lưu ảnh (KHÔNG cập nhật trạng thái trong return_requests)
+    $returnRequest->shipping_images = $imagePaths;
+    $returnRequest->save();
+
+    // ✅ Ghi tiến trình vào return_request_progresses
+    ReturnRequestProgress::create([
+        'return_request_id' => $returnRequest->id,
+        'status' => 'shipping_pending',
+        'note' => 'Khách đã gửi hàng với mã vận đơn hợp lệ',
+        'completed_at' => now(),
+    ]);
+
+    return redirect()->route('user.orders')->with('success', 'Xác nhận gửi hàng thành công!');
+}
+
+
+
+
+
+public function showTrackingForm($id)
+{
+    $returnRequest = ReturnRequest::with('order.orderDetails.productVariant.product')->where('id', $id)
+        ->whereHas('order', function ($query) {
+            $query->where('account_id', auth()->id());
+        })
+        ->firstOrFail();
+
+    if ($returnRequest->status !== 'approved') {
+        return redirect()->route('user.orders')->withErrors(['msg' => 'Yêu cầu chưa được duyệt.']);
+    }
+
+    // Lấy thông tin shop
+    $shopInfo = ShopInfo::first();
+
+    return view('client.user.enter-tracking', compact('returnRequest', 'shopInfo'));
+}
+
+
+
+
 }

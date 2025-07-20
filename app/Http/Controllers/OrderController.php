@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Events\OrderStatusUpdated;
 use App\Models\ReturnRequest;
+use Illuminate\Support\Str;
+use App\Models\ReturnRequestProgress;
+use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
@@ -124,6 +127,10 @@ class OrderController extends Controller
             // Cập nhật trạng thái mới
             $order->order_status_id = $newStatusId;
 
+            // ✅ Nếu chuyển sang "Đang chuẩn bị hàng" thì tạo mã vận chuyển nếu chưa có
+            if ($newStatusId === 3 && !$order->shipping_code) {
+                $order->tracking_number = 'PPGH' . strtoupper(Str::random(7));
+            }
             // Cập nhật phí vận chuyển
             if ($order->shipping_zone_id) {
                 $shippingZone = ShippingZone::find($order->shipping_zone_id);
@@ -243,15 +250,30 @@ class OrderController extends Controller
         $request = ReturnRequest::findOrFail($id);
         $order = $request->order;
 
-        // Cập nhật trạng thái đơn hàng và thanh toán
-        $order->order_status_id = 6; // Trả hàng / Hoàn tiền
-        $order->payment_status_id = 4; // Hoàn tiền
-        $order->save();
+        DB::beginTransaction();
 
-        $request->status = 'approved';
-        $request->save();
+        try {
+            $order->order_status_id = 6; // Trả hàng / Hoàn tiền
+            $order->save();
 
-        return redirect()->back()->with('success', 'Đã duyệt yêu cầu trả hàng.');
+            $request->status = 'approved';
+            $request->save();
+
+            // ✅ Ghi nhận tiến trình
+            ReturnRequestProgress::create([
+                'return_request_id' => $request->id,
+                'status' => 'approved',
+                'note' => 'Yêu cầu đã được duyệt bởi admin.',
+                'completed_at' => Carbon::now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Đã duyệt yêu cầu trả hàng.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Lỗi: ' . $e->getMessage());
+        }
     }
     public function rejectReturnRequest($id)
     {
@@ -260,5 +282,38 @@ class OrderController extends Controller
         $request->save();
 
         return redirect()->back()->with('error', 'Đã từ chối yêu cầu trả hàng.');
+    }
+    public function updateReturnProgress(Request $request, $returnRequestId)
+    {
+        $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);
+
+        $status = $request->input('status');
+        $note = $request->input('note');
+
+        // Không ghi trùng bước
+        $exists = ReturnRequestProgress::where('return_request_id', $returnRequestId)
+            ->where('status', $status)
+            ->exists();
+
+        if (!$exists) {
+            ReturnRequestProgress::create([
+                'return_request_id' => $returnRequestId,
+                'status' => $status,
+                'note' => $note,
+                'completed_at' => now(),
+            ]);
+
+            // Nếu là hoàn tiền thì cập nhật đơn hàng
+            if ($status === 'refunded') {
+                $returnRequest->status = 'refunded';
+                $returnRequest->save();
+
+                $returnRequest->order->update([
+                    'payment_status_id' => 4,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Tiến trình trả hàng đã được cập nhật.');
     }
 }
