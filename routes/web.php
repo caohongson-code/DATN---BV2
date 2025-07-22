@@ -69,7 +69,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/client/orders/{id}/cancel', [ClientOrderController::class, 'ajaxCancel'])->name('client.orders.cancel');
     Route::post('/orders/return-refund/{id}', [ClientOrderController::class, 'requestReturnRefund'])->name('orders.return_refund');
     Route::post('/return-request/{id}/cancel', [ClientOrderController::class, 'cancelReturnRequest'])->name('return.cancel');
- Route::post('/orders/{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('orders.confirm_received');
+    Route::post('/orders/{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('orders.confirm_received');
+   Route::post('/orders/return/{id}/submit-tracking', [ClientOrderController::class, 'submitTrackingCode'])->name('user.return.submit_tracking');
+Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 'showTrackingForm'])->name('user.return.enter_tracking');
+
+
 
     Route::post('/orders/report-issue', [ClientOrderController::class, 'reportDeliveryIssue']);
 
@@ -133,4 +137,8 @@ Route::prefix('admin')->group(function () {
     Route::get('admin/return-requests/{id}/approve', [OrderController::class, 'approveReturnRequest'])->name('admin.return_requests.approve');
     // Từ chối yêu cầu
     Route::get('admin/return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
+    //
+   Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.returns.progress');
+
+
 });

@@ -15,5 +15,11 @@ class ReturnRequest extends Model
     {
         return $this->belongsTo(Order::class);
     }
+    public function progresses()
+{
+    return $this->hasMany(ReturnRequestProgress::class);
+}
+
+    
 }
 
