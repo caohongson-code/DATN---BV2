@@ -2706,10 +2706,10 @@
 
     <!-- header search bar start -->
     <div class="header-search-box">
-        <form method="get" name="product-search" class="electio-search-box" action="# ">
+        <form method="get" name="product-search" class="electio-search-box" action="{{ route('home.search') }}">
             <label class="position-relative search-wrapper">
                 <i class="fas fa-magnifying-glass"></i>
-                <input type="text" name="s" class="search" placeholder="Tìm kiếm..." value="">
+                <input type="text" name="keyword" class="search" placeholder="Tìm kiếm sản phẩm..." value="{{ request('keyword', $keyword ?? '') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                     viewBox="0 0 471.701 471.701">
                     <path d="M409.6,0c-9.426,0-17.067,7.641-17.067,17.067v62.344C304.667-5.656,164.478-3.386,79.411,84.479
@@ -2777,6 +2777,7 @@
 
     <!--header section start-->
     <header class="el2-header-section bg-white ptb-5">
+       
         <div class="container-1440 position-relative">
             <div class="row align-items-center">
                 <div class="col-lg-5 d-none d-lg-block">
@@ -2814,9 +2815,24 @@
 
                 <div class="col-lg-5 col-7">
                     <div class="el2-header-right d-flex align-items-center justify-content-end pe-2">
-                        <div class="el2-header-search d-none d-lg-block">
-                            <button type="button" class="el2-header-search-toggle">🔍</button>
-                        </div>
+                        <form action="{{ route('home.search') }}" method="GET" class="d-none d-lg-block me-3">
+                            <div style="position: relative; max-width: 280px; margin-left: auto;">
+                                <input 
+                                    type="text" 
+                                    name="keyword" 
+                                    placeholder="Tìm kiếm sản phẩm..." 
+                                    value="{{ request('keyword', $keyword ?? '') }}"
+                                    style="width: 100%; height: 38px; padding: 8px 38px 8px 16px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 14px;"
+                                >
+                                <button 
+                                    type="submit" 
+                                    style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); border: none; background: none; padding: 0; line-height: 1;"
+                                >
+                                    {{-- <i class="fas fa-search" style="color: #007bff; font-size: 16px;"></i> --}}
+                                </button>
+                            </div>
+                        </form>
+                        
                         <div class="el2-header-user">
                             @php $user = auth()->user(); @endphp
                             @if ($user)

@@ -39,6 +39,7 @@ Route::get('/home', [ProductClientController::class, 'index'])->name('home');
 Route::get('/product/{id}', [ProductClientController::class, 'show'])->name('product.show');
 Route::get('/categories', [CategoryClientController::class, 'index'])->name('client.categories');
 Route::get('/categories/{id}', [CategoryClientController::class, 'index'])->name('client.categories.filter');
+Route::get('/search', [App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('home.search');
 
 // Đăng nhập / đăng ký dùng chung
 Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');

@@ -121,15 +121,15 @@ Space Orange            </h4>
 				</div>
 					</div>
 				</div>
-		<div class="elementor-element elementor-element-e4357e1 mona-sec-home-category e-flex e-con-boxed e-con e-parent" data-id="e4357e1" data-element_type="container" data-settings="{&quot;content_width&quot;:&quot;boxed&quot;}" data-core-v316-plus="true">
+		{{-- <div class="elementor-element elementor-element-e4357e1 mona-sec-home-category e-flex e-con-boxed e-con e-parent" data-id="e4357e1" data-element_type="container" data-settings="{&quot;content_width&quot;:&quot;boxed&quot;}" data-core-v316-plus="true">
 					<div class="e-con-inner">
 				<div class="elementor-element elementor-element-0f1ef4d elementor-widget elementor-widget-electio-category-section" data-id="0f1ef4d" data-element_type="widget" data-widget_type="electio-category-section.default">
-				<div class="elementor-widget-container">
+				<div class="elementor-widget-container"> --}}
 
 
                     {{-- <! day la phan vong lap danh muc !> --}}
 			    <!--categories section start-->
-    <section class="el2-categories-section bg-white overflow-hidden">
+    {{-- <section class="el2-categories-section bg-white overflow-hidden">
     <div class="container-1440">
     <div class="row align-items-center g-5">
     <div class="col-xxl-5 col-xl-6 overflow-hidden">
@@ -245,9 +245,9 @@ Space Orange            </h4>
             </div>
             </div>
             </div>
-            </section>
+            </section> --}}
             <!--categories section end-->
-            		</div>
+            		{{-- </div>
 				</div>
 
 					</div>
@@ -292,7 +292,7 @@ Space Orange            </h4>
 				</div>
 				</div>
 					</div>
-				</div>
+				</div> --}}
 		<div class="elementor-element elementor-element-d5669dd e-con-full mona-sec-home-product e-flex e-con e-parent" data-id="d5669dd" data-element_type="container" data-settings="{&quot;content_width&quot;:&quot;full&quot;}" data-core-v316-plus="true">
 				<div class="elementor-element elementor-element-86fda34 elementor-widget elementor-widget-electio_flash_sell_grid" data-id="86fda34" data-element_type="widget" data-widget_type="electio_flash_sell_grid.default">
 				<div class="elementor-widget-container">
@@ -315,12 +315,16 @@ Space Orange            </h4>
     <div class="container">
         <div class="row align-items-center mb-4">
             <div class="col text-center">
-                <span class="badge bg-warning text-dark px-3 py-2 mb-2">Khuyến mãi lớn</span>
                 <h2 class="fw-semibold">Sản phẩm nổi bật</h2>
             </div>
         </div>
 
         <div class="row">
+            @if($products->isEmpty())
+                <div class="col-12 text-center text-danger mb-4">
+                    Không tìm thấy sản phẩm phù hợp.
+                </div>
+            @endif
             @foreach ($products as $product)
                 <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div class="card h-100 border-0 shadow-sm position-relative">
@@ -690,7 +694,7 @@ Space Orange            </h4>
                                             Revolutionizing Electronics, Redefining Possibilities                                        </h4>
                                     </a>
                                     <p class="decription-pro mb-4">
-                                        iPad Pro is the fastest device of its kind. It’s designed to take full advantage of next‑level…                                    </p>
+                                        iPad Pro is the fastest device of its kind. It's designed to take full advantage of next‑level…                                    </p>
                                     <a href="# 2023/10/03/how-to-sell-photos-art-online-best-places-to-sell-photos-online-and-make-money/" class="el2-explore-btn blog-btn">Đọc ngay
                                         <span class="ms-2"><i class="fas fa-arrow-right"></i></span></a>
                                 </div>
@@ -719,7 +723,7 @@ Space Orange            </h4>
                                     </div>
                                     <a class="" href="# 2023/06/01/17-ways-you-never-knew-you-could-build-backlinks-to-your-ecommerce-store/">
                                         <h4 class="semibold mb-3 title">
-                                            10 Ideas to Create the Man Cave You’ve Always Wanted                                        </h4>
+                                            10 Ideas to Create the Man Cave You've Always Wanted                                        </h4>
                                     </a>
                                     <p class="decription-pro mb-4">
                                         These ideas should help you get started on creating the man cave of your dreams! Let me…                                    </p>
