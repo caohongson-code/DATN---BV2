@@ -124,6 +124,13 @@
         <input type="file" name="shipping_images[]" class="form-control" multiple accept="image/*" required>
         <small class="text-muted">Chọn 1 hoặc nhiều ảnh chứng minh bạn đã gửi hàng</small>
     </div>
+    <div class="mb-3">
+    <label for="bank_account" class="form-label fw-bold">🏦 Số tài khoản nhận tiền / SĐT MoMo</label>
+    <input type="text" name="bank_account" class="form-control" 
+        value="{{ old('bank_account', Auth::user()->bank_account ?? '') }}"
+        placeholder="Nhập số tài khoản ngân hàng hoặc SĐT MoMo để nhận tiền hoàn" required>
+    <small class="text-muted">Đảm bảo nhập đúng để nhận hoàn tiền</small>
+</div>
 
     <button type="submit" class="btn btn-primary">
         📤 Gửi yêu cầu xác nhận gửi hàng

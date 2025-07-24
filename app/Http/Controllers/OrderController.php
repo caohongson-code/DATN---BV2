@@ -17,6 +17,7 @@ use App\Models\ReturnRequest;
 use Illuminate\Support\Str;
 use App\Models\ReturnRequestProgress;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -124,13 +125,13 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // Cập nhật trạng thái mới
             $order->order_status_id = $newStatusId;
 
-            // ✅ Nếu chuyển sang "Đang chuẩn bị hàng" thì tạo mã vận chuyển nếu chưa có
+            // Tạo mã vận đơn nếu cần
             if ($newStatusId === 3 && !$order->shipping_code) {
                 $order->tracking_number = 'PPGH' . strtoupper(Str::random(7));
             }
+
             // Cập nhật phí vận chuyển
             if ($order->shipping_zone_id) {
                 $shippingZone = ShippingZone::find($order->shipping_zone_id);
@@ -139,22 +140,14 @@ class OrderController extends Controller
                 $order->shipping_fee = 30000;
             }
 
-            // Tính tổng tiền sản phẩm
-            $totalProductAmount = $order->orderDetails->sum(function ($detail) {
-                return $detail->quantity * ($detail->price ?? 0);
-            }) ?? 0;
+            // ❌ KHÔNG tính lại total_amount — tránh làm sai giá trị
 
-            // Cập nhật tổng tiền đơn hàng
-            $order->total_amount = $totalProductAmount + $order->shipping_fee;
-
-            // ✅ Nếu chuyển sang "Đã giao" và người dùng đã xác nhận → cập nhật trạng thái thanh toán
+            // Nếu đã giao hàng và người dùng xác nhận → cập nhật thanh toán
             if ($newStatusId === 5 && $order->user_confirmed_delivery) {
                 $order->payment_status_id = 2; // Đã thanh toán
             }
 
             $order->save();
-            // OrderStatusUpdated::dispatch($order);
-
             DB::commit();
 
             return redirect()->route('admin.orders.show', $order->id)
@@ -283,37 +276,79 @@ class OrderController extends Controller
 
         return redirect()->back()->with('error', 'Đã từ chối yêu cầu trả hàng.');
     }
-    public function updateReturnProgress(Request $request, $returnRequestId)
-    {
-        $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);
+public function updateReturnProgress(Request $request, $returnRequestId)
+{
+    $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);
 
-        $status = $request->input('status');
-        $note = $request->input('note');
+    $status = $request->input('status');
+    $note = $request->input('note');
 
-        // Không ghi trùng bước
-        $exists = ReturnRequestProgress::where('return_request_id', $returnRequestId)
-            ->where('status', $status)
-            ->exists();
+    // Không ghi trùng bước
+    $exists = ReturnRequestProgress::where('return_request_id', $returnRequestId)
+        ->where('status', $status)
+        ->exists();
 
-        if (!$exists) {
-            ReturnRequestProgress::create([
-                'return_request_id' => $returnRequestId,
-                'status' => $status,
-                'note' => $note,
-                'completed_at' => now(),
+    if (!$exists) {
+        $progressData = [
+            'return_request_id' => $returnRequestId,
+            'status' => $status,
+            'note' => $note,
+            'completed_at' => now(),
+        ];
+
+        // Nếu là hoàn tiền, thêm thông tin người hoàn tiền
+        if ($status === 'refunded') {
+            $progressData['refunded_by_name'] = $request->input('refunded_by_name');
+            $progressData['refunded_by_email'] = $request->input('refunded_by_email');
+            $progressData['refunded_account_number'] = $request->input('refunded_account_number');
+
+            // Cập nhật trạng thái đơn hàng
+            $returnRequest->status = 'refunded';
+            $returnRequest->save();
+
+            $returnRequest->order->update([
+                'payment_status_id' => 4, // Đã hoàn tiền
             ]);
-
-            // Nếu là hoàn tiền thì cập nhật đơn hàng
-            if ($status === 'refunded') {
-                $returnRequest->status = 'refunded';
-                $returnRequest->save();
-
-                $returnRequest->order->update([
-                    'payment_status_id' => 4,
-                ]);
-            }
         }
 
-        return back()->with('success', 'Tiến trình trả hàng đã được cập nhật.');
+        ReturnRequestProgress::create($progressData);
     }
+
+    return back()->with('success', 'Tiến trình trả hàng đã được cập nhật.');
+}
+public function showRefundForm($id)
+{
+    $returnRequest = ReturnRequest::with(['order.account'])->findOrFail($id);
+    $order = $returnRequest->order;
+    $account = $order->account;
+
+    // Người đang đăng nhập (admin)
+    $refunder = Auth::user(); // hoặc chỉ Auth::user() nếu dùng default guard
+
+    return view('admin.orders.refund_form', compact('returnRequest', 'order', 'account', 'refunder'));
+}
+
+public function processRefund(Request $request, $id)
+{
+    $returnRequest = ReturnRequest::with('order')->findOrFail($id);
+
+    // Validate và xử lý hoàn tiền
+    $amount = $request->input('refund_amount');
+    $note = $request->input('note');
+
+    ReturnRequestProgress::create([
+        'return_request_id' => $id,
+        'status' => 'refunded',
+        'note' => $note,
+        'completed_at' => now(),
+    ]);
+
+    $returnRequest->status = 'refunded';
+    $returnRequest->save();
+
+    $returnRequest->order->update(['payment_status_id' => 4]);
+
+    return redirect()->route('admin.return_requests.index')->with('success', 'Đã hoàn tiền cho đơn hàng.');
+}
+
 }

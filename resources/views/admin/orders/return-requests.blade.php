@@ -31,6 +31,29 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $statusLabel = [
+                                'pending' => 'Đang chờ',
+                                'approved' => 'Đã duyệt',
+                                'rejected' => 'Từ chối',
+                            ];
+
+                            $progressLabel = [
+                                'approved' => 'Đã duyệt',
+                                'shipping_pending' => 'Chờ gửi hàng',
+                                'shop_received' => 'Shop đã nhận hàng',
+                                'checking' => 'Đang kiểm tra',
+                                'refunded' => 'Đã hoàn tiền',
+                            ];
+
+                            $statusViMap = [
+                                'shipping_pending' => 'Chờ gửi hàng',
+                                'shop_received' => 'Đã nhận hàng',
+                                'checking' => 'Đã kiểm hàng',
+                                'refunded' => 'Đã hoàn tiền',
+                            ];
+                        @endphp
+
                         @forelse($requests as $request)
                             <tr>
                                 <td>#{{ $request->order_id }}</td>
@@ -50,7 +73,7 @@
                                         @elseif($request->status == 'approved') bg-success
                                         @else bg-danger
                                         @endif">
-                                        {{ ucfirst($request->status) }}
+                                        {{ $statusLabel[$request->status] ?? ucfirst($request->status) }}
                                     </span>
                                 </td>
                                 <td>
@@ -59,7 +82,7 @@
                                     @endphp
                                     @if($latestProgress)
                                         <div class="text-start small">
-                                            <div><strong>{{ ucfirst($latestProgress->status) }}</strong></div>
+                                            <div><strong>{{ $progressLabel[$latestProgress->status] ?? ucfirst($latestProgress->status) }}</strong></div>
                                             <div class="text-muted">
                                                 {{ \Carbon\Carbon::parse($latestProgress->completed_at)->format('d/m/Y H:i') }}
                                             </div>
@@ -81,19 +104,39 @@
                                            onclick="return confirm('Từ chối yêu cầu này?')">
                                             <i class="fas fa-times"></i>
                                         </a>
-                                    @elseif($request->status == 'approved' && $latestProgress && in_array($latestProgress->status, ['shipping_pending', 'shop_received', 'checking']))
-                                        <form method="POST" action="{{ route('admin.orders.returns.progress', $request->id) }}">
-                                            @csrf
-                                            <select name="status" class="form-select form-select-sm mb-1">
-                                                <option value="shop_received">Đã nhận hàng</option>
-                                                <option value="checking">Đang kiểm tra</option>
-                                                <option value="refunded">Đã hoàn tiền</option>
-                                            </select>
-                                            <input type="text" name="note" class="form-control form-control-sm mb-1" placeholder="Ghi chú (tuỳ chọn)">
-                                            <button type="submit" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-plus-circle me-1"></i> Cập nhật
-                                            </button>
-                                        </form>
+                                    @elseif($request->status == 'approved' && $latestProgress)
+                                        @php
+                                            $allStatuses = ['shipping_pending', 'shop_received', 'checking', 'refunded'];
+                                            $currentIndex = array_search($latestProgress->status, $allStatuses);
+                                            $nextStatuses = $currentIndex !== false ? array_slice($allStatuses, $currentIndex + 1) : [];
+                                        @endphp
+
+                                        {{-- Nếu đang ở bước "checking" thì chỉ hiển thị nút Hoàn tiền --}}
+                                        @if($latestProgress->status === 'checking')
+                                            <a href="{{ route('admin.orders.refund_form', $request->id) }}"
+                                               class="btn btn-sm btn-warning">
+                                                <i class="fas fa-money-bill-wave me-1"></i> Hoàn tiền
+                                            </a>
+                                        @elseif(count($nextStatuses) > 0 && $latestProgress->status !== 'refunded')
+                                            <form method="POST" action="{{ route('admin.orders.progress', $request->id) }}">
+                                                @csrf
+                                                <select name="status" class="form-select form-select-sm mb-1" required>
+                                                    @foreach($nextStatuses as $status)
+                                                        @if($status !== 'refunded') {{-- Tránh cập nhật trực tiếp --}}
+                                                            <option value="{{ $status }}">
+                                                                {{ $statusViMap[$status] ?? ucfirst($status) }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                                <input type="text" name="note" class="form-control form-control-sm mb-1" placeholder="Ghi chú (tuỳ chọn)">
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-plus-circle me-1"></i> Cập nhật
+                                                </button>
+                                            </form>
+                                        @else
+                                            <em class="text-muted">Đã hoàn tất</em>
+                                        @endif
                                     @else
                                         <em class="text-muted">Không khả dụng</em>
                                     @endif

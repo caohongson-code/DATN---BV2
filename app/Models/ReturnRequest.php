@@ -19,6 +19,10 @@ class ReturnRequest extends Model
 {
     return $this->hasMany(ReturnRequestProgress::class);
 }
+public function account()
+{
+    return $this->belongsTo(Account::class, 'account_id');
+}
 
     
 }
