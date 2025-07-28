@@ -92,7 +92,7 @@
                         </div>
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="radio" name="payment_method" value="momo" id="momo">
-                            <label class="form-check-label" for="momo">Ví MoMo (quét mã QR)</label>
+                            <label class="form-check-label" for="momo">Ví MoMo</label>
                         </div>
 
                         <div id="momo-qr-container" class="mt-3" style="display: none;">

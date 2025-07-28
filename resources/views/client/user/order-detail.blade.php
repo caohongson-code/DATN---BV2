@@ -112,14 +112,14 @@
         </div>
     @endif
 
-    <p><strong>Trạng thái xử lý:</strong>
+    {{-- <p><strong>Trạng thái xử lý:</strong>
         @switch($returnRequest->status)
             @case('pending') <span class="badge bg-warning text-dark">Chờ duyệt</span> @break
             @case('approved') <span class="badge bg-success">Đã chấp nhận</span> @break
             @case('rejected') <span class="badge bg-danger">Đã từ chối</span> @break
             @default <span class="badge bg-secondary">Không xác định</span>
         @endswitch
-    </p>
+    </p> --}}
 @endif
 
     <a href="{{ route('user.orders') }}" class="btn btn-default">
