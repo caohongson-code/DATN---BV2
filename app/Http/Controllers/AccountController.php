@@ -199,4 +199,66 @@ class AccountController extends Controller
             return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
+
+        // Hiển thị thông tin cá nhân admin
+        public function show()
+        {
+            $account = Auth::user();
+            return view('admin.accounts.show', compact('account'));
+        }
+    // Cập nhật thông tin cá nhân
+    public function updateAdminProfile(Request $request)
+    {
+    
+            $admin = Auth::user();
+    
+            $data = $request->validate([
+                'full_name' => 'required|string|max:255',
+                'phone' => 'nullable|string|max:10',
+                'gender' => 'nullable|in:0,1',
+                'date_of_birth' => 'nullable|date',
+                'address' => 'nullable|string|max:255',
+                'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // max 2MB
+            ]);
+    
+            // Xử lý ảnh
+            if ($request->hasFile('avatar')) {
+                // Xoá ảnh cũ nếu có
+                if ($admin->avatar && Storage::exists($admin->avatar)) {
+                    Storage::delete($admin->avatar);
+                }
+    
+                $path = $request->file('avatar')->store('avatars', 'public'); // lưu vào storage/app/public/avatars
+                $data['avatar'] = $path;
+            }
+    
+        $admin = Account::find(Auth::id());
+        $admin->update($data);
+    
+        return back()->with('success', 'Cập nhật thông tin thành công!');
+    }
+    
+    // Cập nhật mật khẩu
+    public function updateAdminPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:6|confirmed',
+        ], [
+            'current_password.required' => 'Vui lòng nhập mật khẩu hiện tại.',
+            'new_password.required' => 'Vui lòng nhập mật khẩu mới.',
+            'new_password.min' => 'Mật khẩu mới phải có ít nhất 6 ký tự.',
+            'new_password.confirmed' => 'Xác nhận mật khẩu không khớp.',
+        ]);
+    
+        $admin = Auth::user();
+    
+        if (!Hash::check($request->current_password, $admin->password)) {
+            return back()->with('error', 'Mật khẩu hiện tại không đúng.');
+        }
+        $admin = Account::find(Auth::id());
+        $admin->update(['password' => bcrypt($request->new_password)]);
+    
+        return back()->with('success', 'Đổi mật khẩu thành công!');
+    }
 }

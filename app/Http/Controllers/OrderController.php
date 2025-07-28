@@ -31,9 +31,9 @@ class OrderController extends Controller
         ]);
 
         if ($request->search) {
-            $query->whereHas('account', function ($q) use ($request) {
+            $query->whereHas('account', function($q) use ($request) {
                 $q->where('full_name', 'like', '%' . $request->search . '%')
-                    ->orWhere('email', 'like', '%' . $request->search . '%');
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -46,10 +46,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->orderBy('order_date', 'desc')->paginate(15);
-
-        // Tính tổng tiền theo bộ lọc hiện tại (tách riêng để tránh ảnh hưởng query pagination)
         $totalAmountAll = (clone $query)->sum('total_amount');
-
         $statuses = OrderStatus::all();
 
         return view('admin.orders.index', compact('orders', 'statuses', 'totalAmountAll'));

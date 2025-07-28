@@ -53,11 +53,22 @@ public function show($id)
     public function search(Request $request)
     {
         $keyword = $request->input('keyword');
-        $products = \App\Models\Product::where(function($query) use ($keyword) {
+        $sort = $request->input('sort', 'newest');
+        $query = \App\Models\Product::where(function($query) use ($keyword) {
             $query->where('product_name', 'like', '%' . $keyword . '%')
                   ->orWhere('description', 'like', '%' . $keyword . '%');
-        })->where('status', 1)->orderByDesc('created_at')->paginate(12);
-        return view('client.home', compact('products', 'keyword'));
+        })->where('status', 1);
+
+        if ($sort === 'price_desc') {
+            $query->orderByDesc('discount_price')->orderByDesc('price');
+        } elseif ($sort === 'price_asc') {
+            $query->orderByRaw('COALESCE(discount_price, price) ASC');
+        } else { // newest
+            $query->orderByDesc('created_at');
+        }
+
+        $products = $query->paginate(12);
+        return view('client.product.search', compact('products', 'keyword'));
     }
     
 

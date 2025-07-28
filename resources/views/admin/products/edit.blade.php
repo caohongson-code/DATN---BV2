@@ -141,6 +141,11 @@
                                         value="{{ old("variants.$index.price", $variant->price) }}" required>
                                 </div>
                                 <div class="col-md-2">
+                                    <label class="form-label">Giá khuyến mãi</label>
+                                    <input type="number" name="variants[{{ $index }}][discount_price]" class="form-control"
+                                        value="{{ old("variants.$index.discount_price", $variant->discount_price) }}">
+                                </div>
+                                <div class="col-md-2">
                                     <label class="form-label">Số lượng</label>
                                     <input type="number" name="variants[{{ $index }}][quantity]" class="form-control"
                                         value="{{ old("variants.$index.quantity", $variant->quantity) }}" required>
@@ -217,6 +222,10 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="col-md-2">
                 <label class="form-label">Giá</label>
                 <input type="number" name="variants[\${index}][price]" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Giá khuyến mãi</label>
+                <input type="number" name="variants[\${index}][discount_price]" class="form-control">
             </div>
             <div class="col-md-2">
                 <label class="form-label">Số lượng</label>

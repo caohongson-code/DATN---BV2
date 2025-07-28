@@ -232,6 +232,7 @@
     <th>RAM</th>
     <th>Bộ nhớ</th>
     <th>Giá</th>
+    <th>Giá khuyến mãi</th>
     <th>Số lượng</th>
     <th>Album ảnh</th> <!-- Cột mới -->
 </tr></thead><tbody>`;
@@ -243,6 +244,7 @@
     <td><input type="hidden" name="variants[${index}][ram_id]" value="${combo.ram.id}">${combo.ram.value}</td>
     <td><input type="hidden" name="variants[${index}][storage_id]" value="${combo.storage.id}">${combo.storage.value}</td>
     <td><input type="number" class="form-control" name="variants[${index}][price]" min="0" required></td>
+    <td><input type="number" class="form-control" name="variants[${index}][discount_price]" min="0" placeholder="Giá khuyến mãi"></td>
     <td><input type="number" class="form-control" name="variants[${index}][quantity]" min="0" required></td>
     <td><input type="file" class="form-control" name="variants[${index}][images][]" multiple accept="image/*"></td>
 </tr>`;

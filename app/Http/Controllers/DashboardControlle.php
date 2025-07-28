@@ -75,12 +75,13 @@ class DashboardControlle extends Controller
             });
             $barChartData = $this->generateChartData($range, $paymentStatusId, $startDate, $endDate);
         // Lấy danh sách đơn hàng theo bộ lọc
-$filteredOrders = $orders->sortByDesc('order_date');
+        $filteredOrders = $orders->where('order_status_id', 5)->sortByDesc('order_date');
+
 
         // Thống kê khác
         $totalCustomers = Account::count();
         $totalProducts = Product::count();
-        $totalOrders = Order::count();
+        $totalOrders = Order::where('order_status_id',1)->count();
         $lowStockProducts = Product::where('quantity', '<', 5)->count();
 
         $recentOrders = Order::orderByDesc('order_date')->take(5)->get();
@@ -161,7 +162,7 @@ $filteredOrders = $orders->sortByDesc('order_date');
     $data = $query->selectRaw("DATE_FORMAT(order_date, '{$groupFormat}') as label, SUM(total_amount) as total")
                  ->groupBy('label')
                  ->orderBy('label')
-->get();
+                 ->get();
 
     // Nếu không có dữ liệu thì trả về dữ liệu trống
     if ($data->isEmpty()) {
