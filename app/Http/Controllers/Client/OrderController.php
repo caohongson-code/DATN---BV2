@@ -250,17 +250,19 @@ $progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrder
 
         return response()->json(['message' => 'Chúng tôi đã ghi nhận phản hồi của bạn.']);
     }
-  public function submitTrackingCode(Request $request, $returnRequestId)
+ public function submitTrackingCode(Request $request, $returnRequestId)
 {
     $request->validate([
         'tracking_number' => 'required|string|max:255',
         'shipping_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+        'bank_name' => 'required|string|max:100',
+        'bank_account' => 'required|string|max:100',
     ]);
 
     $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);
     $order = $returnRequest->order;
 
-    // ❗ Kiểm tra mã vận đơn người dùng nhập có khớp với cái admin cung cấp hay không
+    // ❗ Kiểm tra mã vận đơn có khớp với tracking của order không
     if ($order->tracking_number !== $request->tracking_number) {
         return redirect()->back()->withErrors(['tracking_number' => 'Mã vận đơn không khớp với thông tin đã cung cấp.']);
     }
@@ -274,20 +276,24 @@ $progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrder
         }
     }
 
-    // ✅ Lưu ảnh (KHÔNG cập nhật trạng thái trong return_requests)
+    // ✅ Cập nhật return request
     $returnRequest->shipping_images = $imagePaths;
+    $returnRequest->bank_name = $request->bank_name;
+    $returnRequest->bank_account = $request->bank_account;
     $returnRequest->save();
 
-    // ✅ Ghi tiến trình vào return_request_progresses
+    // ✅ Ghi tiến trình vào bảng return_request_progresses
     ReturnRequestProgress::create([
         'return_request_id' => $returnRequest->id,
-        'status' => 'shipping_pending',
+        'status' => 'shipping_pending', // hoặc 'shipped_back'
         'note' => 'Khách đã gửi hàng với mã vận đơn hợp lệ',
         'completed_at' => now(),
     ]);
 
     return redirect()->route('user.orders')->with('success', 'Xác nhận gửi hàng thành công!');
 }
+
+
 
 
 

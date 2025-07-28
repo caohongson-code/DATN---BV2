@@ -144,7 +144,10 @@ Route::prefix('admin')->group(function () {
     // Từ chối yêu cầu
     Route::get('admin/return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
     //
-   Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.returns.progress');
+   Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
+   Route::get('/admin/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
+Route::post('/admin/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
+
 
 
 });
