@@ -332,10 +332,33 @@ public function processRefund(Request $request, $id)
 {
     $returnRequest = ReturnRequest::with('order')->findOrFail($id);
 
-    // Validate và xử lý hoàn tiền
+    // Validate dữ liệu đầu vào
+    $request->validate([
+        'refund_amount' => 'required|numeric|min:1000',
+        'transaction_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+        'note' => 'nullable|string|max:1000',
+    ]);
+
     $amount = $request->input('refund_amount');
     $note = $request->input('note');
 
+    // Xử lý lưu ảnh giao dịch nếu có
+    $newImages = [];
+
+    if ($request->hasFile('transaction_images')) {
+        foreach ($request->file('transaction_images') as $image) {
+            $path = $image->store('refund_transactions', 'public');
+            $newImages[] = $path;
+        }
+
+        // Gộp ảnh mới với ảnh cũ (nếu có)
+        $existingImages = json_decode($returnRequest->images, true) ?? [];
+        $mergedImages = array_merge($existingImages, $newImages);
+
+        $returnRequest->images = json_encode($mergedImages);
+    }
+
+    // Tạo tiến trình hoàn tiền
     ReturnRequestProgress::create([
         'return_request_id' => $id,
         'status' => 'refunded',
@@ -343,12 +366,15 @@ public function processRefund(Request $request, $id)
         'completed_at' => now(),
     ]);
 
+    // Cập nhật trạng thái
     $returnRequest->status = 'refunded';
     $returnRequest->save();
 
+    // Cập nhật trạng thái thanh toán đơn hàng (4 = đã hoàn tiền)
     $returnRequest->order->update(['payment_status_id' => 4]);
 
     return redirect()->route('admin.return_requests.index')->with('success', 'Đã hoàn tiền cho đơn hàng.');
 }
+
 
 }
