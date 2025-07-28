@@ -364,6 +364,7 @@ public function processRefund(Request $request, $id)
         'status' => 'refunded',
         'note' => $note,
         'completed_at' => now(),
+        'images' => $newImages,
     ]);
 
     // Cập nhật trạng thái
