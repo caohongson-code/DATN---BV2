@@ -1,9 +1,9 @@
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
   <div class="app-sidebar__user">
-    {{-- <img class="app-sidebar__user-avatar" src="{{ asset('storage/' . $admin->avatar) }}" width="50px" alt="User Image"> --}}
+    <img class="app-sidebar__user-avatar" src="{{ asset('storage/' . $admin->avatar) }}" width="50px" alt="User Image">
     <div>
-      {{-- <p class="app-sidebar__user-name"><b>{{ $admin->full_name }}</b></p> --}}
+      <p class="app-sidebar__user-name"><b>{{ $admin->full_name }}</b></p>
       <p class="app-sidebar__user-designation">Chào mừng bạn trở lại</p>
     </div>
   </div>
@@ -17,10 +17,13 @@
     </li>
 
     <li>
-      <a class="app-menu__item {{ request()->is('admin/accounts*') ? 'active' : '' }}" href="{{ url('/admin/accounts') }}">
+        <a class="app-menu__item
+        {{ (request()->is('admin/accounts') || (request()->is('admin/accounts/*') && !request()->is('admin/accounts/show')))
+            ? 'active' : '' }}"
+        href="{{ url('/admin/accounts') }}">
         <i class='app-menu__icon bx bx-id-card'></i>
         <span class="app-menu__label">Quản lý nhân viên</span>
-      </a>
+    </a>
     </li>
 
     <li>
@@ -91,20 +94,21 @@
 
 
   <li>
-      <a class="app-menu__item {{ request()->is('admin/salary*') ? 'active' : '' }}" href="{{ url('admin/salary') }}">
-        <i class='app-menu__icon bx bx-dollar'></i>
-        <span class="app-menu__label">Bảng kê lương</span>
+      <a class="app-menu__item {{ request()->is('admin/salary*') ? 'active' : '' }}" href="{{ route('home')}}">
+        <i class='app-menu__icon bx 	bx bx-home'></i>
+        <span class="app-menu__label">Trang khách hàng</span>
       </a>
     </li>
 
     <li>
-      <a class="app-menu__item {{ request()->is('admin/reports*') ? 'active' : '' }}" href="{{ url('admin/reports') }}">
-        <i class='app-menu__icon bx bx-pie-chart-alt-2'></i>
-        <span class="app-menu__label">Báo cáo doanh thu</span>
-      </a>
-    </li>
+        <a class="app-menu__item {{ request()->is('admin/accounts/show') ? 'active' : '' }}" href="{{ route('admin.profile') }}">
+          <i class='app-menu__icon bx bx-user'></i>
+          <span class="app-menu__label">Thông tin cá nhân</span>
+        </a>
+      </li>
 
-    <li>
+
+    {{-- <li>
       <a class="app-menu__item {{ request()->is('admin/calendar*') ? 'active' : '' }}" href="{{ url('admin/calendar') }}">
         <i class='app-menu__icon bx bx-calendar-check'></i>
         <span class="app-menu__label">Lịch công tác</span>
@@ -116,7 +120,7 @@
         <i class='app-menu__icon bx bx-cog'></i>
         <span class="app-menu__label">Cài đặt hệ thống</span>
       </a>
-    </li>
+    </li> --}}
   </ul>
 </aside>
 <style>

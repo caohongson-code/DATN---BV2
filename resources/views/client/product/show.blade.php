@@ -321,6 +321,21 @@
                 display: none;
             }
         }
+        .product-price-main {
+            font-size: 30px;
+            color: #e11d48;
+            font-weight: 670;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .product-price-old {
+            font-size: 17px;
+            color: #888;
+            text-decoration: line-through;
+            display: inline-block;
+            margin-left: 2px;
+            vertical-align: middle;
+        }
     </style>
 
     <div class="container my-5">
@@ -353,11 +368,10 @@
                     <strong class="d-block text-muted mb-1">Giá:</strong>
                     <div id="priceBlock" class="d-flex flex-column align-items-start">
                         @if ($product->discount_price)
-                            <span class="text-muted"><s>{{ number_format($product->price, 0, ',', '.') }} đ</s></span>
-                            <span class="text-danger fw-bold">{{ number_format($product->discount_price, 0, ',', '.') }}
-                                đ</span>
+                            <span class="product-price-main">{{ number_format($product->discount_price, 0, ',', '.') }} đ</span>
+                            <span class="product-price-old">{{ number_format($product->price, 0, ',', '.') }} đ</span>
                         @else
-                            <span class="text-danger fw-bold">{{ number_format($product->price, 0, ',', '.') }} đ</span>
+                            <span class="product-price-main">{{ number_format($product->price, 0, ',', '.') }} đ</span>
                         @endif
                     </div>
                 </div>
@@ -405,9 +419,9 @@
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="product_variant_id" id="addToCartVariantId">
-                        <div class="input-group" style="max-width: 120px;">
+                        <div class="input-group" ;>
                             <button class="btn btn-outline-secondary" type="button" onclick="changeQty(-1)">-</button>
-                            <input type="number" name="quantity" id="quantityInput" value="1" min="1"
+                            <input type="number" name="quantity" id="quantityInput" value="1" min="1" max="{{ $product->quantity }}"
                                 class="form-control text-center">
                             <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1)">+</button>
                         </div>
@@ -443,47 +457,30 @@
         @php $user = auth()->user(); @endphp
 
         @if ($user)
-           
+            <form action="" method="POST"></form>
+                @csrf
+                <div class="mb-2">
+                    <label for="rating" class="form-label">Đánh giá sao:</label>
+                    <select name="rating" id="rating" class="form-select" required>
+                        <option value="">Chọn sao</option>
+                        @for ($i = 5; $i >= 1; $i--)
+                            <option value="{{ $i }}">{{ $i }} sao</option>
+                        @endfor
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="comment" class="form-label">Nội dung bình luận:</label>
+                    <textarea name="comment" id="comment" rows="3" class="form-control" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Gửi đánh giá</button>
+            </form>
         @else
             <p>Vui lòng <a href="{{ route('taikhoan.login') }}">đăng nhập</a> để đánh giá và bình luận.</p>
         @endif
 
         <div class="mt-4">
-    @if ($reviews->isEmpty())
-        <p>Chưa có đánh giá nào.</p>
-    @else
-        @foreach ($reviews as $review)
-            <div class="border rounded p-3 mb-3 bg-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <strong>{{ $review->account->name ?? 'Người dùng' }}</strong>
-                    <small class="text-muted">{{ $review->created_at->format('d/m/Y H:i') }}</small>
-                </div>
-                <div class="text-warning mb-1">
-                    @for ($i = 1; $i <= 5; $i++)
-                        <i class="fa{{ $i <= $review->rating ? 's' : 'r' }} fa-star"></i>
-                    @endfor
-                </div>
-
-                {{-- Nếu bạn muốn hiển thị phiên bản đã mua --}}
-                @if ($review->variant)
-                    <p class="text-muted mb-1">
-                        Phiên bản: {{ $review->variant->ram->value ?? '?' }} / {{ $review->variant->storage->value ?? '?' }} / {{ $review->variant->color->value ?? '?' }}
-                    </p>
-                @endif
-
-                <p class="mb-1">{{ $review->comment }}</p>
-
-                @if ($review->image)
-                    <div class="mt-2">
-                        <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá"
-                            style="max-height: 120px; border-radius: 6px;">
-                    </div>
-                @endif
-            </div>
-        @endforeach
-    @endif
-</div>
-
+            <p>Chưa có đánh giá nào.</p>
+        </div>
 
         @if ($relatedProducts->count())
             <hr class="my-5">
@@ -570,11 +567,14 @@
                         // Cập nhật thông tin
                         mainImage.src = this.dataset.image;
                         document.getElementById('priceBlock').innerHTML =
-                            `<span class="text-danger fw-bold">${parseInt(this.dataset.price || 0).toLocaleString('vi-VN')} đ</span>`;
+                            `<span class="product-price-main">${parseInt(this.dataset.price || 0).toLocaleString('vi-VN')} đ</span>`;
                         document.getElementById('ram').innerText = this.dataset.ram || '-';
                         document.getElementById('storage').innerText = this.dataset.storage || '-';
                         document.getElementById('color').innerText = this.dataset.color || '-';
                         document.getElementById('stock').innerText = this.dataset.quantity || '-';
+                        document.getElementById('quantityInput').max = this.dataset.quantity;
+                        document.getElementById('quantityInput').value = 1;
+                        document.getElementById('buyNowQuantity').value = 1;
                         selectedVariantInput.value = variantId;
                         addToCartVariantInput.value = variantId;
 
@@ -616,7 +616,7 @@
             function changeQty(change) {
                 const input = document.getElementById('quantityInput');
                 let value = parseInt(input.value) || 1;
-                const max = parseInt(input.max);
+                const max = parseInt(input.max) || 9999; // fallback nếu max không hợp lệ
                 value += change;
                 if (value < 1) value = 1;
                 if (value > max) value = max;
@@ -637,7 +637,7 @@
                         const priceValue = parseInt(this.dataset.price || 0).toLocaleString('vi-VN') +
                             ' đ';
                         document.getElementById('priceBlock').innerHTML =
-                            `<span class="text-danger fw-bold">${priceValue}</span>`;
+                            `<span class="product-price-main">${priceValue}</span>`;
                         document.getElementById('ram').innerText = this.dataset.ram || '-';
                         document.getElementById('storage').innerText = this.dataset.storage || '-';
                         document.getElementById('color').innerText = this.dataset.color || '-';

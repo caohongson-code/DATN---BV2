@@ -2685,7 +2685,7 @@
                         <a href="#"><span>Giới thiệu</span></a>
                     </li>
                     <li class="menu-item">
-                        <a href="{{ route('product.all') }}"><span>Sản phẩm</span></a>
+                        <a href="{{ route('client.categories') }}"><span>Sản phẩm</span></a>
                     </li>
                     <li class="menu-item">
                         <a href="#"><span>Tin tức</span></a>
@@ -2706,10 +2706,10 @@
 
     <!-- header search bar start -->
     <div class="header-search-box">
-        <form method="get" name="product-search" class="electio-search-box" action="# ">
+        <form method="get" name="product-search" class="electio-search-box" action="{{ route('client.search') }}">
             <label class="position-relative search-wrapper">
                 <i class="fas fa-magnifying-glass"></i>
-                <input type="text" name="s" class="search" placeholder="Tìm kiếm..." value="">
+                <input type="text" name="keyword" class="search" placeholder="Tìm kiếm sản phẩm..." value="{{ request('keyword', $keyword ?? '') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                     viewBox="0 0 471.701 471.701">
                     <path d="M409.6,0c-9.426,0-17.067,7.641-17.067,17.067v62.344C304.667-5.656,164.478-3.386,79.411,84.479
@@ -2733,135 +2733,146 @@
 
 
     <!--cart drawer start-->
-    <li id="cart_header_top">
-        <span id="site-cart-handle" class="icon-cart" title="Giỏ hàng">
-            <a href="{{ url('/cart') }}" class="count-holder">
-                <span class="iconTop icon-5-top"></span>
-                <span class="title-info-top">
-                    <i class="">Giỏ Hàng</i>
-                    @php
-                        $cartCount = 0;
-                        if (Auth::check()) {
-                            $cart = \App\Models\Cart::with('details')
-                                ->where('account_id', Auth::id())
-                                ->where('cart_status_id', 1)
-                                ->first();
-                            if ($cart) {
-                                $cartCount = $cart->details->sum('quantity');
-                            }
-                        }
-                    @endphp
-                    <span class="count">({{ $cartCount }})</span>
-                </span>
-            </a>
-        </span>
-    </li>
-    <!--cart drawer end-->
+<li id="cart_header_top" class="nav-item dropdown position-relative">
+    @php
+        $cartCount = 0;
+        $cartItems = [];
+        if (Auth::check()) {
+            $cart = \App\Models\Cart::with('details.product')
+                ->where('account_id', Auth::id())
+                ->where('cart_status_id', 1)
+                ->first();
+
+            if ($cart) {
+                $cartItems = $cart->details;
+                $cartCount = $cart->details->sum('quantity');
+            }
+        }
+    @endphp
+
+    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-cart-fill fs-5"></i>
+        <span class="fw-semibold">Giỏ hàng</span>
+        @if($cartCount > 0)
+            <span class="badge bg-danger text-white position-absolute top-0 start-100 translate-middle rounded-pill shadow-sm" style="font-size: 0.75rem; padding: 0.3em 0.6em;">
+                {{ $cartCount }}
+            </span>
+        @endif
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end p-3 shadow-lg" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+        <h6 class="dropdown-header">Sản phẩm trong giỏ</h6>
+        @forelse($cartItems as $item)
+            <li class="d-flex align-items-center gap-2 mb-2 border-bottom pb-2">
+                <img src="{{ asset($item->product->thumbnail ?? '/images/no-image.png') }}" alt="Ảnh sản phẩm" width="50" height="50" class="rounded">
+                <div>
+                    <div class="fw-semibold">{{ $item->product->product_name ?? 'Không có tên' }}</div>
+                    <div class="text-muted small">SL: {{ $item->quantity }} × {{ number_format($item->price, 0, ',', '.') }}₫</div>
+                </div>
+            </li>
+        @empty
+            <li class="text-muted text-center">Giỏ hàng trống</li>
+        @endforelse
+
+        @if(count($cartItems) > 0)
+            <li class="mt-3 text-center">
+                <a href="{{ url('/cart') }}" class="btn btn-sm btn-outline-primary me-1">Xem giỏ</a>
+                <a href="{{ url('/checkout') }}" class="btn btn-sm btn-primary">Thanh toán</a>
+            </li>
+        @endif
+    </ul>
+</li>
+<!--cart drawer end-->
 
     <!--ticker section start-->
-    <div class="el2-ticker-area overflow-hidden">
-        <div class="el2-ticker-wrapper secondary-bg-color">
+    <div class="el2-ticker-area">
+        <div class="container-1440 overflow-hidden">
             <div class="el2-ticker">
-                <span class="text-white">Đặt hàng trực tuyến gọi cho chúng tôi 0327768996</span>
-                <span class="text-white">Giao hàng miễn phí cho đơn hàng trên 1,000,000 ₫</span>
-                <span class="text-white">Đăng ký tài khoản để được giảm giá -15% cho tất cả các sản phẩm đang thịnh
-                    hành</span>
-                <span class="text-white">Đặt hàng trực tuyến gọi cho chúng tôi 0327768996</span>
-                <span class="text-white">Giao hàng miễn phí cho đơn hàng trên 1,000,000 ₫</span>
-                <span class="text-white">Đăng ký tài khoản để được giảm giá -15% cho tất cả các sản phẩm đang thịnh
-                    hành</span>
+                <span>📞 Đặt hàng trực tuyến gọi 0327768996</span>
+                <span>🚚 Giao hàng miễn phí cho đơn hàng trên 1,000,000 ₫</span>
+                <span>🎁 Đăng ký tài khoản giảm ngay -15% các sản phẩm thịnh hành</span>
             </div>
         </div>
     </div>
-    <!--ticker section end-->
 
     <!--header section start-->
-    <header class="el2-header-section bg-white ptb-5">
-        <div class="container-1440 position-relative">
-            <div class="row align-items-center">
-                <div class="col-lg-5 d-none d-lg-block">
-                    <nav
-                        class="el-hm-one-nav electio-m-menu left-side-position header-navigation text-center text-xl-start ur-navmenu d-none d-customL-block navbar navbar-expand-lg">
-                        <div class="collapse navbar-collapse venturi-m-menu">
-                            <ul id="menu-main-menu" class="nav navbar-nav nav-style-megamenu">
-                                <li class="nav-item active">
-                                    <a href="{{ route('home') }}" class="nav-link">Trang chủ</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a href="{{ route('product.all') }}" class="nav-link dropdown-toggle"
-                                        data-toggle="dropdown">Sản phẩm</a>
-                                    {{-- Có thể thêm dropdown ở đây nếu cần --}}
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url('/blog') }}" class="nav-link">Tin tức</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url('/contact') }}" class="nav-link">Liên hệ</a>
-                                </li>
+    <header class="py-3 shadow-sm">
+        <div class="container-1440 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <!-- Logo -->
+            <a href="{{ route('home') }}">
+                <img src="/client/img/anh1.png" alt="Logo" style="height: 48px;">
+            </a>
 
-                            </ul>
-                        </div>
-                    </nav>
-                </div>
-                <div class="col-lg-2 col-5 text-xl-center">
-                    <a href="#">
-                        <img src="/client/img/anh1.png" alt="logo" class="img-fluid logo">
-                    </a>
-                </div>
+            <!-- Navigation -->
+            <nav class="d-none d-lg-block">
+                <ul class="nav gap-4">
+                    <li class="nav-item"><a href="{{ route('home') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Trang chủ</a></li>
+                    <li class="nav-item"><a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a></li>
+                    <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
+                    <li class="nav-item"><a href="{{ url('/blog') }}" class="nav-link">Tin tức</a></li>
+                    <li class="nav-item"><a href="{{ url('/contact') }}" class="nav-link">Liên hệ</a></li>
+                    <li class="nav-item">
+                        @if(Auth::user() && in_array(Auth::user()->role_id, [1, 2]))
+                            <a href="{{ route('admin.dashboard') }}" class="nav-link text-success">Kênh Người Bán</a>
+                        @else
+                            <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
+                        @endif
+                    </li>
+                </ul>
+            </nav>
 
-                <div class="col-lg-5 col-7">
+                <div class="d-flex align-items-center gap-2">
+                   
                     <div class="el2-header-right d-flex align-items-center justify-content-end pe-2">
-                        <div class="el2-header-search d-none d-lg-block">
-                            <button type="button" class="el2-header-search-toggle">🔍</button>
-                        </div>
-                        <div class="el2-header-user">
-                            @php $user = auth()->user(); @endphp
-                            @if ($user)
-                                <a href="#"><i class="fa-regular fa-user"></i></a>
-                                <ul class="info-menu">
-                                    <li>Xin chào, {{ $user->name ?? 'Khách' }}</li>
-                                    <li><a href="{{ route('user.dashboard') }}">Tài khoản của tôi</a></li>
+                        <form action="{{ route('client.search') }}" method="GET" class="d-none d-lg-block me-3">
+                            <div class="search-wrapper">
+                                <input 
+                                    type="text" 
+                                    name="keyword" 
+                                    placeholder="Tìm kiếm sản phẩm..." 
+                                    value="{{ request('keyword', $keyword ?? '') }}"
+                                    class="search-input"
+                                >
+                                <button type="submit" class="search-btn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        
+                         <!-- Account dropdown -->
+                        <div class="dropdown">
+                            <a href="#" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fa-regular fa-user"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if(Auth::check())
+                                    <li class="dropdown-item">Xin chào, {{ Auth::user()->name }}</li>
+                                    <li><a href="{{ route('user.dashboard') }}" class="dropdown-item">Tài khoản của tôi</a></li>
                                     <li>
-                                        <form action="{{ route('taikhoan.logout') }}" method="POST">
+                                        <form action="{{ route('taikhoan.logout') }}" method="POST" class="px-3">
                                             @csrf
-                                            <button type="submit" class="btn btn-link p-0 text-danger">Đăng
-                                                xuất</button>
+                                            <button class="btn btn-link text-danger p-0">Đăng xuất</button>
                                         </form>
                                     </li>
-                                </ul>
-                            @else
-                                <a href="{{ route('login') }}"><i class="fa-regular fa-user"></i></a>
-                                <ul class="info-menu">
-                                    <li><a href="{{ route('login') }}">Đăng nhập / Đăng ký</a></li>
-                                </ul>
-                            @endif
+                                @else
+                                    <li><a href="{{ route('login') }}" class="dropdown-item">Đăng nhập / Đăng ký</a></li>
+                                @endif
+                            </ul>
                         </div>
-                        @php
-                            $cartCount = Auth::check()
-                                ? \App\Models\Cart::with('details')
-                                        ->where('account_id', Auth::id())
-                                        ->where('cart_status_id', 1)
-                                        ->first()
-                                        ?->details->sum('quantity') ?? 0
-                                : 0;
-                        @endphp
 
-                        <a href="{{ url('/cart') }}" class="position-relative d-inline-block">
-                            <i class="fa-solid fa-shopping-cart fs-4"></i>
-                            @if ($cartCount > 0)
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        <!-- Cart -->
+                        <a href="{{ url('/cart') }}" class="btn btn-light position-relative">
+                            <i class="fas fa-shopping-cart fs-5"></i>
+                            @if($cartCount > 0)
+                                <span class="position-absolute top-0 start-100 translate-middle badge bg-danger">
                                     {{ $cartCount }}
                                 </span>
                             @endif
                         </a>
-
-                    </div>
+                            </div>
+                        </div>
                 </div>
-            </div>
         </div>
     </header>
 
@@ -2949,4 +2960,175 @@
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function showPermissionDenied() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Truy cập bị từ chối',
+                text: 'Bạn không có quyền truy cập kênh bán hàng!',
+                confirmButtonText: 'Đóng',
+            });
+        }
+    </script>
+<style>/* Ticker cải tiến */
+    .el2-ticker-area {
+        background: #0527a0;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 6px 0;
+    }
+    .el2-ticker {
+        display: flex;
+        gap: 40px;
+        white-space: nowrap;
+        animation: ticker 30s linear infinite;
+    }
+    @keyframes ticker {
+        from { transform: translateX(100%); }
+        to { transform: translateX(-100%); }
+    }
+
+    /* Header chính */
+    header {
+        background-color: #fff;
+        border-bottom: 1px solid #eee;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        z-index: 999;
+    }
+
+    header .nav-link {
+        color: #333;
+        font-weight: 600;
+        transition: 0.3s ease-in-out;
+    }
+
+    header .nav-link:hover,
+    header .nav-link.active {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+
+    .btn-light {
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        padding: 6px 10px;
+        border-radius: 8px;
+        transition: 0.2s ease-in-out;
+    }
+    .btn-light:hover {
+        background-color: #e2e6ea;
+    }
+
+    /* Dropdown đẹp hơn */
+    .dropdown-menu {
+        border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        min-width: 180px;
+    }
+/* Ẩn mũi tên mặc định của Bootstrap dropdown-toggle */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+    /* Giỏ hàng */
+    .position-relative .badge {
+        font-size: 0.7rem;
+        padding: 4px 7px;
+        border-radius: 50px;
+    }
+
+    /* Thanh danh mục */
+    .el2-category-navbar {
+        background: #f8f9fa;
+        border-top: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .el2-category-navbar .nav-link {
+        color: #555;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s;
+    }
+    .el2-category-navbar .nav-link:hover {
+        color: #0d6efd;
+        background-color: #eef2ff;
+        padding: 6px 12px;
+        border-radius: 8px;
+    }
+    .el2-category-navbar .nav-link i {
+        font-size: 16px;
+    }
+
+    /* Responsive logo + icon */
+    @media (max-width: 768px) {
+        header .nav {
+            flex-wrap: wrap;
+        }
+        .el2-category-navbar {
+            display: none;
+        }
+    }
+    #cart_header_top a:hover {
+    color: #0d6efd;
+    text-decoration: none;
+    transform: scale(1.02);
+    transition: all 0.2s ease-in-out;
+}
+
+#cart_header_top .badge {
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.search-wrapper {
+    position: relative;
+    max-width: 300px;
+    width: 100%;
+    border-radius: 25px;
+    background-color: #f1f3f5;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    padding-right: 40px;
+    font-size: 14px;
+    border-radius: 25px;
+    outline: none;
+    color: #333;
+}
+
+.search-input::placeholder {
+    color: #888;
+    font-style: italic;
+}
+
+.search-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #0d6efd;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.search-btn:hover {
+    transform: scale(1.1);
+}
+
+    </style>
     </footer>

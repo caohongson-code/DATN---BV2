@@ -133,19 +133,19 @@
           <div class="mb-3">
     <label for="bank_name" class="form-label fw-bold">🏦 Chọn ngân hàng</label>
     <select name="bank_name" class="form-select" required>
-        <option value="">-- Chọn ngân hàng --</option>
-        <option value="Vietcombank">Vietcombank</option>
-        <option value="VietinBank">VietinBank</option>
-        <option value="BIDV">BIDV</option>
-        <option value="Techcombank">Techcombank</option>
-        <option value="MB Bank">MB Bank</option>
-        <option value="ACB">ACB</option>
-        <option value="TPBank">TPBank</option>
-        <option value="Sacombank">Sacombank</option>
-        <option value="Agribank">Agribank</option>
-        <option value="VPBank">VPBank</option>
-        <option value="MoMo">MoMo</option>
-    </select>
+    <option value="">-- Chọn ngân hàng --</option>
+    <option value="Vietcombank">Vietcombank</option>
+    <option value="VietinBank">VietinBank</option>
+    <option value="BIDV">BIDV</option>
+    <option value="Techcombank">Techcombank</option>
+    <option value="MB Bank">MB Bank</option>
+    <option value="ACB">ACB</option>
+    <option value="TPBank">TPBank</option>
+    <option value="Sacombank">Sacombank</option>
+    <option value="Agribank">Agribank</option>
+    <option value="VPBank">VPBank</option>
+    <option value="MoMo" selected>MoMo</option> {{-- ✅ chọn sẵn --}}
+</select>
 </div>
 
 <div class="mb-3">

@@ -27,6 +27,7 @@ use App\Http\Controllers\Client\UserProfileController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
+use App\Http\Controllers\Client\CategoryClientController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -36,6 +37,10 @@ Route::get('/', function () {
 // Trang người dùng (client)
 Route::get('/home', [ProductClientController::class, 'index'])->name('home');
 Route::get('/product/{id}', [ProductClientController::class, 'show'])->name('product.show');
+Route::get('/categories', [CategoryClientController::class, 'index'])->name('client.categories');
+Route::get('/categories/{id}', [CategoryClientController::class, 'index'])->name('client.categories.filter');
+Route::get('/search', [App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('home.search');
+Route::get('/search', [\App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('client.search');
 
 // Đăng nhập / đăng ký dùng chung
 Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');
@@ -120,6 +125,10 @@ Route::prefix('admin')->group(function () {
     Route::resource('carts', CartController::class)->only(['index', 'show', 'destroy']);
     Route::resource('cart-details', CartDetailController::class);
     Route::delete('/admin/cart-details/{id}', [CartDetailController::class, 'destroy'])->name('cart-details.destroy');
+    Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('admin.dashboard');
+    Route::get('accounts/show', [AccountController::class, 'show'])->name('admin.profile');
+    Route::post('accounts/update-profile', [AccountController::class, 'updateAdminProfile'])->name('admin.updateProfile');
+    Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])->name('admin.updatePassword');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
@@ -127,7 +136,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/admin/orders/place/{cartId}', [OrderController::class, 'placeOrderFromCart'])->name('admin.orders.place');
     Route::post('/variants/{id}/images', [ProductVariantImageController::class, 'storeImages'])->name('admin.variant.images.store');
     Route::delete('/variant-images/{id}', [ProductVariantImageController::class, 'deleteImage'])->name('admin.variant.images.delete');
-    Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('dashboard');
+    // Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('dashboard');
     // Hiển thị danh sách yêu cầu hoàn trả
     Route::get('admin/return-requests', [OrderController::class, 'listReturnRequests'])->name('admin.return_requests.index');
     // Duyệt yêu cầu

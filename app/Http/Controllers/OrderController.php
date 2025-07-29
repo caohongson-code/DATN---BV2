@@ -32,9 +32,9 @@ class OrderController extends Controller
         ]);
 
         if ($request->search) {
-            $query->whereHas('account', function ($q) use ($request) {
+            $query->whereHas('account', function($q) use ($request) {
                 $q->where('full_name', 'like', '%' . $request->search . '%')
-                    ->orWhere('email', 'like', '%' . $request->search . '%');
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -47,10 +47,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->orderBy('order_date', 'desc')->paginate(15);
-
-        // Tính tổng tiền theo bộ lọc hiện tại (tách riêng để tránh ảnh hưởng query pagination)
         $totalAmountAll = (clone $query)->sum('total_amount');
-
         $statuses = OrderStatus::all();
 
         return view('admin.orders.index', compact('orders', 'statuses', 'totalAmountAll'));
@@ -337,14 +334,18 @@ public function processRefund(Request $request, $id)
         'refund_amount' => 'required|numeric|min:1000',
         'transaction_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         'note' => 'nullable|string|max:1000',
+        'refunder_bank' => 'required|string|max:255',
+        'refunder_account' => 'required|string|max:255',
     ]);
 
     $amount = $request->input('refund_amount');
     $note = $request->input('note');
+    $refunderBank = $request->input('refunder_bank');
+    $refunderAccount = $request->input('refunder_account');
 
-    // Xử lý lưu ảnh giao dịch nếu có
     $newImages = [];
 
+    // Xử lý lưu ảnh giao dịch nếu có
     if ($request->hasFile('transaction_images')) {
         foreach ($request->file('transaction_images') as $image) {
             $path = $image->store('refund_transactions', 'public');
@@ -365,6 +366,10 @@ public function processRefund(Request $request, $id)
         'note' => $note,
         'completed_at' => now(),
         'images' => $newImages,
+        'refunded_by_name' => auth()->user()->full_name,
+        'refunded_by_email' => auth()->user()->email,
+        'refunded_account_number' => $refunderAccount,
+        'refunded_bank_name' => $refunderBank,
     ]);
 
     // Cập nhật trạng thái
@@ -376,6 +381,7 @@ public function processRefund(Request $request, $id)
 
     return redirect()->route('admin.return_requests.index')->with('success', 'Đã hoàn tiền cho đơn hàng.');
 }
+
 
 
 }

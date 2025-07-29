@@ -18,6 +18,10 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with('category');
+        if ($request->has('low_stock')) {
+            $query->where('quantity', '<', 5);
+        }
+        // $query = Product::with('category');
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
@@ -80,6 +84,7 @@ class ProductController extends Controller
                     'ram_id' => $variantData['ram_id'],
                     'storage_id' => $variantData['storage_id'],
                     'price' => $variantData['price'],
+                    'discount_price' => $variantData['discount_price'] ?? null,
                     'quantity' => $variantData['quantity'] ?? 0,
                 ]);
 
@@ -128,6 +133,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
+            'quantity' => 'required|integer|min:0',
         ]);
 
         // Cập nhật thông tin sản phẩm
@@ -136,6 +142,7 @@ class ProductController extends Controller
             'price' => $request->price,
             'category_id' => $request->category_id,
             'description' => $request->description,
+            'quantity' => $request->quantity,
         ]);
 
         $variantsData = $request->variants ?? [];
@@ -165,6 +172,7 @@ class ProductController extends Controller
                         'ram_id' => $variantData['ram_id'],
                         'storage_id' => $variantData['storage_id'],
                         'price' => $variantData['price'],
+                        'discount_price' => $variantData['discount_price'] ?? null,
                         'quantity' => $variantData['quantity'],
                         'image' => $imagePath,
                     ]);
@@ -178,6 +186,7 @@ class ProductController extends Controller
                     'ram_id' => $variantData['ram_id'],
                     'storage_id' => $variantData['storage_id'],
                     'price' => $variantData['price'],
+                    'discount_price' => $variantData['discount_price'] ?? null,
                     'quantity' => $variantData['quantity'],
                     'image' => $imagePath,
                 ]);

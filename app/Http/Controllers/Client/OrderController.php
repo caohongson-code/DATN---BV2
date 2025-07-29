@@ -107,23 +107,31 @@ $progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrder
     }
 
     public function detail($id)
-    {
-        $order = Order::with([
-            'orderDetails.productVariant.product',
-            'orderStatus',
-            'paymentStatus',
-            'shippingZone',
-            'voucher'
-        ])
-            ->where('id', $id)
-            ->where('account_id', auth()->id())
-            ->firstOrFail();
+{
+    $order = Order::with([
+        'orderDetails.productVariant.product',
+        'orderStatus',
+        'paymentStatus',
+        'shippingZone',
+        'voucher'
+    ])
+        ->where('id', $id)
+        ->where('account_id', auth()->id())
+        ->firstOrFail();
 
-        // Truy xuất yêu cầu trả hàng nếu có
-        $returnRequest = ReturnRequest::where('order_id', $order->id)->first();
+    // Truy xuất yêu cầu trả hàng nếu có
+    $returnRequest = ReturnRequest::where('order_id', $order->id)->first();
 
-        return view('client.user.order-detail', compact('order', 'returnRequest'));
+    // Truy xuất các bước xử lý trả hàng (nếu có)
+    $returnRequestProgresses = collect();
+
+    if ($returnRequest) {
+        $returnRequestProgresses = $returnRequest->progresses()->latest()->get();
     }
+
+    return view('client.user.order-detail', compact('order', 'returnRequest', 'returnRequestProgresses'));
+}
+
 
     public function requestReturnRefund(Request $request, $id)
     {
