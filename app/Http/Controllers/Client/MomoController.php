@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\MomoTransaction;
+use App\Models\Order;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -145,4 +147,76 @@ if ($request->input('resultCode') == 0) {
 
 return redirect()->route('momo.result', ['orderId' => $realOrderId]);
     }
+
+public function retryPayment($orderId)
+{
+    $order = Order::findOrFail($orderId);
+
+    // Kiểm tra nếu đơn hàng đã thanh toán thì không cần thanh toán lại
+    if ($order->payment_status_id == 2) {
+        return redirect()->back()->with('info', 'Đơn hàng này đã được thanh toán.');
+    }
+
+    // Tạo requestId và orderId mới
+    $requestId = uniqid() . time();
+    $newOrderId = $order->id . '-' . time();
+
+    $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+    $partnerCode = 'MOMOBKUN20180529';
+    $accessKey = 'klm05TvNBzhg7h7j';
+    $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
+    $redirectUrl = route('momo.redirect');
+    $ipnUrl = route('momo.ipn');
+    $orderInfo = "Thanh toán lại đơn hàng #" . $order->id;
+    $amount = $order->total_amount;
+
+    $extraData = "";
+    $requestType = "payWithATM";
+
+    $rawHash = "accessKey={$accessKey}&amount={$amount}&extraData={$extraData}&ipnUrl={$ipnUrl}&orderId={$newOrderId}&orderInfo={$orderInfo}&partnerCode={$partnerCode}&redirectUrl={$redirectUrl}&requestId={$requestId}&requestType={$requestType}";
+    $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
+    $data = [
+        'partnerCode' => $partnerCode,
+        'partnerName' => "Test",
+        'storeId'     => "MomoTestStore",
+        'requestId'   => $requestId,
+        'amount'      => $amount,
+        'orderId'     => $newOrderId,
+        'orderInfo'   => $orderInfo,
+        'redirectUrl' => $redirectUrl,
+        'ipnUrl'      => $ipnUrl,
+        'lang'        => 'vi',
+        'extraData'   => $extraData,
+        'requestType' => $requestType,
+        'signature'   => $signature,
+    ];
+
+    $result = $this->execPostRequest($endpoint, json_encode($data));
+    $jsonResult = json_decode($result, true);
+
+    if (isset($jsonResult['payUrl'])) {
+        return redirect()->to($jsonResult['payUrl']);
+    }
+
+    return redirect()->back()->with('error', 'Không thể tạo thanh toán mới: ' . ($jsonResult['message'] ?? 'Lỗi không xác định'));
+}
+
+
+public function convertToCod(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
+
+    if ($order->payment_status_id == 1 && $order->paymentMethod->code == 'momo') {
+        $codMethod = PaymentMethod::where('code', 'cod')->first();
+
+        $order->payment_method_id = $codMethod->id;
+        $order->save();
+
+        return redirect()->back()->with('success', 'Đã chuyển sang thanh toán khi nhận hàng.');
+    }
+
+    return redirect()->back()->with('error', 'Không thể chuyển trạng thái.');
+}
+
 }

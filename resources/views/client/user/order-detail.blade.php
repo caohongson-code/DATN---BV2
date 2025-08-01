@@ -57,31 +57,31 @@
             <hr>
 
             {{-- Thông tin thanh toán --}}
-            <h4 class="mb-3">💳 Thông tin thanh toán</h4>
-            <p><strong>Phương thức thanh toán:</strong> {{ $order->paymentMethod->method_name ?? 'Không rõ' }}</p>
+           <h4 class="mb-3">💳 Thông tin thanh toán</h4>
 
-            @php
-                $methodCode = $order->paymentMethod->code ?? '';
-                $paymentStatusName = $order->paymentStatus->name ?? 'Không xác định';
+<p><strong>Phương thức thanh toán:</strong> 
+    {{ $order->paymentMethod->method_name ?? 'Không rõ' }}
+</p>
 
-                if ($methodCode === 'momo') {
-                    $paymentStatusName = 'Đã thanh toán';
-                }
+@php
+    $paymentStatus = $order->paymentStatus;
+    $paymentStatusName = $paymentStatus->name ?? 'Không xác định';
 
-                $paymentStatusColor = match ($paymentStatusName) {
-                    'Đã thanh toán' => 'text-success',
-                    'Chờ thanh toán' => 'text-warning',
-                    'Thanh toán thất bại' => 'text-danger',
-                    'Hoàn tiền' => 'text-info',
-                    default => 'text-secondary',
-                };
-            @endphp
+    $paymentStatusColor = match ($order->payment_status_id) {
+        1 => 'text-warning',   // Chờ thanh toán
+        2 => 'text-success',   // Đã thanh toán
+        3 => 'text-danger',    // Thanh toán thất bại
+        4 => 'text-info',      // Hoàn tiền
+        default => 'text-secondary',
+    };
+@endphp
 
-            <p><strong>Trạng thái thanh toán:</strong>
-                <span class="{{ $paymentStatusColor }}">
-                    {{ $paymentStatusName }}
-                </span>
-            </p>
+<p><strong>Trạng thái thanh toán:</strong> 
+    <span class="{{ $paymentStatusColor }}">
+        {{ $paymentStatusName }}
+    </span>
+</p>
+
 
 
             @if ($order->voucher)

@@ -96,7 +96,10 @@ Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 
 
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
     Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
-    Route::get('/momo/result/{orderId}', [CheckoutController::class, 'momoResult'])->name('momo.result');
+    // Route::get('/momo/result/{orderId}', [CheckoutController::class, 'momoResult'])->name('momo.result');
+    Route::get('/momo/result', [CheckoutController::class, 'momoResult'])->name('momo.result');
+
+
 
 
     // Hiển thị tất cả sản phẩm (client)
@@ -108,6 +111,12 @@ Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 
 
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
     Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
+    // web.php
+Route::get('/momo/retry/{orderId}', [MomoController::class, 'retryPayment'])->name('client.momo.retry');
+
+
+Route::post('/client/orders/{id}/convert-to-cod', [MomoController::class, 'convertToCod'])->name('client.momo.to_cod');
+
 });
 
 // Khu vực quản trị (admin)

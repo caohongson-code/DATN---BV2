@@ -194,7 +194,7 @@ class CheckoutController extends Controller
     public function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $selectedItems = [], $paymentMethod = 'momo', $requestId = null)
     {
         $total = $subtotal + $shippingFee - $discount;
-        $payment_status = $paymentMethod === 'momo' ? 2 : 1;
+        $payment_status = $paymentMethod === 'momo' ? 1 : 1;
 
         $orderId = DB::table('orders')->insertGetId([
             'account_id' => $user->id,
@@ -240,10 +240,22 @@ class CheckoutController extends Controller
     {
         return DB::table('payment_methods')->where('code', $code)->value('id') ?? 1;
     }
-  public function momoResult($orderId)
+  public function momoResult(Request $request)
 {
-    $momo_trans = MomoTransaction::where('order_id', $orderId)->first();
+    $orderId = $request->input('orderId'); // ✅ Lấy orderId từ query string
+
+    if (!$orderId) {
+        return redirect()->route('home')->with('error', 'Không tìm thấy mã đơn hàng.');
+    }
+
+    $momo_trans = MomoTransaction::where('order_id', $orderId)
+    ->orderByDesc('id') // hoặc ->latest('created_at')
+    ->first();
     $order = DB::table('orders')->where('id', $orderId)->first();
+
+    if (!$order) {
+        return redirect()->route('home')->with('error', 'Đơn hàng không tồn tại.');
+    }
 
     $order_details = DB::table('order_details')
         ->join('product_variants', 'order_details.product_variant_id', '=', 'product_variants.id')
@@ -267,6 +279,7 @@ class CheckoutController extends Controller
 
     return view('client.checkout.momo_result', compact('momo_trans', 'result_code', 'order', 'order_details'));
 }
+
 
 
 }
