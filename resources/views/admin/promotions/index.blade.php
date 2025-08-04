@@ -15,6 +15,7 @@
                     <th>Giá trị</th>
                     <th>Thời gian</th>
                     <th>Giới hạn</th>
+                    <th>Áp dụng theo giá đơn</th> {{-- ✅ Cột mới --}}
                     <th>Trạng thái</th>
                     <th>Sản phẩm áp dụng</th>
                     <th>Danh mục áp dụng</th>
@@ -36,13 +37,31 @@
                             → {{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}
                         </td>
                         <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
+
+                        {{-- ✅ Giá trị đơn hàng áp dụng --}}
+                        <td>
+                            @if($promotion->min_order_amount || $promotion->max_order_amount)
+                                @if($promotion->min_order_amount)
+                                    ≥ {{ number_format($promotion->min_order_amount, 0, ',', '.') }}đ
+                                @endif
+                                @if($promotion->min_order_amount && $promotion->max_order_amount)
+                                    <br>
+                                @endif
+                                @if($promotion->max_order_amount)
+                                    ≤ {{ number_format($promotion->max_order_amount, 0, ',', '.') }}đ
+                                @endif
+                            @else
+                                <span class="text-muted fst-italic">Không giới hạn</span>
+                            @endif
+                        </td>
+
                         <td>
                             <span class="badge bg-{{ $promotion->is_active ? 'success' : 'secondary' }}">
                                 {{ $promotion->is_active ? 'Đang áp dụng' : 'Đã tắt' }}
                             </span>
                         </td>
 
-                        {{-- ✅ Sản phẩm áp dụng: theo ưu tiên --}}
+                        {{-- ✅ Sản phẩm áp dụng --}}
                         <td>
                             @if($promotion->products->isNotEmpty())
                                 <div class="d-flex flex-column gap-1">
@@ -80,7 +99,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10">Không có khuyến mãi nào.</td>
+                        <td colspan="11">Không có khuyến mãi nào.</td> {{-- ✅ Cập nhật colspan = 11 --}}
                     </tr>
                 @endforelse
             </tbody>

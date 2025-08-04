@@ -54,6 +54,15 @@
             <input type="number" name="usage_limit" class="form-control" placeholder="Giới hạn lượt dùng"
                 value="{{ old('usage_limit', $promotion->usage_limit) }}">
         </div>
+        <div class="mb-3">
+    <input type="number" step="0.01" name="min_order_amount" class="form-control" placeholder="Giá trị đơn hàng tối thiểu"
+        value="{{ old('min_order_amount', $promotion->min_order_amount) }}">
+</div>
+
+<div class="mb-3">
+    <input type="number" step="0.01" name="max_order_amount" class="form-control" placeholder="Giá trị đơn hàng tối đa"
+        value="{{ old('max_order_amount', $promotion->max_order_amount) }}">
+</div>
 
         <input type="hidden" name="is_active" value="0">
         <div class="form-check mb-3">
@@ -62,18 +71,26 @@
             <label class="form-check-label">Kích hoạt</label>
         </div>
 
-        {{-- ✅ Chọn sản phẩm --}}
-        <div class="mb-3">
-            <label for="product_ids" class="form-label">Chọn sản phẩm được áp dụng:</label>
-            <select name="product_ids[]" id="product_ids" class="form-control select2" multiple>
-                @foreach($products as $product)
-                    <option value="{{ $product->id }}"
-                        {{ in_array($product->id, old('product_ids', $selectedProductIds ?? [])) ? 'selected' : '' }}>
+       {{-- ✅ Chọn sản phẩm (checkbox) --}}
+<div class="mb-4">
+    <label class="form-label d-block">Chọn sản phẩm được áp dụng:</label>
+    <div class="row" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        @foreach($products as $product)
+            <div class="col-md-4 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="product_ids[]" 
+                           value="{{ $product->id }}"
+                           id="product_{{ $product->id }}"
+                           {{ in_array($product->id, old('product_ids', $selectedProductIds ?? [])) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="product_{{ $product->id }}">
                         {{ $product->product_name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+                    </label>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+
 
         {{-- ✅ Chọn danh mục --}}
         <div class="mb-3">

@@ -49,36 +49,52 @@
             <input type="number" name="usage_limit" class="form-control" placeholder="Giới hạn lượt dùng (tuỳ chọn)" value="{{ old('usage_limit') }}">
         </div>
 
+        {{-- Trạng thái --}}
         <input type="hidden" name="is_active" value="0">
         <div class="form-check mb-3">
             <input type="checkbox" name="is_active" class="form-check-input" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
             <label class="form-check-label">Kích hoạt</label>
         </div>
 
-        {{-- ✅ Chọn sản phẩm áp dụng --}}
-        <div class="mb-3">
-            <label for="product_ids" class="form-label">Chọn sản phẩm được áp dụng:</label>
-            <select name="product_ids[]" id="product_ids" class="form-control select2" multiple>
-                @foreach($products as $product)
-                    <option value="{{ $product->id }}"
-                        {{ in_array($product->id, old('product_ids', [])) ? 'selected' : '' }}>
+           {{-- ✅ Chọn sản phẩm (checkbox) --}}
+<div class="mb-4">
+    <label class="form-label d-block">Chọn sản phẩm được áp dụng:</label>
+    <div class="row" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        @foreach($products as $product)
+            <div class="col-md-4 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="product_ids[]" 
+                           value="{{ $product->id }}"
+                           id="product_{{ $product->id }}"
+                           {{ in_array($product->id, old('product_ids', $selectedProductIds ?? [])) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="product_{{ $product->id }}">
                         {{ $product->product_name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+                    </label>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
 
         {{-- ✅ Chọn danh mục áp dụng --}}
         <div class="mb-3">
             <label for="category_ids" class="form-label">Chọn danh mục được áp dụng:</label>
             <select name="category_ids[]" id="category_ids" class="form-control select2" multiple>
                 @foreach($categories as $category)
-                    <option value="{{ $category->id }}"
-                        {{ in_array($category->id, old('category_ids', [])) ? 'selected' : '' }}>
+                    <option value="{{ $category->id }}" {{ in_array($category->id, old('category_ids', [])) ? 'selected' : '' }}>
                         {{ $category->category_name }}
                     </option>
                 @endforeach
             </select>
+        </div>
+
+        {{-- ✅ Giá trị đơn hàng tối thiểu/tối đa --}}
+        <div class="mb-3">
+            <input type="number" step="0.01" name="min_order_amount" class="form-control" placeholder="Giá trị đơn hàng tối thiểu (tuỳ chọn)" value="{{ old('min_order_amount') }}">
+        </div>
+
+        <div class="mb-3">
+            <input type="number" step="0.01" name="max_order_amount" class="form-control" placeholder="Giá trị đơn hàng tối đa (tuỳ chọn)" value="{{ old('max_order_amount') }}">
         </div>
 
         <button class="btn btn-success">Tạo mới</button>
@@ -88,19 +104,19 @@
 
 {{-- ✅ Thêm Select2 --}}
 @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endpush
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('.select2').select2({
-                placeholder: "Chọn mục...",
-                allowClear: true,
-                width: '100%'
-            });
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "Chọn mục...",
+            allowClear: true,
+            width: '100%'
         });
-    </script>
+    });
+</script>
 @endpush
