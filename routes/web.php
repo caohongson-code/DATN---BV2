@@ -83,9 +83,13 @@ Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 
 
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    //
+    
+    // Giỏ hàng
     Route::post('/cart/add', [ClientCartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
+    Route::delete('/cart/{id}', [ClientCartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/update-before-checkout', [ClientCartController::class, 'updateBeforeCheckout'])->name('cart.updateBeforeCheckout');
+    Route::patch('/cart/update-quantity/{id}', [ClientCartController::class, 'updateQuantity'])->name('cart.updateQuantity');
 
     // Gửi yêu cầu thanh toán lên MoMo
     // Gửi yêu cầu thanh toán lên MoMo

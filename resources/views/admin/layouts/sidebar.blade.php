@@ -32,7 +32,6 @@
         <span class="app-menu__label">Quản lý khách hàng</span>
       </a>
     </li>
-
     <li>
       <a class="app-menu__item {{ request()->is('admin/products*') ? 'active' : '' }}" href="{{ route('products.index') }}">
         <i class='app-menu__icon bx bx-purchase-tag-alt'></i>

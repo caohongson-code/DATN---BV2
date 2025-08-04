@@ -122,7 +122,7 @@
         .btn-primary {
             background-color: #d70018;
             border: none;
-            color: #fff;
+color: #fff;
         }
 
         .btn-primary:hover {
@@ -250,7 +250,7 @@
         }
 
         #albumWrapper {
-            display: flex;
+display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 15px;
@@ -352,7 +352,7 @@
                             <div class="variant-album-img-wrapper" data-variant="{{ $variant->id }}"
                                 style="display: none;">
                                 <img src="{{ asset('storage/' . $img->image) }}" alt="Ảnh phụ" class="variant-album-img"
-                                    data-image="{{ asset('storage/' . $img->image) }}">
+data-image="{{ asset('storage/' . $img->image) }}">
                             </div>
                         @endforeach
                     @endforeach
@@ -398,23 +398,24 @@
                     </tbody>
                 </table>
 
-                <h5 class="mt-4">Chọn phiên bản:</h5>
-                <div class="d-flex flex-wrap gap-2">
-                    @foreach ($product->variants as $variant)
-                        <button type="button" class="btn btn-outline-secondary btn-sm variant-option"
-                            data-id="{{ $variant->id }}"
-                            data-image="{{ asset('storage/' . ($variant->image ?? $product->image)) }}"
-                            data-price="{{ $variant->price }}" data-ram="{{ $variant->ram->value ?? '-' }}"
-                            data-storage="{{ $variant->storage->value ?? '-' }}"
-                            data-color="{{ $variant->color->value ?? '-' }}" data-quantity="{{ $variant->quantity }}">
-                            {{ $variant->ram->value ?? '?' }} / {{ $variant->storage->value ?? '?' }} /
-                            {{ $variant->color->value ?? '?' }}
-                        </button>
-                    @endforeach
+                @foreach ($product->variants as $variant)
+                <button type="button"
+                    class="btn btn-outline-secondary btn-sm variant-option"
+                    data-id="{{ $variant->id }}"
+                    data-image="{{ asset('storage/' . ($variant->image ?? $product->image)) }}"
+                    data-price="{{ $variant->price }}"
+                    data-discount-price="{{ $variant->discount_price }}"
+                    data-ram="{{ $variant->ram->value ?? '-' }}"
+                    data-storage="{{ $variant->storage->value ?? '-' }}"
+                    data-color="{{ $variant->color->value ?? '-' }}"
+                    data-quantity="{{ $variant->quantity }}">
+                    {{ $variant->ram->value ?? '?' }} / {{ $variant->storage->value ?? '?' }} / {{ $variant->color->value ?? '?' }}
+                </button>
+            @endforeach
                 </div>
 
                 <div class="mt-4 d-flex gap-3 align-items-end">
-                    <form action="{{ route('cart.add') }}" method="POST" id="addToCartForm">
+<form action="{{ route('cart.add') }}" method="POST" id="addToCartForm">
 
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -435,7 +436,7 @@
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="variant_id" id="selectedVariantId">
-                        <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
+                        <input type="hidden" name="quantity" id="buyNowQuantity" >
                         <button type="submit" class="btn btn-primary">
                             <i class="fa fa-bolt"></i> Mua ngay
                         </button>
@@ -473,7 +474,7 @@
                     <textarea name="comment" id="comment" rows="3" class="form-control" required></textarea>
                 </div>
                 <button type="submit" class="btn btn-success">Gửi đánh giá</button>
-            </form>
+</form>
         @else
             <p>Vui lòng <a href="{{ route('taikhoan.login') }}">đăng nhập</a> để đánh giá và bình luận.</p>
         @endif
@@ -534,7 +535,7 @@
         <!-- Banner bên trái -->
         <div class="promo-fixed promo-left">
             <a href="#">
-                <img src="https://png.pngtree.com/template/20200517/ourlarge/pngtree-summer-sale-banner-promotion-template-in-portrait-position-with-bright-design-image_372761.jpg"
+<img src="https://png.pngtree.com/template/20200517/ourlarge/pngtree-summer-sale-banner-promotion-template-in-portrait-position-with-bright-design-image_372761.jpg"
                     alt="Summer Sale">
             </a>
         </div>
@@ -549,124 +550,111 @@
     @endsection
 
     @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const qtyInput = document.getElementById('quantityInput');
+        const buyNowQty = document.getElementById('buyNowQuantity');
+        const cartQty = document.getElementById('cartQuantity');
+        const variantButtons = document.querySelectorAll('.variant-option');
+        const selectedVariantInput = document.getElementById('selectedVariantId');
+        const addToCartVariantInput = document.getElementById('addToCartVariantId');
+        const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');
+        const addToCartForm = document.getElementById('addToCartForm');
+        const albumImages = document.querySelectorAll('.variant-album-img-wrapper');
+        const mainImage = document.getElementById('mainImage');
 
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const variantButtons = document.querySelectorAll('.variant-option');
-                const selectedVariantInput = document.getElementById('selectedVariantId');
-                const addToCartVariantInput = document.getElementById('addToCartVariantId');
-                const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');
-                const addToCartForm = document.getElementById('addToCartForm');
-                const albumImages = document.querySelectorAll('.variant-album-img-wrapper');
-                const mainImage = document.getElementById('mainImage');
+        function syncQty() {
+            let value = parseInt(qtyInput.value) || 1;
+            if (value < 1) value = 1;
+            qtyInput.value = value;
+            buyNowQty.value = value;
+            if (cartQty) cartQty.value = value;
+        }
 
-                variantButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const variantId = this.dataset.id;
+        window.changeQty = function(change) {
+            qtyInput.value = parseInt(qtyInput.value || 1) + change;
+            syncQty();
+        };
 
-                        // Cập nhật thông tin
-                        mainImage.src = this.dataset.image;
-                        document.getElementById('priceBlock').innerHTML =
-                            `<span class="product-price-main">${parseInt(this.dataset.price || 0).toLocaleString('vi-VN')} đ</span>`;
-                        document.getElementById('ram').innerText = this.dataset.ram || '-';
-                        document.getElementById('storage').innerText = this.dataset.storage || '-';
-                        document.getElementById('color').innerText = this.dataset.color || '-';
-                        document.getElementById('stock').innerText = this.dataset.quantity || '-';
-                        document.getElementById('quantityInput').max = this.dataset.quantity;
-                        document.getElementById('quantityInput').value = 1;
-                        document.getElementById('buyNowQuantity').value = 1;
-                        selectedVariantInput.value = variantId;
-                        addToCartVariantInput.value = variantId;
+        qtyInput.addEventListener('input', syncQty);
+        syncQty();
 
-                        // Active nút
-                        variantButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
-                        this.classList.add('active', 'btn-primary');
+        // Handle variant button click
+        variantButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const variantId = this.dataset.id;
+                const price = parseInt(this.dataset.price || 0);
+                const discountPrice = parseInt(this.dataset.discountPrice || 0);
+                const ram = this.dataset.ram || '-';
+                const storage = this.dataset.storage || '-';
+                const color = this.dataset.color || '-';
+                const quantity = parseInt(this.dataset.quantity || 0);
 
-                        // Ẩn/hiện ảnh album đúng phiên bản
-                        albumImages.forEach(img => {
-                            img.style.display = (img.dataset.variant === variantId) ? 'block' :
-                                'none';
-                        });
-                    });
-                });
+                // Cập nhật hình ảnh chính
+                mainImage.src = this.dataset.image;
 
-                // Click ảnh nhỏ -> đổi ảnh to
-                document.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('variant-album-img')) {
-                        mainImage.src = e.target.dataset.image;
-                    }
-                });
+                // Cập nhật block giá
+                const priceBlock = document.getElementById('priceBlock');
+                if (discountPrice && discountPrice < price) {
+                    priceBlock.innerHTML = `
+                        <span class="product-price-main text-danger">${discountPrice.toLocaleString('vi-VN')} đ</span>
+<span class="product-price-old text-muted text-decoration-line-through">${price.toLocaleString('vi-VN')} đ</span>
+                    `;
+                } else {
+                    priceBlock.innerHTML = `
+                        <span class="product-price-main text-danger">${price.toLocaleString('vi-VN')} đ</span>
+                    `;
+                }
 
-                // Validate khi mua ngay hoặc thêm giỏ hàng
-                buyNowForm.addEventListener('submit', function(e) {
-                    if (!selectedVariantInput.value) {
-                        e.preventDefault();
-                        alert('Vui lòng chọn phiên bản trước khi mua ngay.');
-                    }
-                });
-                addToCartForm.addEventListener('submit', function(e) {
-                    if (!addToCartVariantInput.value) {
-                        e.preventDefault();
-                        alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ.');
-                    }
+                // Cập nhật thông tin khác
+                document.getElementById('ram').innerText = ram;
+                document.getElementById('storage').innerText = storage;
+                document.getElementById('color').innerText = color;
+                document.getElementById('stock').innerText = quantity;
+                qtyInput.max = quantity;
+                qtyInput.value = 1;
+                buyNowQty.value = 1;
+
+                selectedVariantInput.value = variantId;
+                addToCartVariantInput.value = variantId;
+
+                // Active class
+                variantButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
+                this.classList.add('active', 'btn-primary');
+
+                // Hiển thị ảnh phụ theo biến thể
+                albumImages.forEach(img => {
+                    img.style.display = img.dataset.variant === variantId ? 'block' : 'none';
                 });
             });
+        });
 
-
-            function changeQty(change) {
-                const input = document.getElementById('quantityInput');
-                let value = parseInt(input.value) || 1;
-                const max = parseInt(input.max) || 9999; // fallback nếu max không hợp lệ
-                value += change;
-                if (value < 1) value = 1;
-                if (value > max) value = max;
-                input.value = value;
-                document.getElementById('buyNowQuantity').value = value;
+        // Click ảnh nhỏ → đổi ảnh lớn
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('variant-album-img')) {
+                mainImage.src = e.target.dataset.image;
             }
+        });
 
-            document.addEventListener('DOMContentLoaded', () => {
-                const variantButtons = document.querySelectorAll('.variant-option');
-                const selectedVariantInput = document.getElementById('selectedVariantId');
-                const addToCartVariantInput = document.getElementById('addToCartVariantId');
-                const buyNowForm = document.querySelector('form[action="{{ route('cart.buyNow') }}"]');
-                const addToCartForm = document.getElementById('addToCartForm');
+        // Validate khi chưa chọn phiên bản
+        buyNowForm.addEventListener('submit', function (e) {
+            if (!selectedVariantInput.value) {
+                e.preventDefault();
+                alert('Vui lòng chọn phiên bản trước khi mua ngay.');
+            }
+        });
 
-                variantButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        document.getElementById('mainImage').src = this.dataset.image;
-                        const priceValue = parseInt(this.dataset.price || 0).toLocaleString('vi-VN') +
-                            ' đ';
-                        document.getElementById('priceBlock').innerHTML =
-                            `<span class="product-price-main">${priceValue}</span>`;
-                        document.getElementById('ram').innerText = this.dataset.ram || '-';
-                        document.getElementById('storage').innerText = this.dataset.storage || '-';
-                        document.getElementById('color').innerText = this.dataset.color || '-';
-                        document.getElementById('stock').innerText = this.dataset.quantity || '-';
-                        selectedVariantInput.value = this.dataset.id;
-                        addToCartVariantInput.value = this.dataset.id;
-                        variantButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
-                        this.classList.add('active', 'btn-primary');
-                    });
-                });
+        addToCartForm.addEventListener('submit', function (e) {
+            if (!addToCartVariantInput.value) {
+                e.preventDefault();
+                alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng.');
+            }
+        });
 
-                buyNowForm.addEventListener('submit', function(e) {
-                    if (!selectedVariantInput.value) {
-                        e.preventDefault();
-                        alert('Vui lòng chọn phiên bản trước khi mua ngay.');
-                    }
-                });
-
-                addToCartForm.addEventListener('submit', function(e) {
-                    if (!addToCartVariantInput.value) {
-                        e.preventDefault();
-                        alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng.');
-                    }
-                });
-
-                // Thông báo nổi khi load trang
-                setTimeout(() => {
-                    alert('💡 Đăng ký tài khoản để nhận ngay voucher giảm giá hấp dẫn!');
-                }, 3000);
-            });
-        </script>
+        // Thông báo marketing popup nhẹ
+        setTimeout(() => {
+            alert('🎁 Đăng ký tài khoản để nhận mã giảm giá 10% cho đơn hàng đầu tiên!');
+        }, 4000);
+    });
+    </script>
     @endpush

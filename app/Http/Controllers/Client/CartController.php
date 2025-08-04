@@ -9,35 +9,12 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
-    public function buyNow(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'variant_id' => 'nullable|exists:product_variants,id',
-            'quantity'   => 'required|integer|min:1',
-        ]);
-
-        $user = Auth::user();
-        if (!$user) {
-            // return redirect()->route('taikhoan.showLoginForm')->with('error', 'Bạn cần đăng nhập để mua hàng.');
-            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để mua hàng.');
-        }
-
-        $product = Product::findOrFail($request->product_id);
-        $variant = $request->variant_id ? ProductVariant::findOrFail($request->variant_id) : null;
-
-        session()->put('buy_now', [
-            'product_id' => $product->id,
-            'variant_id' => $variant?->id,
-            'quantity'   => $request->quantity,
-        ]);
-
-        return redirect()->route('checkout');
-    }
-
+    // Thêm sản phẩm vào giỏ
     public function add(Request $request)
     {
         $request->validate([
@@ -47,87 +24,114 @@ class CartController extends Controller
         ]);
 
         $userId = Auth::id();
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để thêm giỏ hàng.');
+        }
 
         $cart = Cart::firstOrCreate(
             ['account_id' => $userId, 'cart_status_id' => 1],
             []
         );
 
-        $query = CartDetail::where('cart_id', $cart->id)
-            ->where('product_id', $request->product_id);
-
-        if ($request->filled('product_variant_id')) {
-            $query->where('product_variant_id', $request->product_variant_id);
-        } else {
-            $query->whereNull('product_variant_id');
-        }
-
-        $detail = $query->first();
-
-        if ($detail) {
-            $detail->quantity += $request->quantity;
-            $detail->save();
-        } else {
-            CartDetail::create([
-                'cart_id' => $cart->id,
-                'product_id' => $request->product_id,
-                'product_variant_id' => $request->product_variant_id,
-                'quantity' => $request->quantity,
-            ]);
-        }
+        CartDetail::create([
+            'cart_id' => $cart->id,
+            'product_id' => $request->product_id,
+            'product_variant_id' => $request->product_variant_id,
+            'quantity' => $request->quantity,
+        ]);
 
         return redirect()->back()->with('success', 'Đã thêm vào giỏ hàng!');
     }
 
+    // Mua ngay
+    public function buyNow(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'variant_id' => 'nullable|exists:product_variants,id',
+            'quantity'   => 'required|integer|min:1',
+        ]);
+
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để mua hàng.');
+        }
+
+        $product = Product::findOrFail($request->product_id);
+        $variant = $request->variant_id ? ProductVariant::findOrFail($request->variant_id) : null;
+
+        // Lấy giá khuyến mãi
+        if ($variant && $variant->discount_price && $variant->discount_price < $variant->price) {
+            $finalPrice = $variant->discount_price;
+        } elseif ($variant) {
+            $finalPrice = $variant->price;
+        } elseif ($product->discount_price && $product->discount_price < $product->price) {
+            $finalPrice = $product->discount_price;
+        } else {
+            $finalPrice = $product->price;
+        }
+
+        Session::put('buy_now', [
+            'product_id' => $product->id,
+            'variant_id' => $variant?->id,
+            'quantity'   => (int)$request->quantity,
+            'price'      => $finalPrice,
+        ]);
+
+        return redirect()->route('checkout');
+    }
+
+    // Hiển thị giỏ hàng
     public function show()
     {
-        // $user = auth()->user();
-        $user = Auth::user();
-        if (!$user) {
+        if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để xem giỏ hàng.');
         }
-
-        $cart = Cart::with(['details.product', 'details.variant', 'status'])
-                    ->where('account_id', $user->id)
-                    ->where('cart_status_id', 1)
-                    ->first();
-
-        if ($cart) {
-            $grouped = [];
-
-            foreach ($cart->details as $item) {
-                $key = $item->product_id . '-' . ($item->product_variant_id ?? 0);
-
-                if (!isset($grouped[$key])) {
-                    $grouped[$key] = $item;
-                } else {
-                    $grouped[$key]->quantity += $item->quantity;
-                    $grouped[$key]->save();
-                    $item->delete();
-                }
-            }
-
-            // Refresh lại giỏ hàng để đảm bảo dữ liệu đồng bộ sau khi xóa dòng trùng
-            $cart->refresh();
-            $cart->load(['details.product', 'details.variant', 'status']);
-        }
+$cart = Cart::with(['details.product', 'details.variant.ram', 'details.variant.storage', 'details.variant.color'])
+            ->where('account_id', Auth::id())
+            ->where('cart_status_id', 1)
+            ->first();
 
         return view('client.cart.show', compact('cart'));
     }
 
-    public function remove($id)
+    // Xóa 1 sản phẩm
+    public function remove($id, Request $request)
     {
-        $detail = CartDetail::with('cart')->findOrFail($id);
+        try {
+            $detail = CartDetail::with('cart')->find($id);
 
-        if (!$detail->cart || $detail->cart->account_id != Auth::id()) {
-            abort(403);
+            if (!$detail) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Không tìm thấy sản phẩm'
+                ], 404);
+            }
+
+            if (!$detail->cart || $detail->cart->account_id != Auth::id()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Không có quyền xóa sản phẩm này'
+                ], 403);
+            }
+
+            $detail->delete();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Đã xóa sản phẩm thành công'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi xóa sản phẩm giỏ hàng: ' . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Đã xảy ra lỗi khi xóa sản phẩm'
+            ], 500);
         }
-
-        $detail->delete();
-
-        return redirect()->back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     }
 
+
+    // Cập nhật số lượng
     public function updateQuantity(Request $request, $id)
     {
         $request->validate([
@@ -145,4 +149,32 @@ class CartController extends Controller
 
         return redirect()->back()->with('success', 'Đã cập nhật số lượng.');
     }
+
+    // Xóa nhiều sản phẩm
+
+    public function updateBeforeCheckout(Request $request)
+{
+    // Lưu danh sách sản phẩm được chọn vào session
+    $selectedItems = $request->input('selected_items', []);
+    $quantities    = $request->input('quantities', []);
+
+    if (empty($selectedItems)) {
+        return redirect()->route('cart.show')->with('error', 'Vui lòng chọn ít nhất một sản phẩm.');
+    }
+
+    // Cập nhật số lượng sản phẩm
+    foreach ($quantities as $id => $qty) {
+        CartDetail::where('id', $id)
+            ->whereHas('cart', function ($q) {
+                $q->where('account_id', Auth::id());
+            })
+            ->update(['quantity' => max(1, (int)$qty)]);
+    }
+
+    // Lưu danh sách đã chọn vào session để sang trang thanh toán
+    session(['checkout_selected' => $selectedItems]);
+
+    return redirect()->route('checkout');
+}
+
 }

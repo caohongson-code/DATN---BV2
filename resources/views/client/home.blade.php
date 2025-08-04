@@ -311,79 +311,215 @@ Space Orange            </h4>
 
 
                   {{-- vong lap san pham ban chay  --}}
-<section class="el2-trending-products bg-white py-5">
-    <div class="container">
-        <div class="row align-items-center mb-4">
-            <div class="col text-center">
-                <h2 class="fw-semibold">Sản phẩm nổi bật</h2>
-            </div>
-        </div>
-
-        <div class="row">
-            @if($products->isEmpty())
-                <div class="col-12 text-center text-danger mb-4">
-                    Không tìm thấy sản phẩm phù hợp.
-                </div>
-            @endif
-            @foreach ($products as $product)
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 border-0 shadow-sm position-relative">
-
-                        {{-- Badge giảm giá --}}
-                        @if ($product->discount_price)
-                            <span class="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 rounded-end">
-                                -{{ round(100 - ($product->discount_price / $product->price) * 100) }}%
-                            </span>
-                        @endif
-
-                        {{-- Hình ảnh --}}
-                        <a href="{{ route('product.show', $product->id) }}">
-                            <img src="{{ asset('storage/' . $product->image) }}"
-                                 alt="{{ $product->product_name }}"
-                                 class="card-img-top"
-                                 style="height: 200px; object-fit: cover; border-top-left-radius: .5rem; border-top-right-radius: .5rem;">
-                        </a>
-
-                        {{-- Nội dung --}}
-                        <div class="card-body">
-                            @if ($product->category)
-                                <small class="text-muted d-block mb-1">{{ $product->category->name }}</small>
+                  <section class="el2-trending-products bg-white py-5">
+                    <div class="container">
+                        <div class="row align-items-center mb-4">
+                            <div class="col text-center">
+                                <h2 class="fw-semibold">Sản phẩm nổi bật</h2>
+                            </div>
+                        </div>
+                
+                        <div class="row">
+                            @if($products->isEmpty())
+                                <div class="col-12 text-center text-danger mb-4">
+                                    Không tìm thấy sản phẩm phù hợp.
+                                </div>
                             @endif
-                            <h6 class="card-title mb-2">
-                                <a href="{{ route('product.show', $product->id) }}"
-                                   class="text-decoration-none text-dark">{{ $product->product_name }}</a>
-                            </h6>
-                            {{-- Giá --}}
-                            <div class="mb-2">
-                                @if ($product->discount_price)
-                                    <span class="text-danger fw-semibold">{{ number_format($product->discount_price, 0, ',', '.') }} đ</span>
-                                    <small class="text-muted text-decoration-line-through ms-1">{{ number_format($product->price, 0, ',', '.') }} đ</small>
-                                @else
-                                    <span class="text-danger fw-semibold">{{ number_format($product->price, 0, ',', '.') }} đ</span>
-                                @endif
+                            @foreach ($products as $product)
+                            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                                <div class="card product-card h-100 border-0 shadow-sm position-relative">
+                                    {{-- Badge giảm giá --}}
+                                    @if ($product->discount_price)
+                                        <span class="discount-badge">
+                                            -{{ round(100 - ($product->discount_price / $product->price) * 100) }}%
+                                        </span>
+                                    @endif
+                
+                                 
+                                    {{-- Hình ảnh --}}
+                                    <a href="{{ route('product.show', $product->id) }}" class="image-wrapper">
+                                        <img src="{{ asset('storage/' . $product->image) }}"
+                                             alt="{{ $product->product_name }}" class="card-img-top product-img">
+                                    </a>
+                
+                                    <div class="card-body d-flex flex-column">
+                                        {{-- Tên sản phẩm --}}
+                                        <h6 class="card-title mb-2">
+                                            <a href="{{ route('product.show', $product->id) }}"
+                                               class="text-decoration-none text-dark product-name">
+                                                {{ $product->product_name }}
+                                            </a>
+                                        </h6>
+                
+                                        {{-- Giá --}}
+                                        <div class="price-box mb-2">
+                                            @if ($product->discount_price)
+                                                <span class="price-new">{{ number_format($product->discount_price, 0, ',', '.') }} đ</span>
+                                                <small class="price-old">{{ number_format($product->price, 0, ',', '.') }} đ</small>
+                                            @else
+                                                <span class="price-new">{{ number_format($product->price, 0, ',', '.') }} đ</span>
+                                            @endif
+                                        </div>
+                
+                                        {{-- Xếp hạng --}}
+                                        <div class="rating-box mb-3">
+                                            @php $rating = $product->rating ?? 0; @endphp
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i class="fa{{ $i <= $rating ? 's' : 'r' }} fa-star"></i>
+                                            @endfor
+                                            <small class="text-muted">({{ $rating }}/5)</small>
+                                        </div>
+                
+                                        {{-- Form giỏ hàng --}}
+                <form action="{{ route('cart.add') }}" method="POST" class="mt-auto cart-form">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                
+                                            <div class="d-flex gap-2 action-buttons">
+                                                <div class="btn-cart-wrapper flex-fill position-relative">
+                                                    <button type="button" class="btn btn-cart w-100">
+                                                        <i class="fa fa-shopping-cart me-1"></i> Thêm vào giỏ
+                                                    </button>
+                                                    {{-- Dropdown mở lên --}}
+                                                    <div class="variant-qty-row">
+                                                        @if ($product->variants->count() > 1)
+                                                            <select name="product_variant_id" class="form-select variant-select" required>
+                                                                <option value="">-- Chọn --</option>
+                                                                @foreach($product->variants as $variant)
+                                                                    <option value="{{ $variant->id }}">
+                                                                        {{ $variant->ram->value ?? '' }} /
+                                                                        {{ $variant->storage->value ?? '' }} /
+                                                                        {{ $variant->color->value ?? '' }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        @else
+                                                            <input type="hidden" name="product_variant_id"
+                                                                   value="{{ $product->variants->first()->id ?? '' }}">
+                                                        @endif
+                
+                                                        <div class="input-group input-group-sm quantity-box">
+                                                            <button class="btn btn-outline-secondary" type="button"
+                                                                    onclick="this.nextElementSibling.stepDown()">-</button>
+                                                                    <input type="number" name="quantity" value="1" min="1" max="99"
+                                                                    class="form-control text-center quantity-input">
+                
+                                                            <button class="btn btn-outline-secondary" type="button"
+                                                                    onclick="this.previousElementSibling.stepUp()">+</button>
+                                                        </div>
+                
+                                                        <button type="submit" class="btn btn-success w-100 mt-2">Xác nhận</button>
+                                                    </div>
+                                                </div>
+                <a href="{{ route('product.show', $product->id) }}" class="btn btn-detail flex-fill">
+                                                    <i class="fa fa-info-circle me-1"></i> Chi tiết
+                                                </a>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
-                            {{-- Xếp hạng sao --}}
-                            <div class="small text-warning mb-2">
-                                @php $rating = $product->rating ?? 0; @endphp
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <i class="fa{{ $i <= $rating ? 's' : 'r' }} fa-star"></i>
-                                @endfor
-                                <small class="text-muted">({{ $rating }}/5)</small>
-                            </div>
-                        </div>
-
-                        {{-- Hành động --}}
-                        <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
-                            <a href="#" class="btn btn-sm btn-outline-primary">
-                                <i class="fa fa-shopping-cart me-1"></i> Thêm vào giỏ
-                            </a>
-                            <a href="{{ route('product.show', $product->id) }}" class="btn btn-sm btn-outline-secondary">
-                                Chi tiết
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+                
+                            {{-- ================== STYLE ================== --}}
+                            <style>
+                
+                
+                /* --- Dropdown mở lên trên --- */
+                .btn-cart-wrapper { position: relative; }
+                .variant-qty-row {
+                    position: absolute;
+                    bottom: 100%; /* mở lên trên */
+                    left: 0;
+                    width: 100%;
+                    background: #fff;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                
+                    opacity: 0;
+                    transform: translateY(5px);
+                    max-height: 0;
+                    overflow: hidden;
+                    transition: all 0.3s ease;
+                    z-index: 20;
+                
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .btn-cart-wrapper:hover .variant-qty-row {
+                    opacity: 1;
+                    transform: translateY(0);
+                    max-height: 500px;
+                }
+                
+                /* Select & số lượng */
+                .variant-select {
+                    height: 38px;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                    font-size: 0.9rem;
+                    padding: 0 8px;
+                }
+                .quantity-box {
+                    width: 140px;
+                    display: flex;
+                    align-items: center;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                .quantity-box .btn {
+                    width: 35px;
+                    background: #f8f9fa;
+                    font-size: 1rem;
+                }
+                .quantity-input {
+                    border: none;
+                    text-align: center;
+                    font-size: 0.9rem;
+                    height: 38px;
+                }
+                
+                /* Nút */
+                .btn-cart, .btn-detail {
+                    border-radius: 8px;
+                    font-weight: 500;
+                    font-size: 0.9rem;
+                    transition: all 0.3s ease;
+                    padding: 10px 0;
+                }
+                .btn-cart { background: #ee4d2d; color: #fff; border: none; }
+                .btn-cart:hover { background: #d73b1f; transform: translateY(-2px); }
+                .btn-detail { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+                .btn-detail:hover { background: #eaeaea; transform: translateY(-2px); }
+                
+                /* Card */
+                .product-card { border-radius: 12px; overflow: hidden; transition: all 0.3s ease-in-out; position: relative; }
+                .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+                .discount-badge {
+                    position: absolute; top: 10px; left: 10px;
+                    background: #dc3545; color: #fff;
+                    padding: 4px 8px; border-radius: 6px;
+                    font-size: 0.85rem; font-weight: 600;
+                }
+                .product-img {
+                    height: 200px; width: 100%; object-fit: cover;
+                    border-top-left-radius: 12px; border-top-right-radius: 12px;
+                    transition: transform 0.4s ease;
+                }
+                .product-card:hover .product-img { transform: scale(1.05); }
+                
+                            </style>
+                
+                            {{-- ================== SCRIPT ================== --}}
+                
+                
+                
+                
+                
+                @endforeach
         </div>
 
         {{-- Nút xem thêm --}}

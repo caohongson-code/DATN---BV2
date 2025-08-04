@@ -13,6 +13,7 @@ class ProductClientController extends Controller
 {
     public function index()
     {
+        
         $products = Product::where('status', 1)->orderByDesc('created_at')->paginate(12);
         return view('client.home', compact('products'));
     }
@@ -70,7 +71,7 @@ public function show($id)
         $products = $query->paginate(12);
         return view('client.product.search', compact('products', 'keyword'));
     }
-    
+
 
 
 }
