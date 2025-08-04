@@ -103,7 +103,7 @@ class CheckoutController extends Controller
     {
         $request->validate([
             'voucher_id' => ['nullable', 'exists:promotions,id'],
-            'payment_method' => ['required', 'in:cod,bank,momo'],
+            'payment_method' => ['required', 'in:cod,bank,momo,wallet'], // thêm wallet
             'selected_items' => ['nullable', 'array'],
         ]);
 
@@ -186,6 +186,33 @@ class CheckoutController extends Controller
                 'orderId' => $orderId,
             ]);
         }
+        if ($paymentMethod === 'wallet') {
+    $wallet = $user->wallet;
+
+    if (!$wallet || $wallet->balance < $total) {
+        return redirect()->back()->with('error', '❌ Số dư ví không đủ để thanh toán.');
+    }
+
+    // Trừ tiền ví
+    $wallet->balance -= $total;
+    $wallet->save();
+
+    // Ghi log lịch sử giao dịch (nếu có bảng wallet_transactions)
+DB::table('wallet_transactions')->insert([
+    'wallet_id' => $wallet->id, // ✅ đúng cột
+    'amount' => -$total,
+    'type' => 'payment',
+    'note' => 'Thanh toán đơn hàng #' . $orderId,
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
+ // ✅ Cập nhật trạng thái thanh toán về "đã thanh toán"
+    DB::table('orders')->where('id', $orderId)->update([
+        'payment_status_id' => 2, // hoặc giá trị tương ứng với "Đã thanh toán"
+        'updated_at' => now(),
+    ]);
+}
+
 
 
         return redirect()->route('home')->with('success', '✅ Đặt hàng thành công!');

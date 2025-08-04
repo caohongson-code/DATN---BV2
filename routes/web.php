@@ -28,6 +28,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
 use App\Http\Controllers\Client\CategoryClientController;
+use App\Http\Controllers\Client\WalletController;
+use App\Http\Middleware\CheckRole;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -72,8 +74,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/return-refund/{id}', [ClientOrderController::class, 'requestReturnRefund'])->name('orders.return_refund');
     Route::post('/return-request/{id}/cancel', [ClientOrderController::class, 'cancelReturnRequest'])->name('return.cancel');
     Route::post('/orders/{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('orders.confirm_received');
-   Route::post('/orders/return/{id}/submit-tracking', [ClientOrderController::class, 'submitTrackingCode'])->name('user.return.submit_tracking');
-Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 'showTrackingForm'])->name('user.return.enter_tracking');
+    Route::post('/orders/return/{id}/submit-tracking', [ClientOrderController::class, 'submitTrackingCode'])->name('user.return.submit_tracking');
+    Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 'showTrackingForm'])->name('user.return.enter_tracking');
 
 
 
@@ -112,15 +114,18 @@ Route::get('/orders/return/{id}/enter-tracking', [ClientOrderController::class, 
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
     Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
     // web.php
-Route::get('/momo/retry/{orderId}', [MomoController::class, 'retryPayment'])->name('client.momo.retry');
+    Route::get('/momo/retry/{orderId}', [MomoController::class, 'retryPayment'])->name('client.momo.retry');
 
 
-Route::post('/client/orders/{id}/convert-to-cod', [MomoController::class, 'convertToCod'])->name('client.momo.to_cod');
+    Route::post('/client/orders/{id}/convert-to-cod', [MomoController::class, 'convertToCod'])->name('client.momo.to_cod');
+
+    // Trang ví người dùng
+Route::get('/dashboard/wallet', [WalletController::class, 'index'])->name('user.wallet');
 
 });
 
 // Khu vực quản trị (admin)
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->middleware(['auth', CheckRole::class . ':admin'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('variants', ProductVariantController::class);
@@ -153,10 +158,7 @@ Route::prefix('admin')->group(function () {
     // Từ chối yêu cầu
     Route::get('admin/return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
     //
-   Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
-   Route::get('/admin/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
-Route::post('/admin/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
-
-
-
+    Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
+    Route::get('/admin/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
+    Route::post('/admin/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
 });

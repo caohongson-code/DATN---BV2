@@ -21,4 +21,9 @@ class Account extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
+    public function wallet()
+{
+    return $this->hasOne(Wallet::class);
+}
+
 }

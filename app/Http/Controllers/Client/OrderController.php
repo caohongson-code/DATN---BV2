@@ -72,39 +72,56 @@ $progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrder
 }
 
     public function ajaxCancel($id)
-    {
-        $order = Order::where('id', $id)
-            ->where('account_id', auth()->id())
-            ->first();
+{
+    $order = Order::where('id', $id)
+        ->where('account_id', auth()->id())
+        ->first();
 
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy đơn hàng'
-            ], 404);
-        }
-
-        if ($order->order_status_id != 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Chỉ có thể huỷ đơn hàng khi đang chờ xác nhận.'
-            ], 400);
-        }
-
-        $order->order_status_id = 7; // Đã huỷ
-
-        // Nếu phương thức thanh toán là MoMo (id = 3) thì cập nhật trạng thái hoàn tiền
-        if ($order->payment_method_id == 3) {
-            $order->payment_status_id = 4; // Hoàn tiền
-        }
-
-        $order->save();
-
+    if (!$order) {
         return response()->json([
-            'success' => true,
-            'message' => 'Đã huỷ đơn hàng thành công.'
+            'success' => false,
+            'message' => 'Không tìm thấy đơn hàng'
+        ], 404);
+    }
+
+    if ($order->order_status_id != 1) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Chỉ có thể huỷ đơn hàng khi đang chờ xác nhận.'
+        ], 400);
+    }
+
+    $order->order_status_id = 7; // Đã huỷ
+
+    // Nếu thanh toán qua MoMo (id=3) hoặc ví nội bộ (id=4) và đã thanh toán thành công (id=2)
+    if (in_array($order->payment_method_id, [3, 4]) && $order->payment_status_id == 2) {
+        $order->payment_status_id = 4; // Đã hoàn tiền
+
+        $account = $order->account;
+        $wallet = $account->wallet;
+
+        // Tính số tiền hoàn lại (trừ phí ship 30.000đ)
+        $refundAmount = max(0, $order->total_amount - 30000);
+
+        // Cộng tiền vào ví
+        $wallet->increment('balance', $refundAmount);
+
+        // Ghi log giao dịch ví
+        $wallet->transactions()->create([
+            'type' => 'Hoàn tiền',
+            'amount' => $refundAmount,
+            'note' => 'Hoàn tiền đơn hàng #' . $order->id . ' (đã trừ phí ship 30.000đ)',
         ]);
     }
+
+    $order->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Đã huỷ đơn hàng thành công.'
+    ]);
+}
+
 
     public function detail($id)
 {
@@ -264,7 +281,12 @@ $progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrder
         'tracking_number' => 'required|string|max:255',
         'shipping_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         'bank_name' => 'required|string|max:100',
-        'bank_account' => 'required|string|max:100',
+            'bank_account' => [
+        'required_if:bank_name,!=,Wallet',
+        'nullable', // Cho phép trống nếu không bắt buộc
+        'string',
+        'max:255'
+    ],
     ]);
 
     $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);

@@ -129,32 +129,36 @@
                 <label for="shipping_images" class="form-label fw-bold">📷 Ảnh gói hàng đã gửi</label>
                 <input type="file" name="shipping_images[]" class="form-control" multiple accept="image/*" required>
                 <small class="text-muted">Chọn 1 hoặc nhiều ảnh chứng minh bạn đã gửi hàng</small>
-            </div>
-          <div class="mb-3">
-    <label for="bank_name" class="form-label fw-bold">🏦 Chọn ngân hàng</label>
-    <select name="bank_name" class="form-select" required>
-    <option value="">-- Chọn ngân hàng --</option>
-    <option value="Vietcombank">Vietcombank</option>
-    <option value="VietinBank">VietinBank</option>
-    <option value="BIDV">BIDV</option>
-    <option value="Techcombank">Techcombank</option>
-    <option value="MB Bank">MB Bank</option>
-    <option value="ACB">ACB</option>
-    <option value="TPBank">TPBank</option>
-    <option value="Sacombank">Sacombank</option>
-    <option value="Agribank">Agribank</option>
-    <option value="VPBank">VPBank</option>
-    <option value="MoMo" selected>MoMo</option> {{-- ✅ chọn sẵn --}}
-</select>
+  <div class="mb-3">
+    <label for="bank_name" class="form-label fw-bold">🏦 Chọn phương thức hoàn tiền</label>
+    <select name="bank_name" class="form-select" id="bank_name_select" required>
+        <option value="">-- Chọn phương thức --</option>
+        <option value="Vietcombank">Vietcombank</option>
+        <option value="VietinBank">VietinBank</option>
+        <option value="BIDV">BIDV</option>
+        <option value="Techcombank">Techcombank</option>
+        <option value="MB Bank">MB Bank</option>
+        <option value="ACB">ACB</option>
+        <option value="TPBank">TPBank</option>
+        <option value="Sacombank">Sacombank</option>
+        <option value="Agribank">Agribank</option>
+        <option value="VPBank">VPBank</option>
+        <option value="MoMo" {{ old('bank_name') == 'MoMo' ? 'selected' : '' }}>MoMo</option>
+        <option value="Wallet" {{ old('bank_name') == 'Wallet' ? 'selected' : '' }}>Ví nội bộ</option>
+    </select>
 </div>
 
-<div class="mb-3">
-    <label for="bank_account" class="form-label fw-bold">🔢 Số tài khoản ngân hàng hoặc SĐT MoMo</label>
+<div class="mb-3" id="bank_account_wrapper">
+    <label for="bank_account" class="form-label fw-bold" id="bank_account_label">🔢 Số tài khoản ngân hàng / SĐT MoMo</label>
     <input type="text" name="bank_account" class="form-control"
-        value="{{ old('bank_account', Auth::user()->bank_account ?? '') }}"
+        id="bank_account_input"
+        value="{{ old('bank_account') }}"
         placeholder="Nhập số tài khoản hoặc SĐT MoMo" required>
-    <small class="text-muted">Đảm bảo nhập đúng để nhận hoàn tiền</small>
+    <small class="text-muted" id="bank_account_hint">Vui lòng nhập đúng thông tin để nhận hoàn tiền</small>
 </div>
+
+
+
 
 
             <button type="submit" class="btn btn-primary">
@@ -164,3 +168,33 @@
 
     </div>
 @endsection
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const select = document.getElementById('bank_name_select');
+        const label = document.getElementById('bank_account_label');
+        const input = document.getElementById('bank_account_input');
+        const hint = document.getElementById('bank_account_hint');
+
+        function updateFieldDisplay() {
+            const value = select.value;
+            if (value === 'Wallet') {
+                label.textContent = '📱 Số điện thoại ví nội bộ';
+                input.placeholder = 'Nhập số điện thoại ví nội bộ';
+                hint.textContent = 'Tiền sẽ được hoàn vào ví nội bộ liên kết với số điện thoại này';
+            } else if (value === 'MoMo') {
+                label.textContent = '📱 Số điện thoại MoMo';
+                input.placeholder = 'Nhập SĐT MoMo';
+                hint.textContent = 'SĐT MoMo phải chính xác để nhận hoàn tiền';
+            } else {
+                label.textContent = '🔢 Số tài khoản ngân hàng';
+                input.placeholder = 'Nhập số tài khoản ngân hàng';
+                hint.textContent = 'Số tài khoản cần đúng và đầy đủ';
+            }
+        }
+
+        select.addEventListener('change', updateFieldDisplay);
+        updateFieldDisplay(); // gọi lần đầu
+    });
+</script>
+@endpush
