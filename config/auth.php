@@ -13,6 +13,7 @@ return [
             'provider' => 'users',
         ],
     ],
+    
 
     'providers' => [
         'users' => [

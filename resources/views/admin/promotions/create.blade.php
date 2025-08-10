@@ -76,17 +76,30 @@
     </div>
 </div>
 
-        {{-- ✅ Chọn danh mục áp dụng --}}
-        <div class="mb-3">
-            <label for="category_ids" class="form-label">Chọn danh mục được áp dụng:</label>
-            <select name="category_ids[]" id="category_ids" class="form-control select2" multiple>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" {{ in_array($category->id, old('category_ids', [])) ? 'selected' : '' }}>
+       {{-- ✅ Chọn danh mục áp dụng --}}
+<div class="mb-3">
+    <label class="form-label">Chọn danh mục được áp dụng:</label>
+    <div class="row">
+        @foreach($categories as $category)
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="category_ids[]"
+                        value="{{ $category->id }}"
+                        id="category_{{ $category->id }}"
+                        {{ in_array($category->id, old('category_ids', $selectedCategoryIds ?? [])) ? 'checked' : '' }}
+                    >
+                    <label class="form-check-label" for="category_{{ $category->id }}">
                         {{ $category->category_name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+                    </label>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+
 
         {{-- ✅ Giá trị đơn hàng tối thiểu/tối đa --}}
         <div class="mb-3">

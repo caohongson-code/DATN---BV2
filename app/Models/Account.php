@@ -3,7 +3,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use App\Models\Promotion;
 class Account extends Authenticatable
 {
     use Notifiable;
@@ -24,6 +24,11 @@ class Account extends Authenticatable
     public function wallet()
 {
     return $this->hasOne(Wallet::class);
+}
+public function savedPromotions()
+{
+    return $this->belongsToMany(Promotion::class, 'promotion_user', 'account_id', 'promotion_id')
+                ->withTimestamps();
 }
 
 }

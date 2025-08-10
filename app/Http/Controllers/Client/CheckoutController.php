@@ -17,6 +17,7 @@ class CheckoutController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\Account $user */
         $user = Auth::user();
         if (!$user) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thanh toán.');
@@ -71,15 +72,76 @@ class CheckoutController extends Controller
 
         $shippingFee = 30000;
         $discount = 0;
-        $vouchers = Promotion::active()->get();
+
+        $allVouchers = $user->savedPromotions()->active()->with(['products', 'categories'])->get();
+
+        $vouchers = $allVouchers->filter(function ($voucher) use ($cartItems) {
+            $productIds = $voucher->products->pluck('id')->toArray();
+            $categoryIds = $voucher->categories->pluck('id')->toArray();
+
+            foreach ($cartItems as $item) {
+                $product = $item['product'];
+                if (
+                    in_array($product->id, $productIds) ||
+                    in_array($product->category_id, $categoryIds)
+                ) {
+                    return true; // Có sản phẩm phù hợp
+                }
+            }
+
+            return false; // Không có sản phẩm phù hợp => loại bỏ
+        })->values(); // reset key
+
         $selectedVoucherId = session('selected_voucher_id');
 
         if ($selectedVoucherId) {
-            $voucher = Promotion::active()->find($selectedVoucherId);
+            $voucher = $user->savedPromotions()->active()->find($selectedVoucherId);
             if ($voucher) {
-                $discount = $voucher->discount_type === 'percent'
-                    ? $subtotal * ($voucher->discount_value / 100)
-                    : $voucher->discount_value;
+                // Danh sách sản phẩm và danh mục áp dụng
+                $applicableProductIds = $voucher->products->pluck('id')->toArray();
+                $applicableCategoryIds = $voucher->categories->pluck('id')->toArray();
+
+                $isApplicable = false;
+
+                foreach ($cartItems as $item) {
+                    $product = $item['product'];
+                    if (
+                        in_array($product->id, $applicableProductIds) ||
+                        in_array($product->category_id, $applicableCategoryIds)
+                    ) {
+                        $isApplicable = true;
+                        break;
+                    }
+                }
+
+                if ($isApplicable) {
+                    // ✅ Tính discount chỉ áp dụng trên những sản phẩm thuộc phạm vi voucher
+                    $applicableSubtotal = 0;
+
+                    foreach ($cartItems as $item) {
+                        $product = $item['product'];
+                        if (
+                            in_array($product->id, $applicableProductIds) ||
+                            in_array($product->category_id, $applicableCategoryIds)
+                        ) {
+                            $applicableSubtotal += $item['subtotal'];
+                        }
+                    }
+
+                    $discount = $voucher->discount_type === 'percentage'
+                        ? $applicableSubtotal * ($voucher->discount_value / 100)
+                        : min($voucher->discount_value, $applicableSubtotal); // tránh giảm hơn tổng
+                        // dd($applicableSubtotal, $discount, $voucher->discount_value);
+
+                } else {
+                    // Không hợp lệ -> báo lỗi hoặc bỏ áp dụng
+                    if ($request->isMethod('post')) {
+                        return redirect()->back()->with('error', 'Mã giảm giá không áp dụng cho các sản phẩm trong giỏ.');
+                    } else {
+                        $voucher = null;
+                        $discount = 0;
+                    }
+                }
             }
         }
 
@@ -101,12 +163,13 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
+        
         $request->validate([
             'voucher_id' => ['nullable', 'exists:promotions,id'],
             'payment_method' => ['required', 'in:cod,bank,momo,wallet'], // thêm wallet
             'selected_items' => ['nullable', 'array'],
         ]);
-
+        /** @var \App\Models\Account $user */
         $user = Auth::user();
         if (!$user || !$user->phone || !$user->address) {
             return redirect()->back()->with('error', 'Vui lòng cập nhật thông tin.');
@@ -155,15 +218,64 @@ class CheckoutController extends Controller
         $voucher = null;
 
         if ($request->filled('voucher_id')) {
-            $voucher = Promotion::active()->find($request->voucher_id);
+            $voucher = $user->savedPromotions()->active()->find($request->voucher_id);
+
             if ($voucher) {
-                $discount = $voucher->discount_type === 'percent'
-                    ? $subtotal * ($voucher->discount_value / 100)
-                    : $voucher->discount_value;
+                // Danh sách sản phẩm và danh mục áp dụng
+                $applicableProductIds = $voucher->products->pluck('id')->toArray();
+                $applicableCategoryIds = $voucher->categories->pluck('id')->toArray();
+
+                $isApplicable = false;
+
+                foreach ($cartItems as $item) {
+                    $product = $item['product'];
+                    if (
+                        in_array($product->id, $applicableProductIds) ||
+                        in_array($product->category_id, $applicableCategoryIds)
+                    ) {
+                        $isApplicable = true;
+                        break;
+                    }
+                }
+
+                if ($isApplicable) {
+                    // ✅ Tính discount chỉ áp dụng trên những sản phẩm thuộc phạm vi voucher
+                    $applicableSubtotal = 0;
+
+                    foreach ($cartItems as $item) {
+                        $product = $item['product'];
+                        if (
+                            in_array($product->id, $applicableProductIds) ||
+                            in_array($product->category_id, $applicableCategoryIds)
+                        ) {
+                            $applicableSubtotal += $item['subtotal'];
+                        }
+                    }
+
+                    $discount = $voucher->discount_type === 'percentage'
+                        ? $applicableSubtotal * ($voucher->discount_value / 100)
+                        : min($voucher->discount_value, $applicableSubtotal); // tránh giảm hơn tổng
+                        // dd($applicableSubtotal, $discount, $voucher->discount_value);
+
+                } else {
+                    // Không hợp lệ -> báo lỗi hoặc bỏ áp dụng
+                    if ($request->isMethod('post')) {
+                        return redirect()->back()->with('error', 'Mã giảm giá không áp dụng cho các sản phẩm trong giỏ.');
+                    } else {
+                        $voucher = null;
+                        $discount = 0;
+                    }
+                }
             }
         }
 
         $total = $subtotal + $shippingFee - $discount;
+        $maxAmount = 100000000; // 100 triệu VNĐ
+
+if ($total > $maxAmount) {
+    return redirect()->back()->with('error', 'Số lượng hàng hoặc tổng tiền quá lớn. Vui lòng đến chi nhánh gần nhất để trao đổi.');
+}
+
         $requestId = $request->input('request_id') ?? time() . uniqid();
         $paymentMethod = $request->payment_method;
 
@@ -187,31 +299,31 @@ class CheckoutController extends Controller
             ]);
         }
         if ($paymentMethod === 'wallet') {
-    $wallet = $user->wallet;
+            $wallet = $user->wallet;
 
-    if (!$wallet || $wallet->balance < $total) {
-        return redirect()->back()->with('error', '❌ Số dư ví không đủ để thanh toán.');
-    }
+            if (!$wallet || $wallet->balance < $total) {
+                return redirect()->back()->with('error', '❌ Số dư ví không đủ để thanh toán.');
+            }
 
-    // Trừ tiền ví
-    $wallet->balance -= $total;
-    $wallet->save();
+            // Trừ tiền ví
+            $wallet->balance -= $total;
+            $wallet->save();
 
-    // Ghi log lịch sử giao dịch (nếu có bảng wallet_transactions)
-DB::table('wallet_transactions')->insert([
-    'wallet_id' => $wallet->id, // ✅ đúng cột
-    'amount' => -$total,
-    'type' => 'payment',
-    'note' => 'Thanh toán đơn hàng #' . $orderId,
-    'created_at' => now(),
-    'updated_at' => now(),
-]);
- // ✅ Cập nhật trạng thái thanh toán về "đã thanh toán"
-    DB::table('orders')->where('id', $orderId)->update([
-        'payment_status_id' => 2, // hoặc giá trị tương ứng với "Đã thanh toán"
-        'updated_at' => now(),
-    ]);
-}
+            // Ghi log lịch sử giao dịch (nếu có bảng wallet_transactions)
+            DB::table('wallet_transactions')->insert([
+                'wallet_id' => $wallet->id, // ✅ đúng cột
+                'amount' => -$total,
+                'type' => 'payment',
+                'note' => 'Thanh toán đơn hàng #' . $orderId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            // ✅ Cập nhật trạng thái thanh toán về "đã thanh toán"
+            DB::table('orders')->where('id', $orderId)->update([
+                'payment_status_id' => 2, // hoặc giá trị tương ứng với "Đã thanh toán"
+                'updated_at' => now(),
+            ]);
+        }
 
 
 
@@ -243,18 +355,30 @@ DB::table('wallet_transactions')->insert([
             'updated_at' => now(),
         ]);
 
-        foreach ($cartItems as $item) {
-            DB::table('order_details')->insert([
-                'order_id' => $orderId,
-                'product_variant_id' => $item['variant']?->id,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['price'],
-                'total_price' => $item['subtotal'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+      foreach ($cartItems as $item) {
+    DB::table('order_details')->insert([
+        'order_id' => $orderId,
+        'product_variant_id' => $item['variant']?->id,
+        'quantity' => $item['quantity'],
+        'unit_price' => $item['price'],
+        'total_price' => $item['subtotal'],
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
+    // ✅ Trừ tồn kho
+    if ($item['variant']) {
+        DB::table('product_variants')
+            ->where('id', $item['variant']->id)
+            ->decrement('quantity', $item['quantity']);
+    } else {
+        DB::table('products')
+            ->where('id', $item['product']->id)
+            ->decrement('quantity', $item['quantity']);
+    }
+}
+
+        
         if (!empty($selectedItems)) {
             CartDetail::whereIn('id', $selectedItems)->delete();
         }
@@ -267,46 +391,43 @@ DB::table('wallet_transactions')->insert([
     {
         return DB::table('payment_methods')->where('code', $code)->value('id') ?? 1;
     }
-  public function momoResult(Request $request)
-{
-    $orderId = $request->input('orderId'); // ✅ Lấy orderId từ query string
+    public function momoResult(Request $request)
+    {
+        $orderId = $request->input('orderId'); // ✅ Lấy orderId từ query string
 
-    if (!$orderId) {
-        return redirect()->route('home')->with('error', 'Không tìm thấy mã đơn hàng.');
+        if (!$orderId) {
+            return redirect()->route('home')->with('error', 'Không tìm thấy mã đơn hàng.');
+        }
+
+        $momo_trans = MomoTransaction::where('order_id', $orderId)
+            ->orderByDesc('id') // hoặc ->latest('created_at')
+            ->first();
+        $order = DB::table('orders')->where('id', $orderId)->first();
+
+        if (!$order) {
+            return redirect()->route('home')->with('error', 'Đơn hàng không tồn tại.');
+        }
+
+        $order_details = DB::table('order_details')
+            ->join('product_variants', 'order_details.product_variant_id', '=', 'product_variants.id')
+            ->join('products', 'product_variants.product_id', '=', 'products.id')
+            ->leftJoin('rams', 'product_variants.ram_id', '=', 'rams.id')
+            ->leftJoin('storages', 'product_variants.storage_id', '=', 'storages.id')
+            ->leftJoin('colors', 'product_variants.color_id', '=', 'colors.id')
+            ->select(
+                'products.product_name as product_name',
+                'rams.value as ram',
+                'storages.value as storage',
+                'colors.value as color',
+                'order_details.quantity',
+                'order_details.unit_price',
+                'order_details.total_price'
+            )
+            ->where('order_details.order_id', $orderId)
+            ->get();
+
+        $result_code = $momo_trans->result_code ?? 99;
+
+        return view('client.checkout.momo_result', compact('momo_trans', 'result_code', 'order', 'order_details'));
     }
-
-    $momo_trans = MomoTransaction::where('order_id', $orderId)
-    ->orderByDesc('id') // hoặc ->latest('created_at')
-    ->first();
-    $order = DB::table('orders')->where('id', $orderId)->first();
-
-    if (!$order) {
-        return redirect()->route('home')->with('error', 'Đơn hàng không tồn tại.');
-    }
-
-    $order_details = DB::table('order_details')
-        ->join('product_variants', 'order_details.product_variant_id', '=', 'product_variants.id')
-        ->join('products', 'product_variants.product_id', '=', 'products.id')
-        ->leftJoin('rams', 'product_variants.ram_id', '=', 'rams.id')
-        ->leftJoin('storages', 'product_variants.storage_id', '=', 'storages.id')
-        ->leftJoin('colors', 'product_variants.color_id', '=', 'colors.id')
-        ->select(
-            'products.product_name as product_name',
-            'rams.value as ram',
-            'storages.value as storage',
-            'colors.value as color',
-            'order_details.quantity',
-            'order_details.unit_price',
-            'order_details.total_price'
-        )
-        ->where('order_details.order_id', $orderId)
-        ->get();
-
-    $result_code = $momo_trans->result_code ?? 99;
-
-    return view('client.checkout.momo_result', compact('momo_trans', 'result_code', 'order', 'order_details'));
-}
-
-
-
 }

@@ -619,7 +619,7 @@
                 const max = parseInt(input.max) || 9999; // fallback nếu max không hợp lệ
                 value += change;
                 if (value < 1) value = 1;
-                if (value > max) value = max;
+                if (value > max-1) value = max-1;
                 input.value = value;
                 document.getElementById('buyNowQuantity').value = value;
             }

@@ -4,6 +4,19 @@
     <div class="container py-5">
         <h3 class="mb-4">🛒 Xác nhận đơn hàng</h3>
 
+        {{-- Hiển thị thông báo lỗi --}}
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- Hiển thị thông báo thành công --}}
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
         @if (session('buy_now') || (isset($cartItems) && count($cartItems)))
             <form method="POST" action="{{ route('checkout.store') }}" id="checkout-form"
                 data-phone="{{ Auth::user()->phone }}" data-address="{{ Auth::user()->address }}">
@@ -72,7 +85,7 @@
                                 <option value="{{ $voucher->id }}" data-type="{{ $voucher->discount_type }}"
                                     data-value="{{ $voucher->discount_value }}">
                                     {{ $voucher->name }} - Mã: {{ $voucher->code }}
-                                    ({{ $voucher->discount_type == 'percent' ? $voucher->discount_value . '%' : number_format($voucher->discount_value, 0, ',', '.') . ' VND' }})
+                                    ({{ $voucher->discount_type == 'percentage' ? $voucher->discount_value . '%' : number_format($voucher->discount_value, 0, ',', '.') . ' ₫' }})
                                 </option>
                             @endforeach
                         </select>
@@ -86,10 +99,13 @@
                                 id="subtotal">{{ number_format($subtotal, 0, ',', '.') }}</span> VND</p>
                         <p><strong>Phí vận chuyển:</strong> <span
                                 id="shipping">{{ number_format($shippingFee, 0, ',', '.') }}</span> VND</p>
-                        <p><strong>Giảm giá:</strong> <span id="discount">0</span></p>
+                        <p>Giảm giá: <span id="discount"></span> (<span id="discount-amount">{{ number_format($discount) }}</span> VND)</p>
+
+
                         <hr>
                         <h5><strong>Thanh toán:</strong> <span
-                                id="total">{{ number_format($subtotal + $shippingFee, 0, ',', '.') }}</span> VND</h5>
+                                id="total">{{ number_format($subtotal + $shippingFee, 0, ',', '.') }}</span>
+                            VND</h5>
                     </div>
                 </div>
 
@@ -151,6 +167,7 @@
 @endsection
 @section('scripts')
     <script>
+        
         document.addEventListener('DOMContentLoaded', function() {
             const voucherSelect = document.getElementById('voucher-select');
             const momoQRContainer = document.getElementById('momo-qr-container');
@@ -165,13 +182,13 @@
 
             function calculateTotal() {
                 const option = voucherSelect.options[voucherSelect.selectedIndex];
-                const type = option.getAttribute('data-type');
+                const type = option.getAttribute('data-type') || '';
                 const value = parseFloat(option.getAttribute('data-value')) || 0;
 
                 let discountAmount = 0;
                 let discountText = '0';
 
-                if (type === 'percent') {
+                if (type === 'percentage') {
                     discountAmount = subtotal * value / 100;
                     discountText = value + '%';
                 } else if (type === 'fixed') {
@@ -179,34 +196,37 @@
                     discountText = new Intl.NumberFormat('vi-VN').format(value) + ' VND';
                 }
 
-                const total = subtotal + shipping - discountAmount;
+                const total = Math.max(0, subtotal + shipping - discountAmount);
 
                 document.getElementById('discount').innerText = discountText;
+                document.getElementById('discount-amount').innerText = new Intl.NumberFormat('vi-VN').format(
+                    discountAmount);
                 document.getElementById('total').innerText = new Intl.NumberFormat('vi-VN').format(total) + ' VND';
-
+                // ✅ Test giá trị
+                console.log("=== Debug Voucher ===");
+                console.log("Subtotal:", subtotal);
+                console.log("Shipping:", shipping);
+                console.log("Discount type:", type);
+                console.log("Discount value:", value);
+                console.log("Discount amount:", discountAmount);
+                console.log("Total after discount:", total);
                 return total;
             }
 
-            voucherSelect.addEventListener('change', calculateTotal);
-
-            paymentRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    const total = calculateTotal();
-
-                    momoQRContainer.style.display = this.value === 'momo' ? 'block' : 'none';
-                    codInfoBox.style.display = this.value === 'cod' ? 'block' : 'none';
-                    document.getElementById('wallet-info-confirmation').style.display = this
-                        .value === 'wallet' ? 'block' : 'none';
-
-                    if (this.value === 'momo') {
-                        momoAmount.innerText = new Intl.NumberFormat('vi-VN').format(total);
-                        momoQR.src = "{{ url('/generate-momo-qr') }}?amount=" + total;
-                    }
-                });
-            });
-
-
+            // Gọi ngay khi load
             calculateTotal();
+
+            // Khi đổi voucher thì tính lại
+            voucherSelect.addEventListener('change', function() {
+                const total = calculateTotal();
+                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+                if (selectedPayment?.value === 'momo') {
+                    momoAmount.innerText = new Intl.NumberFormat('vi-VN').format(total);
+                    momoQR.src = "{{ url('/generate-momo-qr') }}?amount=" + total;
+                }
+            });
+        
+
             document.querySelector('input[name="payment_method"]:checked')?.dispatchEvent(new Event('change'));
 
             form.addEventListener('submit', function(e) {
@@ -231,15 +251,15 @@
                     return;
                 }
                 if (selectedPayment.value === 'wallet') {
-    const walletBalance = {{ Auth::user()->wallet->balance ?? 0 }};
-    const total = calculateTotal();
+                    const walletBalance = {{ Auth::user()->wallet->balance ?? 0 }};
+                    const total = calculateTotal();
 
-    if (walletBalance < total) {
-        e.preventDefault();
-        alert('❌ Số dư ví không đủ để thanh toán. Vui lòng nạp thêm.');
-        return;
-    }
-}
+                    if (walletBalance < total) {
+                        e.preventDefault();
+                        alert('❌ Số dư ví không đủ để thanh toán. Vui lòng nạp thêm.');
+                        return;
+                    }
+                }
 
 
                 // ❌ KHÔNG submit form momo ở đây nữa, vì đã được xử lý sau khi controller redirect sang momo_redirect.blade.php

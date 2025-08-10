@@ -28,6 +28,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
 use App\Http\Controllers\Client\CategoryClientController;
+use App\Http\Controllers\Client\PromotionController as ClientPromotionController;
 use App\Http\Controllers\Client\WalletController;
 use App\Http\Middleware\CheckRole;
 
@@ -90,7 +91,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
 
     // Gửi yêu cầu thanh toán lên MoMo
-    // Gửi yêu cầu thanh toán lên MoMo
     Route::post('/momo_payment', [MomoController::class, 'momo_payment'])->name('momo.payment');
 
     // IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức
@@ -100,28 +100,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
     // Route::get('/momo/result/{orderId}', [CheckoutController::class, 'momoResult'])->name('momo.result');
     Route::get('/momo/result', [CheckoutController::class, 'momoResult'])->name('momo.result');
-
-
-
-
     // Hiển thị tất cả sản phẩm (client)
     Route::get('/products', [ProductClientController::class, 'index'])->name('product.all');
-
-
     // IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức
     Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
-
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
     Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
-    // web.php
     Route::get('/momo/retry/{orderId}', [MomoController::class, 'retryPayment'])->name('client.momo.retry');
-
-
     Route::post('/client/orders/{id}/convert-to-cod', [MomoController::class, 'convertToCod'])->name('client.momo.to_cod');
 
     // Trang ví người dùng
-Route::get('/dashboard/wallet', [WalletController::class, 'index'])->name('user.wallet');
-
+    Route::get('/dashboard/wallet', [WalletController::class, 'index'])->name('user.wallet');
+    //phần khuyến mại
+    Route::get('/khuyen-mai', [ClientPromotionController::class, 'index'])
+        ->middleware('auth')
+        ->name('client.promotions.index');
+    Route::get('/khuyen-mai/luu/{id}', [ClientPromotionController::class, 'save'])
+        ->middleware('auth')
+        ->name('client.promotions.save');
+    Route::get('/khuyen-mai/bo-luu/{id}', [ClientPromotionController::class, 'unsave'])
+        ->middleware('auth')
+        ->name('client.promotions.unsave');
 });
 
 // Khu vực quản trị (admin)

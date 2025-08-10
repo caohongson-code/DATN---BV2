@@ -23,8 +23,10 @@
                     <a href="{{ route('user.profile') }}" class="list-group-item list-group-item-action">👉 Thông tin cá nhân</a>
                     <a href="{{ route('user.orders') }}" class="list-group-item list-group-item-action">👉 Quản lý đơn hàng</a>
                     <a href="{{ route('user.wallet') }}" class="list-group-item list-group-item-action {{ request()->routeIs('user.wallet') ? 'active' : '' }}">
+
     👉 Ví của tôi
 </a>
+                    <a href="{{ route('client.promotions.index') }}" class="list-group-item list-group-item-action">👉 Mã giảm giá</a>
 
                     <a href="#" class="list-group-item list-group-item-action text-danger"
                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

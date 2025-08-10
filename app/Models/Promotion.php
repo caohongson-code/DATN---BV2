@@ -43,7 +43,7 @@ class Promotion extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class);
+        return $this->belongsToMany(Product::class, 'product_promotion');
     }
 
     public function categories()
@@ -60,5 +60,9 @@ class Promotion extends Model
                      ->whereDate('start_date', '<=', now())
                      ->whereDate('end_date', '>=', now());
     }
+    public function users()
+{
+    return $this->belongsToMany(Account::class, 'promotion_user')->withTimestamps();
+}
 
 }
