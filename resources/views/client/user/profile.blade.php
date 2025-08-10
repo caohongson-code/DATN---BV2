@@ -71,11 +71,17 @@
         </div>
         <div class="mb-3">
             <label for="gender" class="form-label">Giới tính</label>
-            <select name="gender" class="form-control">
-                <option value="">-- Chọn --</option>
-                <option value="male" {{ Auth::user()->gender === 'male' ? 'selected' : '' }}>Nam</option>
-                <option value="female" {{ Auth::user()->gender === 'female' ? 'selected' : '' }}>Nữ</option>
-            </select>
+            @php
+            $gender = Auth::user()->gender;
+            $genderValue = $gender === 1 ? 'male' : ($gender === 0 ? 'female' : '');
+        @endphp
+
+        <select name="gender" class="form-control">
+            <option value="">-- Chọn --</option>
+            <option value="male" {{ $genderValue === 'male' ? 'selected' : '' }}>Nam</option>
+            <option value="female" {{ $genderValue === 'female' ? 'selected' : '' }}>Nữ</option>
+        </select>
+
         </div>
         <div class="mb-3">
             <label for="date_of_birth" class="form-label">Ngày sinh</label>

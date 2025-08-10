@@ -8,14 +8,17 @@ use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Models\Comment;
 
 class ProductClientController extends Controller
 {
     public function index()
     {
+        
         $products = Product::where('status', 1)->orderByDesc('created_at')->paginate(12);
         return view('client.home', compact('products'));
     }
+
 
 public function show($id)
 {
@@ -29,13 +32,21 @@ public function show($id)
                             ->take(4)
                             ->get();
 
+    // Lấy đánh giá
     $reviews = Review::with(['account', 'variant.ram', 'variant.storage', 'variant.color'])
                     ->where('product_id', $product->id)
                     ->latest()
                     ->get();
 
-    return view('client.product.show', compact('product', 'relatedProducts', 'reviews'));
+    // Lấy bình luận riêng
+    $comments = Comment::with('account')
+                    ->where('product_id', $product->id)
+                    ->latest()
+                    ->get();
+
+    return view('client.product.show', compact('product', 'relatedProducts', 'reviews', 'comments'));
 }
+
 
     public function categoryPage($id = null)
     {
@@ -70,7 +81,7 @@ public function show($id)
         $products = $query->paginate(12);
         return view('client.product.search', compact('products', 'keyword'));
     }
-    
+
 
 
 }

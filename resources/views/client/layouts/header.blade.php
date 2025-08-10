@@ -2809,7 +2809,7 @@
                     <li class="nav-item"><a href="{{ route('home') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Trang chủ</a></li>
                     <li class="nav-item"><a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a></li>
                     <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
-                    <li class="nav-item"><a href="{{ url('/blog') }}" class="nav-link">Tin tức</a></li>
+                    <li class="nav-item"><a href="{{ route('client.news.index') }}" class="nav-link {{ request()->is('news*') ? 'active' : '' }}">Tin tức</a></li>
                     <li class="nav-item"><a href="{{ url('/contact') }}" class="nav-link">Liên hệ</a></li>
                     <li class="nav-item">
                         @if(Auth::user() && in_array(Auth::user()->role_id, [1, 2]))

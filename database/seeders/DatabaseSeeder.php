@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
     $this->call([
         ShippingZonesTableSeeder::class,
         OrderStatusSeeder::class,
+        NewsSeeder::class,
     ]);
 
     // Seed shop PowPow

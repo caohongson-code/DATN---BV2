@@ -28,9 +28,12 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
 use App\Http\Controllers\Client\CategoryClientController;
+use App\Http\Controllers\Client\CommentController;
 use App\Http\Controllers\Client\PromotionController as ClientPromotionController;
 use App\Http\Controllers\Client\WalletController;
 use App\Http\Middleware\CheckRole;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\Client\NewsClientController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -44,6 +47,10 @@ Route::get('/categories', [CategoryClientController::class, 'index'])->name('cli
 Route::get('/categories/{id}', [CategoryClientController::class, 'index'])->name('client.categories.filter');
 Route::get('/search', [App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('home.search');
 Route::get('/search', [\App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('client.search');
+
+// News routes (Client)
+Route::get('/news', [NewsClientController::class, 'index'])->name('client.news.index');
+Route::get('/news/{slug}', [NewsClientController::class, 'show'])->name('client.news.show');
 
 // Đăng nhập / đăng ký dùng chung
 Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');
@@ -86,9 +93,13 @@ Route::middleware('auth')->group(function () {
 
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    //
+    
+    // Giỏ hàng
     Route::post('/cart/add', [ClientCartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
+    Route::delete('/cart/{id}', [ClientCartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/update-before-checkout', [ClientCartController::class, 'updateBeforeCheckout'])->name('cart.updateBeforeCheckout');
+    Route::patch('/cart/update-quantity/{id}', [ClientCartController::class, 'updateQuantity'])->name('cart.updateQuantity');
 
     // Gửi yêu cầu thanh toán lên MoMo
     Route::post('/momo_payment', [MomoController::class, 'momo_payment'])->name('momo.payment');
@@ -121,6 +132,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/khuyen-mai/bo-luu/{id}', [ClientPromotionController::class, 'unsave'])
         ->middleware('auth')
         ->name('client.promotions.unsave');
+
+    //binh luan
+    Route::post('/client/comments', [CommentController::class, 'store'])->name('client.comments.store');
 });
 
 // Khu vực quản trị (admin)
@@ -142,6 +156,13 @@ Route::prefix('admin')->middleware(['auth', CheckRole::class . ':admin'])->group
     Route::get('accounts/show', [AccountController::class, 'show'])->name('admin.profile');
     Route::post('accounts/update-profile', [AccountController::class, 'updateAdminProfile'])->name('admin.updateProfile');
     Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])->name('admin.updatePassword');
+
+    // News routes (Admin)
+    Route::resource('news', NewsController::class);
+    Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured');
+    Route::post('/news/{id}/toggle-hot', [NewsController::class, 'toggleHot'])->name('admin.news.toggle-hot');
+    Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
+    Route::post('/news/test-upload', [NewsController::class, 'testUpload'])->name('admin.news.test-upload');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
