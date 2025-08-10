@@ -20,14 +20,14 @@
         <a class="app-menu__item
         {{ (request()->is('admin/accounts') || (request()->is('admin/accounts/*') && !request()->is('admin/accounts/show')))
             ? 'active' : '' }}"
-        href="{{ url('/admin/accounts') }}">
+        href="{{ route('accounts.index') }}">
         <i class='app-menu__icon bx bx-id-card'></i>
         <span class="app-menu__label">Quản lý nhân viên</span>
     </a>
     </li>
 
     <li>
-      <a class="app-menu__item {{ request()->is('admin/customers*') ? 'active' : '' }}" href="{{ url('/admin/customers') }}">
+      <a class="app-menu__item {{ request()->is('admin/customers*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
         <i class='app-menu__icon bx bx-user-voice'></i>
         <span class="app-menu__label">Quản lý khách hàng</span>
       </a>
@@ -61,6 +61,13 @@
             <span class="app-menu__label">Quản lý danh mục</span>
           </a>
         </li>
+
+    <li>
+        <a class="app-menu__item {{ request()->is('admin/news*') ? 'active' : '' }}" href="{{ route('news.index') }}">
+            <i class='app-menu__icon bx bx-news'></i>
+            <span class="app-menu__label">Quản lý tin tức</span>
+          </a>
+        </li>
         <li class="dropdown app-menu__item-wrapper position-relative">
             <a class="app-menu__item dropdown-toggle {{ request()->is('admin/attributes*') ? 'active' : '' }}"
                href="#"
@@ -74,17 +81,17 @@
                 aria-labelledby="attributeDropdown"
                 style="top: 100%; left: 0; display: none;">
                 <li>
-                    <a class="dropdown-item {{ request()->is('admin/rams*') ? 'active' : '' }}" href="{{ url('/admin/rams') }}">
+                    <a class="dropdown-item {{ request()->is('admin/rams*') ? 'active' : '' }}" href="{{ route('rams.index') }}">
                         <i class="bx bx-chip me-1"></i> RAM
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item {{ request()->is('admin/storages*') ? 'active' : '' }}" href="{{ url('/admin/storages') }}">
+                    <a class="dropdown-item {{ request()->is('admin/storages*') ? 'active' : '' }}" href="{{ route('storages.index') }}">
                         <i class="bx bx-hdd me-1"></i> Bộ nhớ
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item {{ request()->is('admin/acolors*') ? 'active' : '' }}" href="{{ url('/admin/colors') }}">
+                    <a class="dropdown-item {{ request()->is('admin/colors*') ? 'active' : '' }}" href="{{ route('colors.index') }}">
                         <i class="bx bx-palette me-1"></i> Màu sắc
                     </a>
                 </li>

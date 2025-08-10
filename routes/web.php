@@ -28,6 +28,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
 use App\Http\Controllers\Client\CategoryClientController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\Client\NewsClientController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -41,6 +43,10 @@ Route::get('/categories', [CategoryClientController::class, 'index'])->name('cli
 Route::get('/categories/{id}', [CategoryClientController::class, 'index'])->name('client.categories.filter');
 Route::get('/search', [App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('home.search');
 Route::get('/search', [\App\Http\Controllers\Client\ProductClientController::class, 'search'])->name('client.search');
+
+// News routes (Client)
+Route::get('/news', [NewsClientController::class, 'index'])->name('client.news.index');
+Route::get('/news/{slug}', [NewsClientController::class, 'show'])->name('client.news.show');
 
 // Đăng nhập / đăng ký dùng chung
 Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');
@@ -142,6 +148,13 @@ Route::prefix('admin')->group(function () {
     Route::get('accounts/show', [AccountController::class, 'show'])->name('admin.profile');
     Route::post('accounts/update-profile', [AccountController::class, 'updateAdminProfile'])->name('admin.updateProfile');
     Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])->name('admin.updatePassword');
+
+    // News routes (Admin)
+    Route::resource('news', NewsController::class);
+    Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured');
+    Route::post('/news/{id}/toggle-hot', [NewsController::class, 'toggleHot'])->name('admin.news.toggle-hot');
+    Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
+    Route::post('/news/test-upload', [NewsController::class, 'testUpload'])->name('admin.news.test-upload');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
