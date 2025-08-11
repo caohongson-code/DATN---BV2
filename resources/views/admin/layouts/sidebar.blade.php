@@ -118,6 +118,12 @@
         <span class="app-menu__label">Quản lý khuyến mãi</span>
       </a>
     </li>
+      <li>
+      <a class="app-menu__item {{ request()->is('admin/promotions*') ? 'active' : '' }}" href="{{ route('comments.index') }}">
+        <i class='app-menu__icon bx bx-purchase-tag-alt'></i>
+        <span class="app-menu__label">Quản lý bình luận</span>
+      </a>
+    </li>
 
 
     {{-- <li>

@@ -20,32 +20,72 @@ class ProductClientController extends Controller
     }
 
 
-public function show($id)
+// public function show($id )
+// {
+//         $limit = $request->get('limit', 6);
+//     $product = Product::with(['variants.images','variants.ram', 'variants.storage', 'variants.color'])->findOrFail($id);
+
+//     // Lấy các sản phẩm liên quan (trừ chính nó)
+//     $relatedProducts = Product::where('category_id', $product->category_id)
+//                             ->where('id', '!=', $product->id)
+//                             ->where('status', 1)
+//                             ->latest()
+//                             ->take(4)
+//                             ->get();
+
+//     // Lấy đánh giá
+//     $reviews = Review::with(['account', 'variant.ram', 'variant.storage', 'variant.color'])
+//                     ->where('product_id', $product->id)
+//                     ->latest()
+//                     ->get();
+
+//     // Lấy bình luận riêng
+//     $comments = Comment::with('account')
+//                     ->where('product_id', $product->id)
+//                     ->latest()
+//                     ->get();
+
+//     return view('client.product.show', compact('product', 'relatedProducts', 'reviews', 'comments'));
+// }
+public function show($id, Request $request)
 {
-    $product = Product::with(['variants.images','variants.ram', 'variants.storage', 'variants.color'])->findOrFail($id);
+    $limit = $request->get('limit', 6); // Lấy limit từ query, mặc định 6
 
-    // Lấy các sản phẩm liên quan (trừ chính nó)
+    $product = Product::with(['variants.images','variants.ram', 'variants.storage', 'variants.color'])
+        ->findOrFail($id);
+
     $relatedProducts = Product::where('category_id', $product->category_id)
-                            ->where('id', '!=', $product->id)
-                            ->where('status', 1)
-                            ->latest()
-                            ->take(4)
-                            ->get();
+        ->where('id', '!=', $product->id)
+        ->where('status', 1)
+        ->latest()
+        ->take(4)
+        ->get();
 
-    // Lấy đánh giá
     $reviews = Review::with(['account', 'variant.ram', 'variant.storage', 'variant.color'])
-                    ->where('product_id', $product->id)
-                    ->latest()
-                    ->get();
+        ->where('product_id', $product->id)
+        ->latest()
+        ->get();
 
-    // Lấy bình luận riêng
+    // Đếm tổng số bình luận
+    $totalComments = Comment::where('product_id', $product->id)->count();
+
+    // Chỉ lấy số lượng bình luận theo limit
     $comments = Comment::with('account')
-                    ->where('product_id', $product->id)
-                    ->latest()
-                    ->get();
+        ->where('product_id', $product->id)
+        ->latest()
+        ->take($limit)
+        ->get();
 
-    return view('client.product.show', compact('product', 'relatedProducts', 'reviews', 'comments'));
+    return view('client.product.show', compact(
+        'product', 
+        'relatedProducts', 
+        'reviews', 
+        'comments', 
+        'totalComments', 
+        'limit'
+    ));
 }
+
 
 
     public function categoryPage($id = null)

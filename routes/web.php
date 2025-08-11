@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CommentAdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
 use App\Http\Controllers\CategoryController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Client\WalletController;
 use App\Http\Middleware\CheckRole;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Client\NewsClientController;
+use App\Http\Controllers\CommentsController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -181,4 +183,8 @@ Route::prefix('admin')->middleware(['auth', CheckRole::class . ':admin'])->group
     Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
     Route::get('/admin/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
     Route::post('/admin/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
+    //comment
+     Route::get('comments', [CommentsController::class, 'index'])->name('comments.index');
+    Route::get('/hide/{id}', [CommentsController::class, 'hide'])->name('comments.hide');
+    Route::get('/show/{id}', [CommentsController::class, 'showComment'])->name('comments.showComment');
 });

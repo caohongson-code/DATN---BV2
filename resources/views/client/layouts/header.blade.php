@@ -2807,7 +2807,7 @@
             <nav class="d-none d-lg-block">
                 <ul class="nav gap-4">
                     <li class="nav-item"><a href="{{ route('home') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a></li>
+                    {{-- <li class="nav-item"><a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a></li> --}}
                     <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
                     <li class="nav-item"><a href="{{ route('client.news.index') }}" class="nav-link {{ request()->is('news*') ? 'active' : '' }}">Tin tức</a></li>
                     <li class="nav-item"><a href="{{ url('/contact') }}" class="nav-link">Liên hệ</a></li>
