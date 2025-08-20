@@ -54,6 +54,12 @@
             </a>
           </li>
 
+          <li>
+            <a class="app-menu__item {{ request()->is('admin/promotions*') ? 'active' : '' }}" href="{{ route('promotions.index') }}">
+                <i class='app-menu__icon bx bx-purchase-tag'></i>
+                <span class="app-menu__label">Quản lý voucher</span>
+              </a>
+            </li>
 
     <li>
         <a class="app-menu__item {{ request()->is('admin/categories*') ? 'active' : '' }}" href="{{ route('categories.index') }}">

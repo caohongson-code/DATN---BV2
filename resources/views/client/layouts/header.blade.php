@@ -2807,7 +2807,7 @@
             <nav class="d-none d-lg-block">
                 <ul class="nav gap-4">
                     <li class="nav-item"><a href="{{ route('home') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/about-us') }}" class="nav-link">Giới thiệu</a></li>
+                    <li class="nav-item"><a href="{{ route('client.introduce') }}"class="nav-link {{ request()->is('introduce') ? 'active' : '' }}">Giới thiệu </a></li>
                     <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
                     <li class="nav-item"><a href="{{ route('client.news.index') }}" class="nav-link {{ request()->is('news*') ? 'active' : '' }}">Tin tức</a></li>
                     <li class="nav-item"><a href="{{ url('/contact') }}" class="nav-link">Liên hệ</a></li>
@@ -2822,14 +2822,14 @@
             </nav>
 
                 <div class="d-flex align-items-center gap-2">
-                   
+
                     <div class="el2-header-right d-flex align-items-center justify-content-end pe-2">
                         <form action="{{ route('client.search') }}" method="GET" class="d-none d-lg-block me-3">
                             <div class="search-wrapper">
-                                <input 
-                                    type="text" 
-                                    name="keyword" 
-                                    placeholder="Tìm kiếm sản phẩm..." 
+                                <input
+                                    type="text"
+                                    name="keyword"
+                                    placeholder="Tìm kiếm sản phẩm..."
                                     value="{{ request('keyword', $keyword ?? '') }}"
                                     class="search-input"
                                 >
@@ -2838,8 +2838,8 @@
                                 </button>
                             </div>
                         </form>
-                        
-                        
+
+
                          <!-- Account dropdown -->
                         <div class="dropdown">
                             <a href="#" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
@@ -2847,7 +2847,11 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 @if(Auth::check())
-                                    <li class="dropdown-item">Xin chào, {{ Auth::user()->name }}</li>
+                                <li class="dropdown-item">
+                                    Xin chào, <span class="fw-bold">{{ Auth::check() ? Auth::user()->full_name : 'Khách' }}</span>
+                                </li>
+
+
                                     <li><a href="{{ route('user.dashboard') }}" class="dropdown-item">Tài khoản của tôi</a></li>
                                     <li>
                                         <form action="{{ route('taikhoan.logout') }}" method="POST" class="px-3">
@@ -3007,7 +3011,7 @@
     header .nav-link:hover,
     header .nav-link.active {
         color: #0d6efd;
-        text-decoration: underline;
+        text-decoration: none !important;
     }
 
     .btn-light {
@@ -3046,22 +3050,26 @@
         border-bottom: 1px solid #e0e0e0;
     }
     .el2-category-navbar .nav-link {
-        color: #555;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.3s;
-    }
-    .el2-category-navbar .nav-link:hover {
-        color: #0d6efd;
-        background-color: #eef2ff;
-        padding: 6px 12px;
-        border-radius: 8px;
-    }
+    color: #555;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+    text-decoration: none; /* Bỏ gạch chân mặc định */
+    border-radius: 8px; /* Bo góc luôn, kể cả khi không hover */
+}
+
+.el2-category-navbar .nav-link:hover {
+    color: #0d6efd;
+    background-color: #eef2ff;
+    padding: 6px 12px;
+    text-decoration: none; /* Không gạch chân khi hover */
+}
     .el2-category-navbar .nav-link i {
         font-size: 16px;
     }
+
 
     /* Responsive logo + icon */
     @media (max-width: 768px) {

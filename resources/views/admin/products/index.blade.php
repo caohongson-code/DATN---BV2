@@ -5,16 +5,38 @@
 @section('content')
 <div class="container-fluid">
     <div class="card shadow-sm border-0 rounded-3">
-        {{-- Header --}}
-        <div class="card-header bg-white border-bottom">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h4 class="fw-bold mb-0">Danh sách sản phẩm</h4>
-                </div>
+
+        {{-- Tiêu đề + nút chức năng --}}
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap"
+             style="background: rgba(241, 243, 245, 0.8); backdrop-filter: blur(6px); padding: 12px 20px;">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="bx bx-package me-2"></i> Danh sách sản phẩm
+            </h5>
+            <div>
+                <a href="{{ route('products.create') }}" class="btn btn-create">
+                    <i class="bx bx-plus me-1"></i> Tạo mới
+                </a>
+
             </div>
         </div>
 
         <div class="card-body">
+
+            {{-- Form tìm kiếm --}}
+            <form method="GET" action="{{ route('products.index') }}" class="mb-4">
+                <div class="row g-2 align-items-center" style="max-width: 500px;">
+                    <div class="col-9">
+                        <input type="text" name="search" class="form-control form-control-sm"
+                               placeholder="Tìm theo tên hoặc danh mục" value="{{ request('search') }}">
+                    </div>
+                    <div class="col-3">
+                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                            <i class="bx bx-search"></i> Tìm
+                        </button>
+                    </div>
+                </div>
+            </form>
+
             {{-- Thông báo --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -33,30 +55,9 @@
                 </div>
             @endif
 
-            {{-- Tìm kiếm + nút --}}
-            <div class="row mb-3 align-items-center">
-                <div class="col-md-8">
-                    <a href="{{ route('products.create') }}" class="btn btn-success btn-sm">+ Tạo mới</a>
-                    <button class="btn btn-warning btn-sm">Tải từ file</button>
-                    <button class="btn btn-primary btn-sm">In dữ liệu</button>
-                    <button class="btn btn-info btn-sm">Sao chép</button>
-                    <button class="btn btn-success btn-sm">Xuất Excel</button>
-                    <button class="btn btn-danger btn-sm">Xuất PDF</button>
-                    <button class="btn btn-secondary btn-sm">Xóa tất cả</button>
-                </div>
-                <div class="col-md-4">
-                    <form method="GET" action="{{ route('products.index') }}">
-                        <div class="input-group input-group-sm">
-                            <input type="text" name="search" class="form-control" placeholder="Tìm theo tên hoặc danh mục" value="{{ request('search') }}">
-                            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            {{-- Danh sách bảng --}}
+            {{-- Bảng dữ liệu --}}
             <div class="table-responsive">
-                <table class="table table-bordered table-hover text-center align-middle">
+                <table class="table table-bordered table-hover text-center align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
@@ -79,7 +80,8 @@
                                 <td>{{ $product->category->category_name ?? 'Không có' }}</td>
                                 <td>
                                     @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}" width="80" class="img-thumbnail" alt="Ảnh sản phẩm">
+                                        <img src="{{ asset('storage/' . $product->image) }}" width="80"
+                                             class="img-thumbnail" alt="Ảnh sản phẩm">
                                     @else
                                         <span class="text-muted">Chưa có ảnh</span>
                                     @endif
@@ -104,12 +106,19 @@
                                 <td>{{ $product->created_at->format('d/m/Y') }}</td>
                                 <td>{{ $product->views ?? 0 }}</td>
                                 <td>
-                                    <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm" title="Xem"><i class="fas fa-eye"></i></a>
-                                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm" title="Sửa"><i class="fas fa-edit"></i>Sửa</a>
-                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                    <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm me-1">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm me-1">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </a>
+                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline"
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-danger btn-sm" title="Xóa"><i class="fas fa-trash-alt"></i> Xoá</button>
+                                        <button class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash-alt"></i> Xóa
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
@@ -129,4 +138,27 @@
         </div>
     </div>
 </div>
+<style>
+    .btn-create {
+        background: linear-gradient(90deg, #28a745, #20c997);
+        color: #fff;
+        font-weight: 500;
+        border-radius: 8px;
+        padding: 6px 14px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    .btn-create:hover {
+        background: linear-gradient(90deg, #20c997, #28a745);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        color: #fff;
+        text-decoration: none;
+    }
+    .btn-create i {
+        font-size: 14px;
+    }
+    </style>
 @endsection

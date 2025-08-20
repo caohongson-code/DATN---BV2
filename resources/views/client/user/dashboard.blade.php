@@ -17,7 +17,10 @@
         <div class="col-md-3 mb-4">
             <div class="card shadow-sm rounded-3">
                 <div class="card-header bg-dark text-white fw-bold">
-                    Xin chào, {{ Auth::user()->name }}
+                    <li class="dropdown-item">
+                        Xin chào, <span class="fw-bold">{{ Auth::check() ? Auth::user()->full_name : 'Khách' }}</span>
+                    </li>
+
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="{{ route('user.profile') }}" class="list-group-item list-group-item-action">👉 Thông tin cá nhân</a>

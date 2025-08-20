@@ -83,39 +83,51 @@
 
                             {{-- Nếu từ giỏ hàng --}}
                             @elseif(!empty($cartItems))
-                                @foreach($cartItems as $item)
-                                    @php
-                                        $availableQty = $item['variant']
-                                            ? $item['variant']->quantity
-                                            : $item['product']->quantity;
-                                        if($availableQty < $item['quantity']) $outOfStock = true;
-                                    @endphp
-                                    <hr>
-                                    <p><strong>Tên sản phẩm:</strong> {{ $item['product']->product_name }}</p>
-                                    @if($item['variant'])
-                                        <p><strong>Phiên bản:</strong>
-                                            {{ $item['variant']->ram->value ?? '' }} /
-                                            {{ $item['variant']->storage->value ?? '' }} /
-                                            {{ $item['variant']->color->value ?? '' }}
-                                        </p>
-                                    @endif
-                                    @php
+                            @php
+                                $totalProducts = 0;
+                                $totalItems = count($cartItems);
+                            @endphp
+                            @foreach($cartItems as $item)
+                                @php
+                                    $availableQty = $item['variant']
+                                        ? $item['variant']->quantity
+                                        : $item['product']->quantity;
+
                                     $itemPrice = $item['variant']
-? (($item['variant']->discount_price !== null && $item['variant']->discount_price < $item['variant']->price) ? $item['variant']->discount_price : $item['variant']->price)
-                    : (($item['product']->discount_price !== null && $item['product']->discount_price < $item['product']->price) ? $item['product']->discount_price : $item['product']->price);
+                                        ? (($item['variant']->discount_price !== null && $item['variant']->discount_price < $item['variant']->price)
+                                            ? $item['variant']->discount_price
+                                            : $item['variant']->price)
+                                        : (($item['product']->discount_price !== null && $item['product']->discount_price < $item['product']->price)
+                                            ? $item['product']->discount_price
+                                            : $item['product']->price);
 
+                                    $totalProducts += $item['quantity'];
+
+                                    if($availableQty < $item['quantity']) $outOfStock = true;
                                 @endphp
+                                <hr>
+                                <p><strong>Tên sản phẩm:</strong> {{ $item['product']->product_name }}</p>
+                                @if($item['variant'])
+                                    <p><strong>Phiên bản:</strong>
+                                        {{ $item['variant']->ram->value ?? '' }} /
+                                        {{ $item['variant']->storage->value ?? '' }} /
+                                        {{ $item['variant']->color->value ?? '' }}
+                                    </p>
+                                @endif
                                 <p><strong>Giá:</strong> {{ number_format($itemPrice, 0, ',', '.') }} VND</p>
+                                <p><strong>Số lượng:</strong> {{ $item['quantity'] }}</p>
 
-                                    <p><strong>Số lượng:</strong> {{ $item['quantity'] }}</p>
+                                @if($availableQty < $item['quantity'])
+                                    <div class="alert alert-danger mt-2">
+                                        Sản phẩm này đã hết hàng hoặc không đủ số lượng!
+                                    </div>
+                                @endif
+                            @endforeach
 
-                                    @if($availableQty < $item['quantity'])
-                                        <div class="alert alert-danger mt-2">
-                                            Sản phẩm này đã hết hàng hoặc không đủ số lượng!
-                                        </div>
-                                    @endif
-                                @endforeach
-                            @endif
+                            <hr>
+                            <p><strong>🛒 Tổng loại sản phẩm:</strong> {{ $totalItems }}</p>
+                            <p><strong>📦 Tổng số lượng sản phẩm:</strong> {{ $totalProducts }}</p>
+                        @endif
                         </div>
                     </div>
                 </div>
@@ -187,28 +199,48 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const voucherSelect = document.getElementById('voucher-select');
+    const voucherSelect   = document.getElementById('voucher-select');
     const momoQRContainer = document.getElementById('momo-qr-container');
-    const momoQR = document.getElementById('momo-qr');
-    const momoAmount = document.getElementById('momo-amount');
-    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-    const subtotal = {{ $subtotal }};
+    const momoQR          = document.getElementById('momo-qr');
+    const momoAmount      = document.getElementById('momo-amount');
+    const paymentRadios   = document.querySelectorAll('input[name="payment_method"]');
+
     const shipping = {{ $shippingFee }};
+    const cartItems = @json($cartItems);
+    // $cartItems phải được truyền từ controller ra Blade, gồm: id, name, price, discount_price, quantity
+
+    function calculateSubtotal() {
+        let subtotal = 0;
+        cartItems.forEach(item => {
+            let price = item.discount_price > 0 ? item.discount_price : item.price;
+            subtotal += price * item.quantity;
+        });
+        return subtotal;
+    }
 
     function calculateTotal() {
-        const option = voucherSelect.options[voucherSelect.selectedIndex];
-        const type = option.dataset.type;
-        const value = parseFloat(option.dataset.value) || 0;
+        const subtotal = calculateSubtotal();
+        const option   = voucherSelect.options[voucherSelect.selectedIndex];
+        const type     = option ? option.dataset.type : null;
+        const value    = parseFloat(option ? option.dataset.value : 0);
+
         const discountAmount = type === 'percent' ? subtotal * value / 100 : value;
         const total = subtotal + shipping - discountAmount;
-        document.getElementById('discount').innerText = new Intl.NumberFormat('vi-VN').format(discountAmount);
-        document.getElementById('total').innerText = new Intl.NumberFormat('vi-VN').format(total) + ' VND';
+
+        document.getElementById('subtotal').innerText =
+            new Intl.NumberFormat('vi-VN').format(subtotal);
+        document.getElementById('discount').innerText =
+            new Intl.NumberFormat('vi-VN').format(discountAmount);
+        document.getElementById('total').innerText =
+            new Intl.NumberFormat('vi-VN').format(total) + ' VND';
+
         return total;
     }
-voucherSelect.addEventListener('change', calculateTotal);
+
+    voucherSelect.addEventListener('change', calculateTotal);
 
     paymentRadios.forEach(radio => {
         radio.addEventListener('change', function () {
@@ -224,4 +256,4 @@ voucherSelect.addEventListener('change', calculateTotal);
     calculateTotal();
 });
 </script>
-@endsection
+@endpush

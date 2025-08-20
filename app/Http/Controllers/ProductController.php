@@ -135,6 +135,15 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'quantity' => 'required|integer|min:0',
         ]);
+        if ($request->hasFile('image')) {
+            // Xoá ảnh cũ nếu có
+            if ($product->image && StorageFacade::disk('public')->exists($product->image)) {
+                StorageFacade::disk('public')->delete($product->image);
+            }
+            // Lưu ảnh mới
+            $path = $request->file('image')->store('products', 'public');
+            $product->update(['image' => $path]);
+        }
 
         // Cập nhật thông tin sản phẩm
         $product->update([

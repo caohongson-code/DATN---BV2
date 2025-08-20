@@ -134,14 +134,16 @@
         $maxVisible = 10;
     @endphp
 
-    <ul class="nav nav-tabs" id="orderTabs" role="tablist">
-        @foreach ($statusLabels as $index => $label)
-            <li class="nav-item" role="presentation">
-                <button class="nav-link @if ($index === 0) active @endif" data-bs-toggle="tab"
-                    data-bs-target="#tab-{{ $index }}" type="button" role="tab">{{ $label }}</button>
-            </li>
-        @endforeach
-    </ul>
+<ul class="nav nav-tabs" id="orderTabs" role="tablist">
+    @foreach ($statusLabels as $index => $label)
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {{ ($statusMap[$index] == $status || ($index == 0 && !$status)) ? 'active' : '' }}"
+               href="{{ route('user.orders', ['status' => $statusMap[$index]]) }}">
+               {{ $label }}
+            </a>
+        </li>
+    @endforeach
+</ul>
 
     <div class="tab-content pt-3">
         @foreach ($statusLabels as $index => $label)
@@ -200,7 +202,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div>
                                         <span
-                                            class="badge 
+                                            class="badge
             @switch($order->payment_status_id)
                 @case(1) bg-warning text-dark @break
                 @case(2) bg-success @break

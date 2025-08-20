@@ -56,7 +56,10 @@
       if (dd < 10) dd = '0' + dd;
       if (mm < 10) mm = '0' + mm;
       var formatted = `<span class="date"> ${day}, ${dd}/${mm}/${yyyy} - ${nowTime}</span>`;
-      document.getElementById("clock").innerHTML = formatted;
+      document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("myElement").innerHTML = "Hello!";
+});
+
       setTimeout(time, 1000);
     }
     function checkTime(i) {

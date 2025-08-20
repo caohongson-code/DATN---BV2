@@ -56,7 +56,7 @@
                     ĐĂNG NHẬP
                 </button>
                 <div class="text-right mt-2">
-                    <a href="#" class="text-sm text-blue-500 hover:underline">Quên mật khẩu?</a>
+                    <a href="{{ route('password.request') }}" class="text-sm text-blue-500 hover:underline">Quên mật khẩu?</a>
                 </div>
                 <div class="text-center text-gray-400 text-sm my-4">Hoặc đăng nhập với</div>
                 <div class="flex gap-2">

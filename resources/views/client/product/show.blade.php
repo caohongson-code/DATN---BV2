@@ -514,6 +514,7 @@ data-image="{{ asset('storage/' . $img->image) }}">
                     </div>
                 @endforeach
             </div>
+        </form>
         @endif
     </div>
 
