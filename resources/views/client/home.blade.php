@@ -14,9 +14,9 @@
 @section('content')
 
 
-  
-  
-  
+
+
+
   <div class="electio-notifications" aria-live="polite" aria-atomic="true">
 
          <div class="electio-notifications-area">
@@ -144,7 +144,7 @@ Space Orange            </h4>
     </div>
     <div class="col-xxl-7">
     <div class="row g-30">
-    
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".0s" style="visibility: visible; animation-delay: 0s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -156,7 +156,7 @@ Space Orange            </h4>
                         <p class="mb-0">2 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -168,7 +168,7 @@ Space Orange            </h4>
                         <p class="mb-0">3 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".2s" style="visibility: visible; animation-delay: 0.2s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -180,7 +180,7 @@ Space Orange            </h4>
                         <p class="mb-0">7 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -192,7 +192,7 @@ Space Orange            </h4>
                         <p class="mb-0">2 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".4s" style="visibility: visible; animation-delay: 0.4s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -204,7 +204,7 @@ Space Orange            </h4>
                         <p class="mb-0">2 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".5s" style="visibility: visible; animation-delay: 0.5s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -216,7 +216,7 @@ Space Orange            </h4>
                         <p class="mb-0">3 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".6s" style="visibility: visible; animation-delay: 0.6s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -228,7 +228,7 @@ Space Orange            </h4>
                         <p class="mb-0">8 Sản phẩm</p>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-sm-4 wow fadeInUp" data-wow-delay=".7s" style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;">
                     <div class="el2-icon-box text-center">
                 <span class="icon-wrapper">
@@ -240,7 +240,7 @@ Space Orange            </h4>
                         <p class="mb-0">10 Sản phẩm</p>
                     </div>
                 </div>
-                
+
             </div>
             </div>
             </div>
@@ -259,9 +259,9 @@ Space Orange            </h4>
 				<div class="elementor-widget-container">
 			    <div class="el2-banner-4">
         <!-- banner img -->
-<span class="banner-img" 
+<span class="banner-img"
      style="background-image: url(&quot;https://e-tech.monamedia.net/wp-content/uploads/2023/10/banner-6.jpg&quot;);">
-</span>       
+</span>
 
 <div class="banner-content">
                             <span class="fw-medium el2-subtitle mb-1">Khuyến mãi lên đến 60%</span>
@@ -282,7 +282,7 @@ Space Orange            </h4>
 				<div class="elementor-widget-container">
 			    <div class="el2-banner-6 text-center h-100">
         <!-- banner img -->
-<span class="banner-img" 
+<span class="banner-img"
    style="background-image: url(&quot;https://e-tech.monamedia.net/wp-content/uploads/2023/10/banner-7.jpg&quot;);">
 </span>                     <h2>Tai nghe thịnh hành</h2>
                             <a href="# shop/" class="btn-blue el-btn">Mua ngay                <span class="ms-2"><i class="fas fa-arrow-right"></i></span>
@@ -307,7 +307,7 @@ Space Orange            </h4>
                             <h2 class="fw-semibold">Sản phẩm nổi bật</h2>
                         </div>
                     </div>
-                  --}} 
+                  --}}
 
 
                   {{-- vong lap san pham ban chay  --}}
@@ -318,7 +318,7 @@ Space Orange            </h4>
                                 <h2 class="fw-semibold">Sản phẩm nổi bật</h2>
                             </div>
                         </div>
-                
+
                         <div class="row">
                             @if($products->isEmpty())
                                 <div class="col-12 text-center text-danger mb-4">
@@ -334,14 +334,14 @@ Space Orange            </h4>
                                             -{{ round(100 - ($product->discount_price / $product->price) * 100) }}%
                                         </span>
                                     @endif
-                
-                                 
+
+
                                     {{-- Hình ảnh --}}
                                     <a href="{{ route('product.show', $product->id) }}" class="image-wrapper">
                                         <img src="{{ asset('storage/' . $product->image) }}"
                                              alt="{{ $product->product_name }}" class="card-img-top product-img">
                                     </a>
-                
+
                                     <div class="card-body d-flex flex-column">
                                         {{-- Tên sản phẩm --}}
                                         <h6 class="card-title mb-2">
@@ -350,7 +350,7 @@ Space Orange            </h4>
                                                 {{ $product->product_name }}
                                             </a>
                                         </h6>
-                
+
                                         {{-- Giá --}}
                                         <div class="price-box mb-2">
                                             @if ($product->discount_price)
@@ -360,7 +360,7 @@ Space Orange            </h4>
                                                 <span class="price-new">{{ number_format($product->price, 0, ',', '.') }} đ</span>
                                             @endif
                                         </div>
-                
+
                                         {{-- Xếp hạng --}}
                                         <div class="rating-box mb-3">
                                             @php $rating = $product->rating ?? 0; @endphp
@@ -369,12 +369,12 @@ Space Orange            </h4>
                                             @endfor
                                             <small class="text-muted">({{ $rating }}/5)</small>
                                         </div>
-                
+
                                         {{-- Form giỏ hàng --}}
                 <form action="{{ route('cart.add') }}" method="POST" class="mt-auto cart-form">
                                             @csrf
                                             <input type="hidden" name="product_id" value="{{ $product->id }}">
-                
+
                                             <div class="d-flex gap-2 action-buttons">
                                                 <div class="btn-cart-wrapper flex-fill position-relative">
                                                     <button type="button" class="btn btn-cart w-100">
@@ -397,17 +397,17 @@ Space Orange            </h4>
                                                             <input type="hidden" name="product_variant_id"
                                                                    value="{{ $product->variants->first()->id ?? '' }}">
                                                         @endif
-                
+
                                                         <div class="input-group input-group-sm quantity-box">
                                                             <button class="btn btn-outline-secondary" type="button"
                                                                     onclick="this.nextElementSibling.stepDown()">-</button>
                                                                     <input type="number" name="quantity" value="1" min="1" max="99"
                                                                     class="form-control text-center quantity-input">
-                
+
                                                             <button class="btn btn-outline-secondary" type="button"
                                                                     onclick="this.previousElementSibling.stepUp()">+</button>
                                                         </div>
-                
+
                                                         <button type="submit" class="btn btn-success w-100 mt-2">Xác nhận</button>
                                                     </div>
                                                 </div>
@@ -419,11 +419,11 @@ Space Orange            </h4>
                                     </div>
                                 </div>
                             </div>
-                
+
                             {{-- ================== STYLE ================== --}}
                             <style>
-                
-                
+
+
                 /* --- Dropdown mở lên trên --- */
                 .btn-cart-wrapper { position: relative; }
                 .variant-qty-row {
@@ -436,14 +436,14 @@ Space Orange            </h4>
                     border: 1px solid #ddd;
                     border-radius: 8px;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                
+
                     opacity: 0;
                     transform: translateY(5px);
                     max-height: 0;
                     overflow: hidden;
                     transition: all 0.3s ease;
                     z-index: 20;
-                
+
                     display: flex;
                     flex-direction: column;
                     gap: 8px;
@@ -453,7 +453,7 @@ Space Orange            </h4>
                     transform: translateY(0);
                     max-height: 500px;
                 }
-                
+
                 /* Select & số lượng */
                 .variant-select {
                     height: 38px;
@@ -481,7 +481,7 @@ Space Orange            </h4>
                     font-size: 0.9rem;
                     height: 38px;
                 }
-                
+
                 /* Nút */
                 .btn-cart, .btn-detail {
                     border-radius: 8px;
@@ -494,7 +494,7 @@ Space Orange            </h4>
                 .btn-cart:hover { background: #d73b1f; transform: translateY(-2px); }
                 .btn-detail { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
                 .btn-detail:hover { background: #eaeaea; transform: translateY(-2px); }
-                
+
                 /* Card */
                 .product-card { border-radius: 12px; overflow: hidden; transition: all 0.3s ease-in-out; position: relative; }
                 .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
@@ -510,27 +510,27 @@ Space Orange            </h4>
                     transition: transform 0.4s ease;
                 }
                 .product-card:hover .product-img { transform: scale(1.05); }
-                
+
                             </style>
-                
+
                             {{-- ================== SCRIPT ================== --}}
-                
-                
-                
-                
-                
+
+
+
+
+
                 @endforeach
         </div>
 
         {{-- Nút xem thêm --}}
         <div class="text-center mt-4">
-            <a href="{{ route('product.all') }}" class="btn btn-outline-danger px-4">Xem thêm</a>
+            <a href="{{ route('client.categories') }}" class="btn btn-outline-danger px-4">Xem thêm</a>
         </div>
     </div>
 </section>
 
 
-                    
+
 			    <!--banner section start-->
     <section class="el2-banner7-box bg-white pb-120 wow fadeInUp" style="visibility: visible; animation-name: fadeInUp;">
         <div class="container-1440 position-relative z-1 overflow-hidden custom_container_width">
@@ -573,7 +573,7 @@ Space Orange            </h4>
 			        <div class="el2-products-list product_list_widget_title_wrap">
                             <h3 class="mb-4 fw-medium">Sản phẩm nổi bật</h3>
                                         <div class="el2-horizontal-card position-relative ">
-                    
+
                         </div>
                 </div>
                         </div>
@@ -585,8 +585,8 @@ Space Orange            </h4>
 			        <div class="el2-products-list product_list_widget_title_wrap">
                             <h3 class="mb-4 fw-medium">Khuyến mãi</h3>
                                         <div class="el2-horizontal-card position-relative ">
-                   
-    
+
+
                         </div>
                 </div>
                         </div>
@@ -653,7 +653,7 @@ Space Orange            </h4>
                                 <img decoding="async" src="https://e-tech.monamedia.net/wp-content/uploads/2023/10/brand-10.svg" alt="brand" class="img-fluid">
                             </a>
                         </div>
-                        
+
 
                 </div>
             </div>
@@ -729,7 +729,7 @@ Space Orange            </h4>
                             <div>
                                                                     <h4 class="title">Miễn phí giao hàng</h4>
                                                                                                     <p class="des">Từ Đơn Hàng Trên 1,000,000 ₫</p>
-                                
+
                             </div>
                         </div>
                     </div>
@@ -743,7 +743,7 @@ Space Orange            </h4>
                             <div>
                                                                     <h4 class="title">Hỗ trợ 24/7</h4>
                                                                                                     <p class="des">Nhận Hỗ Trợ Trực Truyến 24/7</p>
-                                
+
                             </div>
                         </div>
                     </div>
@@ -757,7 +757,7 @@ Space Orange            </h4>
                             <div>
                                                                     <h4 class="title">Hoàn tiền</h4>
                                                                                                     <p class="des">Hoàn Trả Trong Vòng 15 Ngày</p>
-                                
+
                             </div>
                         </div>
                     </div>
@@ -771,11 +771,11 @@ Space Orange            </h4>
                             <div>
                                                                     <h4 class="title">Mã quà tặng</h4>
                                                                                                     <p class="des">Nhận Mã Khuyến Mãi</p>
-                                
+
                             </div>
                         </div>
                     </div>
-                    
+
             </div>
         </div>
     </section>
@@ -810,7 +810,7 @@ Space Orange            </h4>
                                                                     <a href="# 2023/10/03/how-to-sell-photos-art-online-best-places-to-sell-photos-online-and-make-money/">
                                         <img decoding="async" src="https://e-tech.monamedia.net/wp-content/uploads/2023/06/pexels-dom-bucci-981062-scaled-1.jpg" alt="blog img" class="img-fluid rounded-1 blog-img">
                                     </a>
-                                
+
                                 <div class="el2-blog-card-content text-start">
                                     <div class="el2-blog-meta">
                 <span>
@@ -842,7 +842,7 @@ Space Orange            </h4>
                                                                     <a href="# 2023/06/01/17-ways-you-never-knew-you-could-build-backlinks-to-your-ecommerce-store/">
                                         <img decoding="async" src="https://e-tech.monamedia.net/wp-content/uploads/2023/10/pexels-karolina-grabowska-4887246.jpg" alt="blog img" class="img-fluid rounded-1 blog-img">
                                     </a>
-                                
+
                                 <div class="el2-blog-card-content text-start">
                                     <div class="el2-blog-meta">
                 <span>
@@ -868,7 +868,7 @@ Space Orange            </h4>
                                 </div>
                             </div>
                         </div>
-                        
+
             </div>
         </div>
     </section>

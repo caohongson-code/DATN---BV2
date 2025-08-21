@@ -12,64 +12,64 @@ use App\Models\ReturnRequest;
 use App\Models\Review;
 use Carbon\Carbon;
 use App\Models\ShopInfo;
-use App\Models\ReturnRequestProgress; 
+use App\Models\ReturnRequestProgress;
 class OrderController extends Controller
 {
 
-    public function show()
-{
-    $accountId = Auth::id();
+    
+    public function show(Request $request)
+    {
+        $accountId = Auth::id();
+        $status = $request->query('status'); // Lấy ?status=... từ URL
 
-    // Lấy danh sách đơn hàng
-    $orders = Order::with([
-        'orderStatus',
-        'orderDetails.productVariant.product'
-    ])
-        ->where('account_id', $accountId)
-        ->latest()
-        ->get();
+        $ordersQuery = Order::with([
+            'orderStatus',
+            'orderDetails.productVariant.product'
+        ])->where('account_id', $accountId);
 
-    // ✅ Tự động xác nhận đã nhận hàng nếu quá 3 ngày
-    foreach ($orders as $order) {
-        if (
-            $order->order_status_id == 5 && // Đã giao
-            !$order->user_confirmed_delivery &&
-            $order->delivered_at &&
-            Carbon::parse($order->delivered_at)->addDays(3)->lt(now())
-        ) {
-            $order->user_confirmed_delivery = true;
-            $order->save();
+        // Nếu có trạng thái, lọc theo
+        if (!is_null($status) && $status !== '0') {
+            $ordersQuery->where('order_status_id', $status);
         }
+
+        $orders = $ordersQuery->latest()->get();
+
+        // ✅ Tự động xác nhận đã nhận hàng nếu quá 3 ngày
+        foreach ($orders as $order) {
+            if (
+                $order->order_status_id == 5 &&
+                !$order->user_confirmed_delivery &&
+                $order->delivered_at &&
+                Carbon::parse($order->delivered_at)->addDays(3)->lt(now())
+            ) {
+                $order->user_confirmed_delivery = true;
+                $order->save();
+            }
+        }
+
+        $reviewedMap = Review::where('account_id', $accountId)
+            ->get()
+            ->groupBy(function ($r) {
+                return $r->order_id . '-' . $r->product_variant_id;
+            });
+
+        $statuses = OrderStatus::all();
+        $returnedRequests = ReturnRequest::whereIn('order_id', $orders->pluck('id'))->get();
+        $returnedOrders = $returnedRequests->keyBy('order_id');
+        $deliveryIssues = OrderDeliveryIssue::whereIn('order_id', $orders->pluck('id'))->get()->keyBy('order_id');
+        $progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrders->pluck('id'))->get()->groupBy('return_request_id');
+
+        return view('client.user.orders', compact(
+            'orders',
+            'statuses',
+            'reviewedMap',
+            'returnedOrders',
+            'deliveryIssues',
+            'progresses',
+            'status' // để biết đang ở tab nào
+        ));
     }
 
-    // ✅ Đánh giá đã thực hiện (map theo order_id-variant_id)
-    $reviewedMap = Review::where('account_id', $accountId)
-        ->get()
-        ->groupBy(function ($r) {
-            return $r->order_id . '-' . $r->product_variant_id;
-        });
-
-    // ✅ Lấy tất cả trạng thái đơn hàng (nếu bạn dùng trong view để lọc hoặc hiển thị)
-    $statuses = OrderStatus::all();
-
-    // ✅ Lấy các yêu cầu trả hàng
-    $returnedRequests = ReturnRequest::whereIn('order_id', $orders->pluck('id'))->get();
-    $returnedOrders = $returnedRequests->keyBy('order_id');
-
-    // ✅ Lấy các phản hồi giao hàng nếu có
-    $deliveryIssues = OrderDeliveryIssue::whereIn('order_id', $orders->pluck('id'))->get()->keyBy('order_id');
-$progresses = ReturnRequestProgress::whereIn('return_request_id', $returnedOrders->pluck('id'))->get()->groupBy('return_request_id');
-
-    // ✅ Truyền sang view
-    return view('client.user.orders', compact(
-        'orders',
-        'statuses',
-        'reviewedMap',
-        'returnedOrders',
-        'deliveryIssues', // ✅ truyền biến mới
-        'progresses',
-    ));
-}
 
     public function ajaxCancel($id)
 

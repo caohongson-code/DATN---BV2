@@ -83,6 +83,7 @@
                             <option value="" data-type="" data-value="0">-- Không sử dụng --</option>
                             @foreach ($vouchers as $voucher)
                                 <option value="{{ $voucher->id }}" data-type="{{ $voucher->discount_type }}"
+
                                     data-value="{{ $voucher->discount_value }}">
                                     {{ $voucher->name }} - Mã: {{ $voucher->code }}
                                     ({{ $voucher->discount_type == 'percentage' ? $voucher->discount_value . '%' : number_format($voucher->discount_value, 0, ',', '.') . ' ₫' }})
@@ -180,6 +181,7 @@
             const subtotal = {{ $subtotal }};
             const shipping = {{ $shippingFee }};
 
+
             function calculateTotal() {
                 const option = voucherSelect.options[voucherSelect.selectedIndex];
                 const type = option.getAttribute('data-type') || '';
@@ -213,6 +215,7 @@
                 return total;
             }
 
+<<<<<<< HEAD
             // Gọi ngay khi load
             calculateTotal();
 
@@ -268,3 +271,4 @@
         });
     </script>
 @endsection
+

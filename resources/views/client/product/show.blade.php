@@ -818,6 +818,7 @@
                     </div>
                 @endforeach
             </div>
+        </form>
         @endif
     </div>
 
@@ -978,4 +979,5 @@
 
             });
         </script>
+
     @endpush

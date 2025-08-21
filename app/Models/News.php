@@ -39,14 +39,21 @@ class News extends Model
     ];
 
     // Scopes
+
     public function scopePublished($query)
     {
+        // if (app()->environment('local')) {
+        //     return $query;
+        // }
+
         return $query->where('status', 'published')
-                    ->where('published_at', '<=', Carbon::now());
+                     ->whereNotNull('published_at')
+                     ->where('published_at', '<=', now());
     }
 
     public function scopeFeatured($query)
     {
+
         return $query->where('is_featured', true);
     }
 
@@ -69,7 +76,7 @@ class News extends Model
             'published' => 'Đã xuất bản',
             'archived' => 'Đã lưu trữ'
         ];
-        
+
         return $statuses[$this->status] ?? $this->status;
     }
 
@@ -80,14 +87,14 @@ class News extends Model
             'published' => 'badge-success',
             'archived' => 'badge-warning'
         ];
-        
+
         return $badges[$this->status] ?? 'badge-secondary';
     }
 
     public function getIsPublishedAttribute()
     {
-        return $this->status === 'published' && 
-               $this->published_at && 
+        return $this->status === 'published' &&
+               $this->published_at &&
                $this->published_at <= Carbon::now();
     }
 
@@ -122,4 +129,4 @@ class News extends Model
     {
         $this->update(['is_hot' => !$this->is_hot]);
     }
-} 
+}

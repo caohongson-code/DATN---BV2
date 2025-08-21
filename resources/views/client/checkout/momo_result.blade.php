@@ -89,14 +89,17 @@
                         📄 Xem chi tiết đơn hàng
                     </a>
                 </div>
-               
+
             </div>
         @endif
  <div>
-                    <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="GET">
-                        <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
-                    </form>
-                </div>
+    @if ($order)
+    <div>
+        <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="GET">
+            <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
+        </form>
+    </div>
+@endif
         <a href="{{ route('home') }}" class="btn btn-primary mt-4">🔙 Quay về trang chủ</a>
 
     </div>

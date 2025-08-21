@@ -36,6 +36,7 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Client\NewsClientController;
 use App\Http\Controllers\CommentsController;
+use App\Http\Controllers\Client\IntroduceController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -53,17 +54,24 @@ Route::get('/search', [\App\Http\Controllers\Client\ProductClientController::cla
 // News routes (Client)
 Route::get('/news', [NewsClientController::class, 'index'])->name('client.news.index');
 Route::get('/news/{slug}', [NewsClientController::class, 'show'])->name('client.news.show');
-
+Route::get('/introduce', [IntroduceController::class, 'index'])->name('client.introduce');
 // Đăng nhập / đăng ký dùng chung
 Route::get('/login', [AccountController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AccountController::class, 'login'])->name('taikhoan.login');
 Route::post('/register', [AccountController::class, 'register'])->name('taikhoan.register');
+
+    Route::get('forgot-password', [AccountController::class, 'showForgotForm'])->name('password.request');
+    Route::post('forgot-password', [AccountController::class, 'sendResetLink'])->name('password.email');
+    Route::get('reset-password/{token}', [AccountController::class, 'showResetForm'])->name('password.reset');
+    Route::post('reset-password', [AccountController::class, 'resetPassword'])->name('password.update');
+
 
 // 🌟 Các chức năng yêu cầu đăng nhập
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AccountController::class, 'logout'])->name('taikhoan.logout');
     Route::post('/buy-now', [ClientCartController::class, 'buyNow'])->name('cart.buyNow');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+
     // Trang người dùng: dashboard, profile, đơn hàng
     Route::get('/user/dashboard', function () {
         return view('client.user.dashboard');
@@ -95,7 +103,7 @@ Route::middleware('auth')->group(function () {
 
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    
+
     // Giỏ hàng
     Route::post('/cart/add', [ClientCartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
@@ -110,9 +118,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
 
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
-    Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
+    Route::get('/momo_redirect/{orderId}', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
     // Route::get('/momo/result/{orderId}', [CheckoutController::class, 'momoResult'])->name('momo.result');
     Route::get('/momo/result', [CheckoutController::class, 'momoResult'])->name('momo.result');
+
     // Hiển thị tất cả sản phẩm (client)
     Route::get('/products', [ProductClientController::class, 'index'])->name('product.all');
     // IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức

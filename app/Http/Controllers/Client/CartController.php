@@ -10,7 +10,6 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -86,7 +85,8 @@ class CartController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để xem giỏ hàng.');
         }
-$cart = Cart::with(['details.product', 'details.variant.ram', 'details.variant.storage', 'details.variant.color'])
+
+        $cart = Cart::with(['details.product', 'details.variant.ram', 'details.variant.storage', 'details.variant.color'])
             ->where('account_id', Auth::id())
             ->where('cart_status_id', 1)
             ->first();
@@ -95,40 +95,23 @@ $cart = Cart::with(['details.product', 'details.variant.ram', 'details.variant.s
     }
 
     // Xóa 1 sản phẩm
+    // App\Http\Controllers\CartController.php
     public function remove($id, Request $request)
-    {
-        try {
-            $detail = CartDetail::with('cart')->find($id);
+{
+    $detail = CartDetail::with('cart')->find($id);
 
-            if (!$detail) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Không tìm thấy sản phẩm'
-                ], 404);
-            }
-
-            if (!$detail->cart || $detail->cart->account_id != Auth::id()) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Không có quyền xóa sản phẩm này'
-                ], 403);
-            }
-
-            $detail->delete();
-
-            return response()->json([
-                'success' => true, 
-                'message' => 'Đã xóa sản phẩm thành công'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Lỗi xóa sản phẩm giỏ hàng: ' . $e->getMessage());
-            return response()->json([
-                'success' => false, 
-                'message' => 'Đã xảy ra lỗi khi xóa sản phẩm'
-            ], 500);
-        }
+    if (!$detail) {
+        return response()->json(['success' => false, 'message' => 'Không tìm thấy sản phẩm'], 404);
     }
+
+    if (!$detail->cart || $detail->cart->account_id != Auth::id()) {
+        return response()->json(['success' => false, 'message' => 'Không có quyền xóa'], 403);
+    }
+
+    $detail->delete();
+
+    return response()->json(['success' => true, 'message' => 'Đã xóa thành công']);
+}
 
 
     // Cập nhật số lượng
@@ -178,3 +161,7 @@ $cart = Cart::with(['details.product', 'details.variant.ram', 'details.variant.s
 }
 
 }
+
+
+
+

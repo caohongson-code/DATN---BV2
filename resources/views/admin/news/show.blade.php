@@ -136,15 +136,15 @@
                                 </div>
                                 <div class="card-body text-center">
                                     @if($news->featured_image)
-                                        <img src="{{ asset('storage/' . $news->featured_image) }}" 
-                                             alt="{{ $news->title }}" 
-                                             class="img-fluid rounded" 
+                                        <img src="{{ asset('storage/' . $news->featured_image) }}"
+                                             alt="{{ $news->title }}"
+                                             class="img-fluid rounded"
                                              style="max-width: 100%; height: auto;">
                                         <div class="mt-2">
                                             <small class="text-muted">{{ $news->featured_image }}</small>
                                         </div>
                                     @else
-                                        <div class="bg-light d-flex align-items-center justify-content-center" 
+                                        <div class="bg-light d-flex align-items-center justify-content-center"
                                              style="height: 200px;">
                                             <div class="text-center">
                                                 <i class="fas fa-image text-muted fa-3x mb-2"></i>
@@ -220,22 +220,22 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn {{ $news->is_featured ? 'btn-warning' : 'btn-outline-warning' }}"
                                                 onclick="toggleFeatured({{ $news->id }})">
-                                            <i class="fas fa-star"></i> 
+                                            <i class="fas fa-star"></i>
                                             {{ $news->is_featured ? 'Bỏ đánh dấu nổi bật' : 'Đánh dấu nổi bật' }}
                                         </button>
-                                        
-                                        <button type="button" 
+
+                                        <button type="button"
                                                 class="btn {{ $news->is_hot ? 'btn-danger' : 'btn-outline-danger' }}"
                                                 onclick="toggleHot({{ $news->id }})">
-                                            <i class="fas fa-fire"></i> 
+                                            <i class="fas fa-fire"></i>
                                             {{ $news->is_hot ? 'Bỏ đánh dấu hot' : 'Đánh dấu hot' }}
                                         </button>
 
                                         @if($news->status === 'draft')
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="btn btn-success"
                                                     onclick="publishNews({{ $news->id }})">
                                                 <i class="fas fa-paper-plane"></i> Xuất bản ngay
@@ -243,7 +243,7 @@
                                         @endif
 
                                         @if($news->status === 'published')
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="btn btn-secondary"
                                                     onclick="draftNews({{ $news->id }})">
                                                 <i class="fas fa-edit"></i> Chuyển về bản nháp
@@ -339,4 +339,4 @@ function draftNews(newsId) {
     }
 }
 </script>
-@endpush 
+@endpush

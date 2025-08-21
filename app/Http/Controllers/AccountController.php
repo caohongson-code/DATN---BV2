@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 
 class AccountController extends Controller
@@ -209,9 +210,9 @@ class AccountController extends Controller
     // Cập nhật thông tin cá nhân
     public function updateAdminProfile(Request $request)
     {
-    
+
             $admin = Auth::user();
-    
+
             $data = $request->validate([
                 'full_name' => 'required|string|max:255',
                 'phone' => 'nullable|string|max:10',
@@ -220,24 +221,24 @@ class AccountController extends Controller
                 'address' => 'nullable|string|max:255',
                 'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // max 2MB
             ]);
-    
+
             // Xử lý ảnh
             if ($request->hasFile('avatar')) {
                 // Xoá ảnh cũ nếu có
                 if ($admin->avatar && Storage::exists($admin->avatar)) {
                     Storage::delete($admin->avatar);
                 }
-    
+
                 $path = $request->file('avatar')->store('avatars', 'public'); // lưu vào storage/app/public/avatars
                 $data['avatar'] = $path;
             }
-    
+
         $admin = Account::find(Auth::id());
         $admin->update($data);
-    
+
         return back()->with('success', 'Cập nhật thông tin thành công!');
     }
-    
+
     // Cập nhật mật khẩu
     public function updateAdminPassword(Request $request)
     {
@@ -250,15 +251,73 @@ class AccountController extends Controller
             'new_password.min' => 'Mật khẩu mới phải có ít nhất 6 ký tự.',
             'new_password.confirmed' => 'Xác nhận mật khẩu không khớp.',
         ]);
-    
+
         $admin = Auth::user();
-    
+
         if (!Hash::check($request->current_password, $admin->password)) {
             return back()->with('error', 'Mật khẩu hiện tại không đúng.');
         }
         $admin = Account::find(Auth::id());
         $admin->update(['password' => bcrypt($request->new_password)]);
-    
+
         return back()->with('success', 'Đổi mật khẩu thành công!');
     }
+    public function showForgotForm()
+{
+    return view('admin.auth.forgot-password'); // dùng chung form cho admin & khách
+}
+
+public function sendResetLink(Request $request)
+{
+    // Validate email
+    $request->validate([
+        'email' => 'required|email',
+    ]);
+
+    // Gửi link reset password qua broker 'accounts'
+    $status = Password::broker('accounts')->sendResetLink(
+        $request->only('email')
+    );
+
+    // Kiểm tra kết quả
+    if ($status === Password::RESET_LINK_SENT) {
+        return back()->with('success', __('Link đặt lại mật khẩu đã được gửi vào email!'));
+        // Hiển thị: "Link đặt lại mật khẩu đã được gửi vào email!"
+    }
+
+    return back()->withErrors([
+        'email' => __('Chúng tôi không thể tìm thấy người dùng nào có địa chỉ email đó.')
+        // Hiển thị: "Chúng tôi không thể tìm thấy người dùng nào có địa chỉ email đó."
+    ]);
+}
+
+public function showResetForm(Request $request, $token = null)
+{
+    return view('admin.auth.reset-password')->with([
+        'token' => $token,
+        'email' => $request->email, // email có thể được truyền từ query string
+    ]);
+}
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|min:6|confirmed',
+        'token' => 'required'
+    ]);
+
+    $status = Password::broker('accounts')->reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($user, $password) {
+            $user->password = bcrypt($password);
+            $user->save();
+        }
+    );
+
+    return $status === Password::PASSWORD_RESET
+        ? redirect()->route('login')->with('success', 'Đặt lại mật khẩu thành công, vui lòng đăng nhập.')
+        : back()->withErrors(['email' => 'Token không hợp lệ hoặc đã hết hạn.']);
+}
+
 }

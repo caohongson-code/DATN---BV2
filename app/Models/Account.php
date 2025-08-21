@@ -4,9 +4,12 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Promotion;
-class Account extends Authenticatable
+use Illuminate\Auth\Passwords\CanResetPassword; // trait
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract; // interface
+
+class Account extends Authenticatable implements CanResetPasswordContract
 {
-    use Notifiable;
+    use Notifiable, CanResetPassword; // dùng trait CanResetPassword
 
     protected $fillable = [
         'full_name', 'email', 'password', 'role_id',
