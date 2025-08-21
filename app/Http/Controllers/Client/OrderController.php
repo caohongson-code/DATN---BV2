@@ -72,34 +72,10 @@ class OrderController extends Controller
 
 
     public function ajaxCancel($id)
-
-    {
-        $order = Order::where('id', $id)
-            ->where('account_id', Auth::id())
-            ->first();
-
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy đơn hàng'
-            ], 404);
-        }
-
-        if ($order->order_status_id != 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Chỉ có thể huỷ đơn hàng khi đang chờ xác nhận.'
-            ], 400);
-        }
-
-        $order->order_status_id = 7; // Đã huỷ
-
-        // Nếu phương thức thanh toán là MoMo (id = 3) thì cập nhật trạng thái hoàn tiền
-        if ($order->payment_method_id == 3) {
-            $order->payment_status_id = 4; // Hoàn tiền
-        }
-
-        $order->save();
+{
+    $order = Order::where('id', $id)
+        ->where('account_id', Auth::id())
+        ->first();
 
     if (!$order) {
         return response()->json([
@@ -145,6 +121,7 @@ class OrderController extends Controller
         'message' => 'Đã huỷ đơn hàng thành công.'
     ]);
 }
+
 
 
     public function detail($id)

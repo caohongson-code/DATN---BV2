@@ -15,13 +15,11 @@ class OrderStatusSeeder extends Seeder
         $statuses = [
             1 => 'Chờ xác nhận',
             2 => 'Đã xác nhận',
-            3 => 'Chờ thanh toán',
-            4 => 'Đã thanh toán',
-            5 => 'Đang chuẩn bị hàng',
-            6 => 'Đang giao hàng',
-            7 => 'Đã giao hàng',
-            8 => 'Trả hàng / Hoàn tiền',
-            9 => 'Đã huỷ',
+            3 => 'Đang chuẩn bị hàng',
+            4 => 'Đang giao hàng',
+            5 => 'Đã giao hàng',
+            6 => 'Trả hàng / Hoàn tiền',
+            7 => 'Đã huỷ',
         ];
 
         foreach ($statuses as $id => $name) {

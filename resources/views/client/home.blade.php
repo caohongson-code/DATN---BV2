@@ -362,13 +362,17 @@ Space Orange            </h4>
                                         </div>
 
                                         {{-- Xếp hạng --}}
-                                        <div class="rating-box mb-3">
-                                            @php $rating = $product->rating ?? 0; @endphp
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                <i class="fa{{ $i <= $rating ? 's' : 'r' }} fa-star"></i>
-                                            @endfor
-                                            <small class="text-muted">({{ $rating }}/5)</small>
-                                        </div>
+                                   @php
+    $rating = round($product->reviews()->avg('rating') ?? 0);
+@endphp
+
+<div class="rating-box mb-3">
+    @for ($i = 1; $i <= 5; $i++)
+        <i class="fa{{ $i <= $rating ? 's' : 'r' }} fa-star"></i>
+    @endfor
+    <small class="text-muted">({{ $rating }}/5)</small>
+</div>
+
 
                                         {{-- Form giỏ hàng --}}
                 <form action="{{ route('cart.add') }}" method="POST" class="mt-auto cart-form">

@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -9,8 +10,11 @@ class AddPaymentStatusIdToOrdersTable extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             if (!Schema::hasColumn('orders', 'payment_status_id')) {
-                $table->unsignedBigInteger('payment_status_id')->after('id')->nullable();
-                $table->foreign('payment_status_id')->references('id')->on('payment_status')->onDelete('set null');
+                $table->unsignedBigInteger('payment_status_id')->nullable()->after('order_status_id');
+                $table->foreign('payment_status_id')
+                      ->references('id')
+                      ->on('payment_statuses')
+                      ->onDelete('set null');
             }
         });
     }
@@ -24,4 +28,4 @@ class AddPaymentStatusIdToOrdersTable extends Migration
             }
         });
     }
-};
+}

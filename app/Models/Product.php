@@ -31,6 +31,10 @@ public function variants()
 {
     return $this->hasMany(ProductVariant::class);
 }
+  public function reviews()
+    {
+        return $this->hasMany(Review::class, 'product_id');
+    }
 
 
 

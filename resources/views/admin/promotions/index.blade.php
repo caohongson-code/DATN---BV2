@@ -5,78 +5,6 @@
 <div class="container-fluid">
     <div class="card shadow-sm border-0 rounded-3">
 
-<<<<<<< HEAD
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle text-center">
-            <thead class="table-primary">
-                <tr>
-                    <th>#</th>
-                    <th>Mã KM</th>
-                    <th>Loại giảm</th>
-                    <th>Giá trị</th>
-                    <th>Thời gian</th>
-                    <th>Giới hạn</th>
-                    <th>Áp dụng theo giá đơn</th> {{-- ✅ Cột mới --}}
-                    <th>Trạng thái</th>
-                    <th>Sản phẩm áp dụng</th>
-                    <th>Danh mục áp dụng</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($promotions as $index => $promotion)
-                    <tr>
-                        <td>{{ $loop->iteration + ($promotions->currentPage() - 1) * $promotions->perPage() }}</td>
-                        <td><strong>{{ $promotion->code }}</strong></td>
-                        <td>{{ $promotion->discount_type == 'percentage' ? 'Phần trăm' : 'Cố định' }}</td>
-                        <td>
-                            {{ number_format($promotion->discount_value, 0, ',', '.') }}
-                            {{ $promotion->discount_type == 'percentage' ? '%' : 'VNĐ' }}
-                        </td>
-                        <td>
-                            {{ \Carbon\Carbon::parse($promotion->start_date)->format('d/m/Y H:i') }} <br>
-                            → {{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}
-                        </td>
-                        <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
-
-                        {{-- ✅ Giá trị đơn hàng áp dụng --}}
-                        <td>
-                            @if($promotion->min_order_amount || $promotion->max_order_amount)
-                                @if($promotion->min_order_amount)
-                                    ≥ {{ number_format($promotion->min_order_amount, 0, ',', '.') }}đ
-                                @endif
-                                @if($promotion->min_order_amount && $promotion->max_order_amount)
-                                    <br>
-                                @endif
-                                @if($promotion->max_order_amount)
-                                    ≤ {{ number_format($promotion->max_order_amount, 0, ',', '.') }}đ
-                                @endif
-                            @else
-                                <span class="text-muted fst-italic">Không giới hạn</span>
-                            @endif
-                        </td>
-
-                        <td>
-                            <span class="badge bg-{{ $promotion->is_active ? 'success' : 'secondary' }}">
-                                {{ $promotion->is_active ? 'Đang áp dụng' : 'Đã tắt' }}
-                            </span>
-                        </td>
-
-                        {{-- ✅ Sản phẩm áp dụng --}}
-                        <td>
-                            @if($promotion->products->isNotEmpty())
-                                <div class="d-flex flex-column gap-1">
-                                    @foreach ($promotion->products as $product)
-                                        <span class="badge bg-info text-dark">{{ $product->product_name }}</span>
-                                    @endforeach
-                                </div>
-                            @elseif($promotion->categories->isNotEmpty())
-                                <span class="text-muted fst-italic">Theo danh mục</span>
-                            @else
-                                <span class="text-muted fst-italic">Tất cả sản phẩm</span>
-                            @endif
-                        </td>
-=======
         {{-- Header --}}
         <div class="card-header bg-white border-bottom">
             <div class="d-flex justify-content-between align-items-center">
@@ -97,12 +25,11 @@
             @if(session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
->>>>>>> origin/CaoSon
 
             {{-- Bảng danh sách --}}
             <div class="table-responsive">
                 <table class="table table-bordered table-hover align-middle text-center">
-                    <thead class="table-light">
+                    <thead class="table-primary">
                         <tr>
                             <th>#</th>
                             <th>Mã KM</th>
@@ -110,6 +37,7 @@
                             <th>Giá trị</th>
                             <th>Thời gian</th>
                             <th>Giới hạn</th>
+                            <th>Áp dụng theo giá đơn</th> {{-- ✅ Cột mới --}}
                             <th>Trạng thái</th>
                             <th>Sản phẩm áp dụng</th>
                             <th>Danh mục áp dụng</th>
@@ -131,35 +59,39 @@
                                     → {{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}
                                 </td>
                                 <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
+
+                                {{-- ✅ Giá trị đơn hàng áp dụng --}}
+                                <td>
+                                    @if($promotion->min_order_amount || $promotion->max_order_amount)
+                                        @if($promotion->min_order_amount)
+                                            ≥ {{ number_format($promotion->min_order_amount, 0, ',', '.') }}đ
+                                        @endif
+                                        @if($promotion->min_order_amount && $promotion->max_order_amount)
+                                            <br>
+                                        @endif
+                                        @if($promotion->max_order_amount)
+                                            ≤ {{ number_format($promotion->max_order_amount, 0, ',', '.') }}đ
+                                        @endif
+                                    @else
+                                        <span class="text-muted fst-italic">Không giới hạn</span>
+                                    @endif
+                                </td>
+
+                                {{-- Trạng thái --}}
                                 <td>
                                     <span class="badge bg-{{ $promotion->is_active ? 'success' : 'secondary' }}">
                                         {{ $promotion->is_active ? 'Đang áp dụng' : 'Đã tắt' }}
                                     </span>
                                 </td>
 
-<<<<<<< HEAD
-                        <td>
-                            <a href="{{ route('promotions.edit', $promotion) }}" class="btn btn-sm btn-primary mb-1">Sửa</a>
-                            <form action="{{ route('promotions.destroy', $promotion) }}" method="POST" style="display:inline">
-                                @csrf @method('DELETE')
-                                <button onclick="return confirm('Xóa khuyến mãi này?')" class="btn btn-sm btn-danger">Xóa</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="11">Không có khuyến mãi nào.</td> {{-- ✅ Cập nhật colspan = 11 --}}
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-=======
-                                {{-- Sản phẩm áp dụng --}}
+                                {{-- ✅ Sản phẩm áp dụng --}}
                                 <td>
                                     @if($promotion->products->isNotEmpty())
-                                        @foreach ($promotion->products as $product)
-                                            <span class="badge bg-info text-dark mb-1">{{ $product->product_name }}</span>
-                                        @endforeach
+                                        <div class="d-flex flex-column gap-1">
+                                            @foreach ($promotion->products as $product)
+                                                <span class="badge bg-info text-dark">{{ $product->product_name }}</span>
+                                            @endforeach
+                                        </div>
                                     @elseif($promotion->categories->isNotEmpty())
                                         <span class="text-muted fst-italic">Theo danh mục</span>
                                     @else
@@ -167,7 +99,7 @@
                                     @endif
                                 </td>
 
-                                {{-- Danh mục áp dụng --}}
+                                {{-- ✅ Danh mục áp dụng --}}
                                 <td>
                                     @if($promotion->categories->isEmpty())
                                         <span class="text-muted fst-italic">Không chọn danh mục</span>
@@ -178,7 +110,7 @@
                                     @endif
                                 </td>
 
-                                {{-- Hành động --}}
+                                {{-- ✅ Hành động --}}
                                 <td>
                                     <a href="{{ route('promotions.edit', $promotion) }}"
                                        class="btn btn-warning btn-sm mb-1">
@@ -195,7 +127,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-muted">Không có khuyến mãi nào.</td>
+                                <td colspan="11" class="text-muted">Không có khuyến mãi nào.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -207,7 +139,6 @@
                 {{ $promotions->links('pagination::bootstrap-5') }}
             </div>
         </div>
->>>>>>> origin/CaoSon
     </div>
 </div>
 @endsection

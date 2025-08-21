@@ -88,7 +88,7 @@ class CheckoutController extends Controller
 
 
             if ($cartDetails->isEmpty()) {
-return redirect()->route('cart.show')->with('error', 'Không có sản phẩm để thanh toán.');
+            return redirect()->route('cart.show')->with('error', 'Không có sản phẩm để thanh toán.');
             }
 
             foreach ($cartDetails as $item) {
@@ -332,9 +332,9 @@ if ($total > $maxAmount) {
 
         try {
             DB::beginTransaction();
-            $orderId = $this->createOrder(
-                $user, $cartItems, $subtotal, $discount, $shippingFee, $voucher, $paymentMethod, $requestId
-            );
+           $orderId = $this->createOrder(
+    $user, $cartItems, $subtotal, $discount, $shippingFee, $voucher, $paymentMethod, $requestId, $selectedItems
+);
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -381,7 +381,8 @@ if ($total > $maxAmount) {
         return redirect()->route('home')->with('success', '✅ Đặt hàng thành công!');
     }
 
-    private function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $paymentMethod = 'cod', $requestId = null)
+   private function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $paymentMethod = 'cod', $requestId = null, $selectedItems = [])
+
     {
         // Kiểm tra tồn kho
 foreach ($cartItems as $item) {
@@ -441,9 +442,9 @@ foreach ($cartItems as $item) {
 }
 
         
-        if (!empty($selectedItems)) {
-            CartDetail::whereIn('id', $selectedItems)->delete();
-        }
+       if (!empty($selectedItems)) {
+    CartDetail::whereIn('id', $selectedItems)->delete();
+}
 
         session()->forget('buy_now');
 

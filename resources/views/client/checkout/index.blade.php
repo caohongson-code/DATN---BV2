@@ -130,11 +130,19 @@
                         </div>
 
                         <div class="form-check mt-2">
-                            <input class="form-check-input" type="radio" name="payment_method" value="wallet"
-                                id="wallet">
-                            <label class="form-check-label" for="wallet">Ví Của Tôi
-                                ({{ number_format(Auth::user()->wallet->balance ?? 0, 0, ',', '.') }} VND)</label>
-                        </div>
+    @php
+        $walletBalance = Auth::user()->wallet->balance ?? 0;
+    @endphp
+    <input class="form-check-input" type="radio" name="payment_method" value="wallet"
+           id="wallet" {{ $walletBalance < $total ? 'disabled' : '' }}>
+    <label class="form-check-label" for="wallet">
+        Ví Của Tôi ({{ number_format($walletBalance, 0, ',', '.') }} VND)
+        @if($walletBalance < $total)
+            - Không đủ số dư
+        @endif
+    </label>
+</div>
+
 
                     </div>
                 </div>
@@ -158,7 +166,11 @@
                 </div>
 
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success btn-lg">Xác nhận đặt hàng</button>
+                  <button type="submit" class="btn btn-success btn-lg"
+        onclick="return confirm('Bạn có chắc chắn muốn đặt hàng không?')">
+    Xác nhận đặt hàng
+</button>
+
                 </div>
             </form>
         @else

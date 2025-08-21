@@ -44,21 +44,6 @@
                     <textarea name="description" class="form-control" placeholder="Nhập mô tả">{{ old('description', $promotion->description) }}</textarea>
                 </div>
 
-<<<<<<< HEAD
-        <div class="mb-3">
-            <input type="number" name="usage_limit" class="form-control" placeholder="Giới hạn lượt dùng"
-                value="{{ old('usage_limit', $promotion->usage_limit) }}">
-        </div>
-        <div class="mb-3">
-    <input type="number" step="0.01" name="min_order_amount" class="form-control" placeholder="Giá trị đơn hàng tối thiểu"
-        value="{{ old('min_order_amount', $promotion->min_order_amount) }}">
-</div>
-
-<div class="mb-3">
-    <input type="number" step="0.01" name="max_order_amount" class="form-control" placeholder="Giá trị đơn hàng tối đa"
-        value="{{ old('max_order_amount', $promotion->max_order_amount) }}">
-</div>
-=======
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Loại giảm giá</label>
@@ -69,11 +54,10 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Giá trị giảm</label>
-                        <input type="text" name="discount_value" class="form-control" placeholder="Ví dụ: 100000"
-                            value="{{ old('discount_value', number_format($promotion->discount_value, 0, ',', '.')) }}">
+                        <input type="number" step="0.01" name="discount_value" class="form-control"
+                            value="{{ old('discount_value', $promotion->discount_value) }}">
                     </div>
                 </div>
->>>>>>> origin/CaoSon
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -88,91 +72,50 @@
                     </div>
                 </div>
 
-<<<<<<< HEAD
-       {{-- ✅ Chọn sản phẩm (checkbox) --}}
-<div class="mb-4">
-    <label class="form-label d-block">Chọn sản phẩm được áp dụng:</label>
-    <div class="row" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-        @foreach($products as $product)
-            <div class="col-md-4 mb-2">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="product_ids[]" 
-                           value="{{ $product->id }}"
-                           id="product_{{ $product->id }}"
-                           {{ in_array($product->id, old('product_ids', $selectedProductIds ?? [])) ? 'checked' : '' }}>
-                    <label class="form-check-label" for="product_{{ $product->id }}">
-                        {{ $product->product_name }}
-                    </label>
-                </div>
-            </div>
-        @endforeach
-    </div>
-</div>
-
-
-       {{-- ✅ Chọn danh mục --}}
-<div class="mb-3">
-    <label class="form-label">Chọn danh mục được áp dụng:</label>
-    <div class="row">
-        @foreach($categories as $category)
-            <div class="col-md-4">
-                <div class="form-check">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="category_ids[]"
-                        value="{{ $category->id }}"
-                        id="category_{{ $category->id }}"
-                        {{ in_array($category->id, old('category_ids', $selectedCategoryIds ?? [])) ? 'checked' : '' }}
-                    >
-                    <label class="form-check-label" for="category_{{ $category->id }}">
-                        {{ $category->category_name }}
-                    </label>
-                </div>
-            </div>
-        @endforeach
-    </div>
-</div>
-
-=======
                 <div class="mb-3">
                     <label class="form-label fw-bold">Giới hạn lượt dùng</label>
-                    <input type="number" name="usage_limit" class="form-control" placeholder="Nhập số lượt"
+                    <input type="number" name="usage_limit" class="form-control"
                         value="{{ old('usage_limit', $promotion->usage_limit) }}">
                 </div>
 
-                <input type="hidden" name="is_active" value="0">
-                <div class="form-check form-switch mb-4">
-                    <input type="checkbox" name="is_active" class="form-check-input" value="1"
-                        {{ old('is_active', $promotion->is_active) ? 'checked' : '' }}>
-                    <label class="form-check-label fw-bold">Kích hoạt</label>
-                </div>
->>>>>>> origin/CaoSon
-
-                {{-- Chọn sản phẩm --}}
-                <div class="mb-3">
-                    <label for="product_ids" class="form-label fw-bold">Chọn sản phẩm được áp dụng</label>
-                    <select name="product_ids[]" id="product_ids" class="form-control select2" multiple>
+                {{-- ✅ Chọn sản phẩm (checkbox) --}}
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Chọn sản phẩm được áp dụng:</label>
+                    <div class="row" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}"
-                                {{ in_array($product->id, old('product_ids', $selectedProductIds ?? [])) ? 'selected' : '' }}>
-                                {{ $product->product_name }}
-                            </option>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="product_ids[]" 
+                                           value="{{ $product->id }}"
+                                           id="product_{{ $product->id }}"
+                                           {{ in_array($product->id, old('product_ids', $selectedProductIds ?? [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="product_{{ $product->id }}">
+                                        {{ $product->product_name }}
+                                    </label>
+                                </div>
+                            </div>
                         @endforeach
-                    </select>
+                    </div>
                 </div>
 
-                {{-- Chọn danh mục --}}
-                <div class="mb-3">
-                    <label for="category_ids" class="form-label fw-bold">Chọn danh mục được áp dụng</label>
-                    <select name="category_ids[]" id="category_ids" class="form-control select2" multiple>
+                {{-- ✅ Chọn danh mục (checkbox) --}}
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Chọn danh mục được áp dụng:</label>
+                    <div class="row">
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}"
-                                {{ in_array($category->id, old('category_ids', $selectedCategoryIds ?? [])) ? 'selected' : '' }}>
-                                {{ $category->category_name }}
-                            </option>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="category_ids[]"
+                                           value="{{ $category->id }}"
+                                           id="category_{{ $category->id }}"
+                                           {{ in_array($category->id, old('category_ids', $selectedCategoryIds ?? [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="category_{{ $category->id }}">
+                                        {{ $category->category_name }}
+                                    </label>
+                                </div>
+                            </div>
                         @endforeach
-                    </select>
+                    </div>
                 </div>
 
                 <div class="text-start">
@@ -185,22 +128,3 @@
     </div>
 </div>
 @endsection
-
-{{-- Select2 --}}
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-@endpush
-
-@push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: "Chọn mục...",
-            allowClear: true,
-            width: '100%'
-        });
-    });
-</script>
-@endpush
