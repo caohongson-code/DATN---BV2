@@ -42,38 +42,89 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card mb-4">
-                            <div class="card-header bg-success text-white">📦 Thông tin sản phẩm</div>
-                            <div class="card-body">
-                                @if (session('buy_now') && isset($product))
-                                    <p><strong>Tên sản phẩm:</strong> {{ $product->name }}</p>
-                                    @if ($variant)
-                                        <p><strong>Phiên bản:</strong> {{ $variant->ram->value ?? '' }} /
-                                            {{ $variant->storage->value ?? '' }} / {{ $variant->color->value ?? '' }}</p>
-                                        @php $price = $variant->price; @endphp
-                                    @else
-                                        <p><strong>Phiên bản:</strong> Không chọn</p>
-                                        @php $price = $product->price; @endphp
-                                    @endif
-                                    <p><strong>Giá:</strong> {{ number_format($price, 0, ',', '.') }} VND</p>
-                                    <p><strong>Số lượng:</strong> {{ $buyNow['quantity'] }}</p>
-                                @elseif (isset($cartItems) && count($cartItems))
-                                    @foreach ($cartItems as $item)
-                                        <hr>
-                                        <p><strong>Tên sản phẩm:</strong> {{ $item['product']->name }}</p>
-                                        @if ($item['variant'])
-                                            <p><strong>Phiên bản:</strong> {{ $item['variant']->ram->value ?? '' }} /
-                                                {{ $item['variant']->storage->value ?? '' }} /
-                                                {{ $item['variant']->color->value ?? '' }}</p>
-                                        @endif
-                                        <p><strong>Giá:</strong> {{ number_format($item['price'], 0, ',', '.') }} VND</p>
-                                        <p><strong>Số lượng:</strong> {{ $item['quantity'] }}</p>
-                                    @endforeach
+                       <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">📦 Thông tin sản phẩm</div>
+                        <div class="card-body">
+
+                            {{-- Nếu mua ngay --}}
+                            @if($buyNow && isset($product))
+                                @php
+                                    $availableQty = $variant ? $variant->quantity : $product->quantity;
+                                    $price = $variant
+                                        ? (($variant->discount_price !== null && $variant->discount_price < $variant->price) ? $variant->discount_price : $variant->price)
+                                        : (($product->discount_price !== null && $product->discount_price < $product->price) ? $product->discount_price : $product->price);
+
+                                    if($availableQty < $buyNow['quantity']) $outOfStock = true;
+                                @endphp
+
+                                <p><strong>Tên sản phẩm:</strong> {{ $product->product_name }}</p>
+                                @if($variant)
+                                    <p><strong>Phiên bản:</strong>
+                                        {{ $variant->ram->value ?? '' }} /
+                                        {{ $variant->storage->value ?? '' }} /
+                                        {{ $variant->color->value ?? '' }}
+                                    </p>
                                 @endif
-                            </div>
+                                <p><strong>Giá:</strong> {{ number_format($price, 0, ',', '.') }} VND</p>
+                                <p><strong>Số lượng:</strong> {{ $buyNow['quantity'] }}</p>
+
+                                @if($availableQty < $buyNow['quantity'])
+                                    <div class="alert alert-danger mt-2">
+                                        Sản phẩm này đã hết hàng hoặc không đủ số lượng!
+                                    </div>
+                                @endif
+
+                            {{-- Nếu từ giỏ hàng --}}
+                            @elseif(!empty($cartItems))
+                                @php
+                                    $totalProducts = 0;
+                                    $totalItems = count($cartItems);
+                                @endphp
+                                @foreach($cartItems as $item)
+                                    @php
+                                        $availableQty = $item['variant']
+                                            ? $item['variant']->quantity
+                                            : $item['product']->quantity;
+
+                                        $itemPrice = $item['variant']
+                                            ? (($item['variant']->discount_price !== null && $item['variant']->discount_price < $item['variant']->price)
+                                                ? $item['variant']->discount_price
+                                                : $item['variant']->price)
+                                            : (($item['product']->discount_price !== null && $item['product']->discount_price < $item['product']->price)
+                                                ? $item['product']->discount_price
+                                                : $item['product']->price);
+
+                                        $totalProducts += $item['quantity'];
+
+                                        if($availableQty < $item['quantity']) $outOfStock = true;
+                                    @endphp
+                                    <hr>
+                                    <p><strong>Tên sản phẩm:</strong> {{ $item['product']->product_name }}</p>
+                                    @if($item['variant'])
+                                        <p><strong>Phiên bản:</strong>
+                                            {{ $item['variant']->ram->value ?? '' }} /
+                                            {{ $item['variant']->storage->value ?? '' }} /
+                                            {{ $item['variant']->color->value ?? '' }}
+                                        </p>
+                                    @endif
+                                    <p><strong>Giá:</strong> {{ number_format($itemPrice, 0, ',', '.') }} VND</p>
+                                    <p><strong>Số lượng:</strong> {{ $item['quantity'] }}</p>
+
+                                    @if($availableQty < $item['quantity'])
+                                        <div class="alert alert-danger mt-2">
+                                            Sản phẩm này đã hết hàng hoặc không đủ số lượng!
+                                        </div>
+                                    @endif
+                                @endforeach
+
+                                <hr>
+                                <p><strong>🛒 Tổng loại sản phẩm:</strong> {{ $totalItems }}</p>
+                                <p><strong>📦 Tổng số lượng sản phẩm:</strong> {{ $totalProducts }}</p>
+                            @endif
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <div class="card mb-4">
@@ -100,13 +151,15 @@
                                 id="subtotal">{{ number_format($subtotal, 0, ',', '.') }}</span> VND</p>
                         <p><strong>Phí vận chuyển:</strong> <span
                                 id="shipping">{{ number_format($shippingFee, 0, ',', '.') }}</span> VND</p>
-                        <p>Giảm giá: <span id="discount"></span> (<span id="discount-amount">{{ number_format($discount) }}</span> VND)</p>
+           <p><strong>Giảm giá:</strong> 
+    <span id="discount">0%</span> 
+    - <span id="discount-amount">0</span> VND
+</p>
+           <hr>
+                       <h5><strong>Thanh toán:</strong> 
+    <span id="total">{{ number_format($subtotal + $shippingFee - $discount, 0, ',', '.') }}</span> VND
+</h5>
 
-
-                        <hr>
-                        <h5><strong>Thanh toán:</strong> <span
-                                id="total">{{ number_format($subtotal + $shippingFee, 0, ',', '.') }}</span>
-                            VND</h5>
                     </div>
                 </div>
 
@@ -178,71 +231,62 @@
         @endif
     </div>
 @endsection
-@section('scripts')
-    <script>
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const voucherSelect = document.getElementById('voucher-select');
-            const momoQRContainer = document.getElementById('momo-qr-container');
-            const momoQR = document.getElementById('momo-qr');
-            const momoAmount = document.getElementById('momo-amount');
-            const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-            const codInfoBox = document.getElementById('cod-info-confirmation');
-            const form = document.getElementById('checkout-form');
 
-            const subtotal = {{ $subtotal }};
-            const shipping = {{ $shippingFee }};
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const voucherSelect   = document.getElementById('voucher-select');
+    const momoQRContainer = document.getElementById('momo-qr-container');
+    const momoQR          = document.getElementById('momo-qr');
+    const momoAmount      = document.getElementById('momo-amount');
+    const paymentRadios   = document.querySelectorAll('input[name="payment_method"]');
 
+    const shipping = {{ $shippingFee }};
+    const cartItems = @json($cartItems ?? []);
 
-            function calculateTotal() {
-                const option = voucherSelect.options[voucherSelect.selectedIndex];
-                const type = option.getAttribute('data-type') || '';
-                const value = parseFloat(option.getAttribute('data-value')) || 0;
+    function calculateSubtotal() {
+        let subtotal = 0;
+        cartItems.forEach(item => {
+            let price = item.discount_price && item.discount_price > 0 ? item.discount_price : item.price;
+            subtotal += price * item.quantity;
+        });
+        return subtotal;
+    }
 
-                let discountAmount = 0;
-                let discountText = '0';
+    function calculateTotal() {
+        const subtotal = calculateSubtotal();
+        const option   = voucherSelect.options[voucherSelect.selectedIndex];
+        const type     = option ? option.dataset.type : null;
+        const value    = parseFloat(option ? option.dataset.value : 0);
 
-                if (type === 'percentage') {
-                    discountAmount = subtotal * value / 100;
-                    discountText = value + '%';
-                } else if (type === 'fixed') {
-                    discountAmount = value;
-                    discountText = new Intl.NumberFormat('vi-VN').format(value) + ' VND';
-                }
+        const discountAmount = type === 'percentage' ? subtotal * value / 100 : value;
+        const total = subtotal + shipping - discountAmount;
 
-                const total = Math.max(0, subtotal + shipping - discountAmount);
+        document.getElementById('subtotal').innerText =
+            new Intl.NumberFormat('vi-VN').format(subtotal);
+        document.getElementById('discount').innerText =
+            new Intl.NumberFormat('vi-VN').format(discountAmount);
+        document.getElementById('total').innerText =
+            new Intl.NumberFormat('vi-VN').format(total) + ' VND';
 
-                document.getElementById('discount').innerText = discountText;
-                document.getElementById('discount-amount').innerText = new Intl.NumberFormat('vi-VN').format(
-                    discountAmount);
-                document.getElementById('total').innerText = new Intl.NumberFormat('vi-VN').format(total) + ' VND';
-                // ✅ Test giá trị
-                console.log("=== Debug Voucher ===");
-                console.log("Subtotal:", subtotal);
-                console.log("Shipping:", shipping);
-                console.log("Discount type:", type);
-                console.log("Discount value:", value);
-                console.log("Discount amount:", discountAmount);
-                console.log("Total after discount:", total);
-                return total;
+        return total;
+    }
+
+    voucherSelect.addEventListener('change', calculateTotal);
+
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            const total = calculateTotal();
+            momoQRContainer.style.display = this.value === 'momo' ? 'block' : 'none';
+            if (this.value === 'momo') {
+                momoAmount.innerText = new Intl.NumberFormat('vi-VN').format(total);
+                momoQR.src = "{{ url('/generate-momo-qr') }}?amount=" + total;
             }
+        });
+    });
 
-<<<<<<< HEAD
-            // Gọi ngay khi load
-            calculateTotal();
-
-            // Khi đổi voucher thì tính lại
-            voucherSelect.addEventListener('change', function() {
-                const total = calculateTotal();
-                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
-                if (selectedPayment?.value === 'momo') {
-                    momoAmount.innerText = new Intl.NumberFormat('vi-VN').format(total);
-                    momoQR.src = "{{ url('/generate-momo-qr') }}?amount=" + total;
-                }
-            });
-        
-
-            document.querySelector('input[name="payment_method"]:checked')?.dispatchEvent(new Event('change'));
+    calculateTotal();
+      document.querySelector('input[name="payment_method"]:checked')?.dispatchEvent(new Event('change'));
 
             form.addEventListener('submit', function(e) {
                 const phone = form.dataset.phone;
@@ -280,7 +324,7 @@
                 // ❌ KHÔNG submit form momo ở đây nữa, vì đã được xử lý sau khi controller redirect sang momo_redirect.blade.php
                 // ✅ Form sẽ post về route checkout.store như bình thường
             });
-        });
-    </script>
-@endsection
+});
 
+</script>
+@endpush

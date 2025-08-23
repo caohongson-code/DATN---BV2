@@ -377,7 +377,7 @@ public function processRefund(Request $request, $id)
                 'wallet_id' => $wallet->id,
                 'amount' => $amount,
                 'type' => 'refund',
-                'note' => 'Hoàn tiền đơn hàng #' . $returnRequest->order->id,
+                'note' => 'Hoàn tiền đơn hàng ',
             ]);
 
             ReturnRequestProgress::create([

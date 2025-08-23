@@ -34,6 +34,71 @@ class CheckoutController extends Controller
     /**
      * Hiển thị trang xác nhận đơn hàng
      */
+    /**
+     * Tạo danh sách item từ session "buy_now" hoặc "checkout_selected".
+     */
+    private function buildCartItems($buyNow, $selectedItems, $user, &$subtotal)
+    {
+        $cartItems = [];
+
+        // ===== MUA NGAY =====
+        if ($buyNow) {
+            $product = Product::select('id', 'product_name', 'price', 'discount_price', 'quantity')
+                ->find($buyNow['product_id']);
+            if (!$product) throw new \Exception('Sản phẩm không tồn tại.');
+
+            $variant = !empty($buyNow['variant_id'])
+                ? ProductVariant::with(['ram', 'storage', 'color'])->find($buyNow['variant_id'])
+                : null;
+
+            $price     = $this->getFinalPrice($product, $variant);
+            $quantity  = max(1, (int)($buyNow['quantity'] ?? 1));
+            $lineTotal = $price * $quantity;
+
+            $subtotal += $lineTotal;
+            $cartItems[] = compact('product', 'variant', 'quantity', 'price') + [
+                'subtotal'  => $lineTotal,
+                'from_cart' => false,
+            ];
+        }
+
+        // ===== GIỎ HÀNG =====
+        elseif (!empty($selectedItems)) {
+            $cart = Cart::with(['details.product', 'details.variant'])
+                ->where('account_id', $user->id)
+                ->where('cart_status_id', 1)
+                ->first();
+
+            if (!$cart) throw new \Exception('Giỏ hàng trống.');
+
+            $cartDetails = CartDetail::with(['product', 'variant'])
+                ->where('cart_id', $cart->id)
+                ->whereIn('id', $selectedItems)
+                ->get();
+
+            if ($cartDetails->isEmpty()) throw new \Exception('Không có sản phẩm để thanh toán.');
+
+            foreach ($cartDetails as $item) {
+                $price     = $this->getFinalPrice($item->product, $item->variant);
+                $quantity  = max(1, (int)$item->quantity);
+                $lineTotal = $price * $quantity;
+                $subtotal += $lineTotal;
+
+                $cartItems[] = [
+                    'cart_detail_id' => $item->id,
+                    'product'        => $item->product,
+                    'variant'        => $item->variant,
+                    'quantity'       => $quantity,
+                    'price'          => $price,
+                    'subtotal'       => $lineTotal,
+                    'from_cart'      => true,
+                ];
+            }
+        }
+
+        return $cartItems;
+    }
+
     public function index(Request $request)
     {
         /** @var \App\Models\Account $user */
@@ -44,8 +109,13 @@ class CheckoutController extends Controller
 
         $buyNow        = session('buy_now');
         $selectedItems = session('checkout_selected', []);
+         if (!empty($selectedItems)) {
+            Session::forget('buy_now');
+            $buyNow = null;
+        }
+
+        // Xóa selected sau khi lấy ra (tránh bị lặp lại)
         Session::forget('checkout_selected');
-        $cartItems     = [];
         $subtotal      = 0;
 
         // ===== MUA NGAY =====

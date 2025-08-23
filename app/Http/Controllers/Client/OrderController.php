@@ -110,7 +110,7 @@ class OrderController extends Controller
         $wallet->transactions()->create([
             'type' => 'Hoàn tiền',
             'amount' => $refundAmount,
-            'note' => 'Hoàn tiền đơn hàng #' . $order->id . ' (đã trừ phí ship 30.000đ)',
+            'note' => 'Hoàn tiền đơn hàng',
         ]);
     }
 

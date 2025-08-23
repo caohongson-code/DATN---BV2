@@ -114,14 +114,19 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
-                                    @if($item->type === 'deposit')
-                                        <span class="text-success">Nạp tiền</span>
-                                    @elseif($item->type === 'withdraw')
-                                        <span class="text-danger">Rút tiền</span>
-                                    @else
-                                        {{ ucfirst($item->type) }}
-                                    @endif
-                                </td>
+    @if($item->type === 'deposit')
+        <span class="text-success">Nạp tiền</span>
+    @elseif($item->type === 'withdraw')
+        <span class="text-danger">Rút tiền</span>
+    @elseif($item->type === 'payment')
+        <span class="text-primary">Thanh toán</span>
+    @elseif($item->type === 'refund')
+        <span class="text-warning">Hoàn tiền</span>
+    @else
+        {{ $item->type }}
+    @endif
+</td>
+
                                 <td>{{ number_format($item->amount, 0, ',', '.') }}đ</td>
                                 <td>{{ $item->created_at->format('d/m/Y H:i') }}</td>
                                 <td>{{ $item->note }}</td>

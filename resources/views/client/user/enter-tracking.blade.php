@@ -149,13 +149,19 @@
 </div>
 
 <div class="mb-3" id="bank_account_wrapper">
-    <label for="bank_account" class="form-label fw-bold" id="bank_account_label">🔢 Số tài khoản ngân hàng / SĐT MoMo</label>
+    <label for="bank_account" class="form-label fw-bold" id="bank_account_label">
+        🔢 Số tài khoản ngân hàng / SĐT MoMo
+    </label>
     <input type="text" name="bank_account" class="form-control"
         id="bank_account_input"
         value="{{ old('bank_account') }}"
         placeholder="Nhập số tài khoản hoặc SĐT MoMo" required>
     <small class="text-muted" id="bank_account_hint">Vui lòng nhập đúng thông tin để nhận hoàn tiền</small>
+
+    {{-- Thông báo lỗi frontend --}}
+    <div class="invalid-feedback" id="bank_account_error"></div>
 </div>
+
 
 
 
@@ -175,9 +181,17 @@
         const label = document.getElementById('bank_account_label');
         const input = document.getElementById('bank_account_input');
         const hint = document.getElementById('bank_account_hint');
+        const form = input.closest("form");
+        const errorBox = document.getElementById('bank_account_error');
+
+        // SĐT từ backend
+        const userPhone = "{{ Auth::user()->phone }}";
 
         function updateFieldDisplay() {
             const value = select.value;
+            input.classList.remove("is-invalid");
+            errorBox.textContent = "";
+
             if (value === 'Wallet') {
                 label.textContent = '📱 Số điện thoại ví nội bộ';
                 input.placeholder = 'Nhập số điện thoại ví nội bộ';
@@ -193,8 +207,22 @@
             }
         }
 
+        // Validate khi submit
+        form.addEventListener("submit", function (e) {
+            let valid = true;
+            if (select.value === "Wallet") {
+                if (input.value.trim() !== userPhone) {
+                    e.preventDefault(); 
+                    input.classList.add("is-invalid");
+                    errorBox.textContent = "❌ Số điện thoại ví nội bộ không khớp với tài khoản của bạn!";
+                    valid = false;
+                }
+            }
+            return valid;
+        });
+
         select.addEventListener('change', updateFieldDisplay);
-        updateFieldDisplay(); // gọi lần đầu
+        updateFieldDisplay();
     });
 </script>
 @endpush
