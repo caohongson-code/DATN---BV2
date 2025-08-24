@@ -71,11 +71,7 @@
                         <input type="file" class="form-control" id="image" name="image" accept="image/*">
                     </div>
 
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Số lượng</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity"
-                            value="{{ old('quantity') }}" required>
-                    </div>
+                  
                     <div class="mb-3">
                         <label for="description" class="form-label">Mô tả chi tiết</label>
                         <textarea class="form-control" id="description" name="description" rows="4">{{ old('description') }}</textarea>

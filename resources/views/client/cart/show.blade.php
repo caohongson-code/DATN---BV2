@@ -60,9 +60,15 @@
                                 </td>
                                 <td class="text-danger fw-bold">{{ number_format($price,0,',','.') }} đ</td>
                                 <td class="text-center">
-                                    <input type="number" class="form-control quantity-input text-center"
-                                           name="quantities[{{ $item->id }}]" value="{{ $item->quantity }}" min="1">
-                                </td>
+    <input type="number"
+           class="form-control form-control-sm quantity-input text-center"
+           name="quantities[{{ $item->id }}]"
+           value="{{ $item->quantity }}"
+           min="1"
+           max="{{ $item->variant ? $item->variant->quantity - 1 : $item->product->quantity - 1 }}"
+           style="width: 100px;">
+</td>
+
                                 <td class="fw-bold subtotal">{{ number_format($subtotal,0,',','.') }} đ</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm btn-delete-item" data-id="{{ $item->id }}">

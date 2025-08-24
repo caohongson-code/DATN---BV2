@@ -63,6 +63,10 @@
                                value="{{ old('discount_price', $product->discount_price) }}">
                     </div>
                 </div>
+<div class="mb-3">
+    <label for="description" class="form-label fw-semibold">Mô tả chi tiết</label>
+    <textarea class="form-control" id="description" name="description" rows="4">{{ old('description', $product->description) }}</textarea>
+</div>
 
                 <div class="mb-3">
                     <label for="image" class="form-label fw-semibold">Ảnh sản phẩm</label>
@@ -76,11 +80,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="quantity" class="form-label fw-semibold">Số lượng</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity"
-                               value="{{ old('quantity', $product->quantity) }}" required>
-                    </div>
+                 
                     <div class="col-md-6 mb-3">
                         <label for="status" class="form-label fw-semibold">
                             <i class="fas fa-toggle-on text-info me-1"></i>Trạng thái

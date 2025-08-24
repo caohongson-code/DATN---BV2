@@ -54,10 +54,25 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|lte:price',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'quantity' => 'required|integer|min:0',
+            // 'quantity' => 'required|integer|min:0',
             'status' => 'required|boolean',
             'description' => 'nullable|string',
-        ]);
+        ]
+    ,  [
+        'product_name.required' => 'Tên sản phẩm là bắt buộc.',
+        'category_id.required' => 'Danh mục là bắt buộc.',
+        'category_id.exists' => 'Danh mục không hợp lệ.',
+        'price.required' => 'Giá sản phẩm là bắt buộc.',
+        'price.numeric' => 'Giá sản phẩm phải là số.',
+        'price.min' => 'Giá sản phẩm không được nhỏ hơn 0.',
+        'discount_price.numeric' => 'Giá khuyến mãi phải là số.',
+        'discount_price.lte' => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
+        'image.image' => 'Tệp tải lên phải là hình ảnh.',
+        'image.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif.',
+        'image.max' => 'Hình ảnh không được vượt quá 2MB.',
+        'status.required' => 'Trạng thái sản phẩm là bắt buộc.',
+        'status.boolean' => 'Trạng thái không hợp lệ.',
+    ]);
 
         DB::beginTransaction();
         try {
@@ -66,7 +81,7 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'price' => $request->price,
                 'discount_price' => $request->discount_price,
-                'quantity' => $request->quantity,
+                // 'quantity' => $request->quantity,
                 'status' => $request->status,
                 'description' => $request->description,
             ]);
@@ -130,11 +145,29 @@ class ProductController extends Controller
 
         $request->validate([
             'product_name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0|lte:price',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // 'quantity' => 'required|integer|min:0',
+            'status' => 'required|boolean',
             'description' => 'nullable|string',
-            'quantity' => 'required|integer|min:0',
-        ]);
+        ]
+    ,  [
+        'product_name.required' => 'Tên sản phẩm là bắt buộc.',
+        'category_id.required' => 'Danh mục là bắt buộc.',
+        'category_id.exists' => 'Danh mục không hợp lệ.',
+        'price.required' => 'Giá sản phẩm là bắt buộc.',
+        'price.numeric' => 'Giá sản phẩm phải là số.',
+        'price.min' => 'Giá sản phẩm không được nhỏ hơn 0.',
+        'discount_price.numeric' => 'Giá khuyến mãi phải là số.',
+        'discount_price.lte' => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
+        'image.image' => 'Tệp tải lên phải là hình ảnh.',
+        'image.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif.',
+        'image.max' => 'Hình ảnh không được vượt quá 2MB.',
+        'status.required' => 'Trạng thái sản phẩm là bắt buộc.',
+        'status.boolean' => 'Trạng thái không hợp lệ.',
+    ]);
         if ($request->hasFile('image')) {
             // Xoá ảnh cũ nếu có
             if ($product->image && StorageFacade::disk('public')->exists($product->image)) {
@@ -151,7 +184,7 @@ class ProductController extends Controller
             'price' => $request->price,
             'category_id' => $request->category_id,
             'description' => $request->description,
-            'quantity' => $request->quantity,
+            // 'quantity' => $request->quantity,
         ]);
 
         $variantsData = $request->variants ?? [];

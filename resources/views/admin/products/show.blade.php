@@ -10,61 +10,95 @@
         <i class="fas fa-arrow-left me-2"></i> Quay lại danh sách
     </a>
 
-    <div class="card">
+    <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <div class="row">
+            <div class="row g-4">
                 {{-- Ảnh đại diện --}}
                 <div class="col-md-4 text-center">
                     <img id="main-image"
                          src="{{ asset('storage/' . $product->image) }}"
                          alt="Ảnh sản phẩm"
-                         class="img-fluid rounded border"
-                         style="max-height: 250px; object-fit: contain;">
+                         class="img-fluid rounded border shadow-sm"
+                         style="max-height: 280px; object-fit: contain;">
                 </div>
 
                 {{-- Thông tin sản phẩm --}}
                 <div class="col-md-8">
-                    <table class="table table-borderless">
-                        <tr><th>ID:</th><td>{{ $product->id }}</td></tr>
-                        <tr><th>Tên sản phẩm:</th><td>{{ $product->product_name }}</td></tr>
-                        <tr><th>Giá:</th><td id="variant-price">{{ number_format($product->price, 0, ',', '.') }} đ</td></tr>
-                        <tr><th>Số lượng:</th><td id="variant-quantity">{{ $product->quantity }}</td></tr>
-                        <tr><th>RAM:</th><td id="variant-ram">-</td></tr>
-                        <tr><th>Bộ nhớ:</th><td id="variant-storage">-</td></tr>
-                        <tr><th>Màu sắc:</th><td id="variant-color">-</td></tr>
-                        <tr>
-                            <th>Trạng thái:</th>
-                            <td>
-                                @if($product->status)
-                                    <span class="badge bg-success">Hiển thị</span>
-                                @else
-                                    <span class="badge bg-secondary">Ẩn</span>
-                                @endif
-                            </td>
-                        </tr>
-                        <tr><th>Mô tả:</th><td>{!! nl2br(e($product->description)) !!}</td></tr>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <tr>
+                                <th style="width: 180px;">ID:</th>
+                                <td>{{ $product->id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Tên sản phẩm:</th>
+                                <td>{{ $product->product_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Giá:</th>
+                                <td id="variant-price">{{ number_format($product->price, 0, ',', '.') }} đ</td>
+                            </tr>
+                            <tr>
+                                <th>Số lượng:</th>
+                                <td id="variant-quantity">{{ $product->quantity ?? 'Chưa cập nhật' }}</td>
+                            </tr>
+                            <tr>
+                                <th>RAM:</th>
+                                <td id="variant-ram">{{ $product->ram ?? 'Chưa cập nhật' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Bộ nhớ:</th>
+                                <td id="variant-storage">{{ $product->storage ?? 'Chưa cập nhật' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Màu sắc:</th>
+                                <td id="variant-color">{{ $product->color ?? 'Chưa cập nhật' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Trạng thái:</th>
+                                <td>
+                                    @if($product->status)
+                                        <span class="badge bg-success">Hiển thị</span>
+                                    @else
+                                        <span class="badge bg-secondary">Ẩn</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Mô tả:</th>
+                                <td>{!! nl2br(e($product->description)) !!}</td>
+                            </tr>
+                        </table>
+                    </div>
 
-                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning me-2">
-                        <i class="fas fa-edit me-1"></i> Sửa sản phẩm
-                    </a>
+                    {{-- Nút hành động --}}
+                    <div class="mt-3">
+                        <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning me-2">
+                            <i class="fas fa-edit me-1"></i> Sửa sản phẩm
+                        </a>
 
-                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt me-1"></i> Xóa sản phẩm
-                        </button>
-                    </form>
+                        <form action="{{ route('products.destroy', $product->id) }}"
+                              method="POST"
+                              class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-1"></i> Xóa sản phẩm
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
             <hr>
+
+            {{-- Biến thể --}}
             <h5 class="fw-bold mb-3">Chọn biến thể:</h5>
             <div class="d-flex flex-wrap gap-2">
-                @foreach ($product->variants as $variant)
+                @forelse ($product->variants as $variant)
                     <button type="button"
-                            class="btn btn-outline-dark variant-btn px-3 py-2"
+                            class="btn btn-outline-dark variant-btn px-3 py-2 position-relative"
                             style="border: 2px solid {{ $variant->color->code }}; background-color: {{ $variant->color->code }}22;"
                             data-variant="{{ json_encode([
                                 'image' => $variant->image,
@@ -75,8 +109,15 @@
                                 'color' => $variant->color->value
                             ]) }}">
                         {{ $variant->color->value }} - {{ $variant->ram->value }} - {{ $variant->storage->value }}
+
+                        {{-- Hiển thị chấm than đỏ nếu số lượng < 5 --}}
+                        @if($variant->quantity < 5)
+                            <i class="fas fa-exclamation-circle text-danger ms-2"></i>
+                        @endif
                     </button>
-                @endforeach
+                @empty
+                    <p class="text-muted fst-italic">Sản phẩm chưa có biến thể</p>
+                @endforelse
             </div>
         </div>
     </div>
@@ -91,12 +132,13 @@
             button.addEventListener('click', function () {
                 const data = JSON.parse(this.getAttribute('data-variant'));
 
-                // Cập nhật ảnh nếu có
+                // Cập nhật ảnh
                 const imageTag = document.getElementById('main-image');
                 if (data.image) {
                     imageTag.src = `/storage/${data.image}`;
                 }
 
+                // Cập nhật thông tin
                 document.getElementById('variant-price').textContent = data.price;
                 document.getElementById('variant-quantity').textContent = data.quantity;
                 document.getElementById('variant-ram').textContent = data.ram;

@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Order;
 use App\Models\PaymentStatus;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -82,8 +83,14 @@ class DashboardControlle extends Controller
         $totalCustomers = Account::count();
         $totalProducts = Product::count();
         $totalOrders = Order::where('order_status_id',1)->count();
-        $lowStockProducts = Product::where('quantity', '<', 5)->count();
+        // Đếm số biến thể gần hết hàng
+$lowStockVariantsCount = ProductVariant::where('quantity', '<', 5)->count();
 
+// Lấy chi tiết 1 biến thể gần hết hàng (ví dụ số lượng nhỏ nhất)
+$lowStockVariant = ProductVariant::where('quantity', '<', 5)
+    ->with('product') // load luôn product cha
+    ->orderBy('quantity', 'asc')
+    ->first();
         $recentOrders = Order::orderByDesc('order_date')->take(5)->get();
         $newCustomers = Account::orderByDesc('created_at')->take(5)->get();
 
@@ -98,7 +105,8 @@ class DashboardControlle extends Controller
             'totalCustomers',
             'totalProducts',
             'totalOrders',
-            'lowStockProducts',
+            'lowStockVariantsCount',
+            'lowStockVariant',
             'recentOrders',
             'newCustomers',
             'paymentStatuses',

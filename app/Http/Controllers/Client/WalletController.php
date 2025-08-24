@@ -19,7 +19,10 @@ class WalletController extends Controller
         ]);
     }
 
-    $wallet->load('transactions');
+    $wallet->load(['transactions' => function ($query) {
+    $query->orderBy('id', 'desc');
+}]);
+
 
     return view('client.user.wallet', compact('wallet'));
 }
