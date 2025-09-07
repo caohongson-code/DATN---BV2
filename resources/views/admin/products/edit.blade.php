@@ -5,6 +5,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold mb-0">Sửa sản phẩm: {{ $product->product_name }}</h4>
                 <a href="{{ route('products.index') }}" class="btn btn-sm btn-light border shadow-sm text-dark d-flex align-items-center">
@@ -13,7 +14,6 @@
                 </a>
             </div>
 
-            <div class="card-body">
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0">
@@ -63,24 +63,26 @@
                                value="{{ old('discount_price', $product->discount_price) }}">
                     </div>
                 </div>
-<div class="mb-3">
-    <label for="description" class="form-label fw-semibold">Mô tả chi tiết</label>
-    <textarea class="form-control" id="description" name="description" rows="4">{{ old('description', $product->description) }}</textarea>
-</div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label fw-semibold">Mô tả chi tiết</label>
+                    <textarea class="form-control" id="description" name="description" rows="4">{{ old('description', $product->description) }}</textarea>
+                </div>
 
                 <div class="mb-3">
                     <label for="image" class="form-label fw-semibold">Ảnh sản phẩm</label>
                     <input type="file" class="form-control" id="image" name="image" accept="image/*">
                     @if($product->image)
                         <div class="mt-2">
+                            <p class="text-muted mb-1">Ảnh hiện tại:</p>
                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}"
-                                 style="max-height: 150px; object-fit: contain;">
+                                 style="max-height: 150px; object-fit: contain;" class="border rounded">
+                            <input type="hidden" name="current_image" value="{{ $product->image }}">
                         </div>
                     @endif
                 </div>
 
                 <div class="row">
-                 
                     <div class="col-md-6 mb-3">
                         <label for="status" class="form-label fw-semibold">
                             <i class="fas fa-toggle-on text-info me-1"></i>Trạng thái
@@ -96,78 +98,156 @@
                 <h5 class="fw-bold mt-4 mb-3">Biến thể sản phẩm</h5>
 
                 <div id="variants-container">
-                    @foreach ($product->variants as $index => $variant)
-                        <div class="card p-3 mb-4 border shadow-sm variant-item">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-2">
-                                    <label class="form-label">Màu sắc</label>
-                                    <select name="variants[{{ $index }}][color_id]" class="form-select" required>
-                                        <option value="">-- Chọn màu --</option>
-                                        @foreach ($colors as $color)
-                                            <option value="{{ $color->id }}"
-                                                {{ old("variants.$index.color_id", $variant->color_id) == $color->id ? 'selected' : '' }}>
-                                                {{ $color->value }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">RAM</label>
-                                    <select name="variants[{{ $index }}][ram_id]" class="form-select" required>
-                                        <option value="">-- Chọn RAM --</option>
-                                        @foreach ($rams as $ram)
-                                            <option value="{{ $ram->id }}"
-                                                {{ old("variants.$index.ram_id", $variant->ram_id) == $ram->id ? 'selected' : '' }}>
-                                                {{ $ram->value }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Dung lượng</label>
-                                    <select name="variants[{{ $index }}][storage_id]" class="form-select" required>
-                                        <option value="">-- Chọn --</option>
-                                        @foreach ($storages as $storage)
-                                            <option value="{{ $storage->id }}"
-                                                {{ old("variants.$index.storage_id", $variant->storage_id) == $storage->id ? 'selected' : '' }}>
-                                                {{ $storage->value }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Giá</label>
-                                    <input type="number" name="variants[{{ $index }}][price]" class="form-control"
-                                        value="{{ old("variants.$index.price", $variant->price) }}" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Giá khuyến mãi</label>
-                                    <input type="number" name="variants[{{ $index }}][discount_price]" class="form-control"
-                                        value="{{ old("variants.$index.discount_price", $variant->discount_price) }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Số lượng</label>
-                                    <input type="number" name="variants[{{ $index }}][quantity]" class="form-control"
-                                        value="{{ old("variants.$index.quantity", $variant->quantity) }}" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Ảnh (nếu thay)</label>
-                                    <input type="file" name="color_images[{{ $variant->color_id }}]" class="form-control" accept="image/*">
-                                    <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $variant->id }}">
-                                    <input type="hidden" name="variants[{{ $index }}][old_image]" value="{{ $variant->image }}">
-                                    @if($variant->image)
-                                        <img src="{{ asset('storage/' . $variant->image) }}" alt="variant image"
-                                            class="img-thumbnail mt-1" style="max-height: 60px;">
-                                    @endif
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button type="button" class="btn btn-outline-danger btn-sm remove-variant">
-                                        <i class="fas fa-times"></i> Xoá biến thể
-                                    </button>
+                    @if(old('variants'))
+                        {{-- Hiển thị dữ liệu từ old() khi có lỗi validation --}}
+                        @foreach(old('variants') as $index => $oldVariant)
+                            <div class="card p-3 mb-4 border shadow-sm variant-item">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-2">
+                                        <label class="form-label">Màu sắc</label>
+                                        <select name="variants[{{ $index }}][color_id]" class="form-select" required>
+                                            <option value="">-- Chọn màu --</option>
+                                            @foreach ($colors as $color)
+                                                <option value="{{ $color->id }}"
+                                                    {{ $oldVariant['color_id'] == $color->id ? 'selected' : '' }}>
+                                                    {{ $color->value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">RAM</label>
+                                        <select name="variants[{{ $index }}][ram_id]" class="form-select" required>
+                                            <option value="">-- Chọn RAM --</option>
+                                            @foreach ($rams as $ram)
+                                                <option value="{{ $ram->id }}"
+                                                    {{ $oldVariant['ram_id'] == $ram->id ? 'selected' : '' }}>
+                                                    {{ $ram->value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Dung lượng</label>
+                                        <select name="variants[{{ $index }}][storage_id]" class="form-select" required>
+                                            <option value="">-- Chọn --</option>
+                                            @foreach ($storages as $storage)
+                                                <option value="{{ $storage->id }}"
+                                                    {{ $oldVariant['storage_id'] == $storage->id ? 'selected' : '' }}>
+                                                    {{ $storage->value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Giá</label>
+                                        <input type="number" name="variants[{{ $index }}][price]" class="form-control"
+                                            value="{{ $oldVariant['price'] ?? '' }}" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Giá khuyến mãi</label>
+                                        <input type="number" name="variants[{{ $index }}][discount_price]" class="form-control"
+                                            value="{{ $oldVariant['discount_price'] ?? '' }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Số lượng</label>
+                                        <input type="number" name="variants[{{ $index }}][quantity]" class="form-control"
+                                            value="{{ $oldVariant['quantity'] ?? '' }}" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Ảnh (nếu thay)</label>
+                                        <input type="file" name="variants[{{ $index }}][image]" class="form-control" accept="image/*">
+                                        @if(isset($oldVariant['id']))
+                                            <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $oldVariant['id'] }}">
+                                        @endif
+                                        @if(isset($oldVariant['old_image']))
+                                            <input type="hidden" name="variants[{{ $index }}][old_image]" value="{{ $oldVariant['old_image'] }}">
+                                            <img src="{{ asset('storage/' . $oldVariant['old_image']) }}" alt="variant image" class="img-thumbnail mt-1" style="max-height: 60px;">
+                                        @endif
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-variant">
+                                            <i class="fas fa-times"></i> Xoá biến thể
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    @else
+                        {{-- Hiển thị dữ liệu gốc từ database --}}
+                        @foreach ($product->variants as $index => $variant)
+                            <div class="card p-3 mb-4 border shadow-sm variant-item">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-2">
+                                        <label class="form-label">Màu sắc</label>
+                                        <select name="variants[{{ $index }}][color_id]" class="form-select" required>
+                                            <option value="">-- Chọn màu --</option>
+                                            @foreach ($colors as $color)
+                                                <option value="{{ $color->id }}"
+                                                    {{ $variant->color_id == $color->id ? 'selected' : '' }}>
+                                                    {{ $color->value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">RAM</label>
+                                        <select name="variants[{{ $index }}][ram_id]" class="form-select" required>
+                                            <option value="">-- Chọn RAM --</option>
+                                            @foreach ($rams as $ram)
+                                                <option value="{{ $ram->id }}"
+                                                    {{ $variant->ram_id == $ram->id ? 'selected' : '' }}>
+                                                    {{ $ram->value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Dung lượng</label>
+                                        <select name="variants[{{ $index }}][storage_id]" class="form-select" required>
+                                            <option value="">-- Chọn --</option>
+                                            @foreach ($storages as $storage)
+                                                <option value="{{ $storage->id }}"
+                                                    {{ $variant->storage_id == $storage->id ? 'selected' : '' }}>
+                                                    {{ $storage->value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Giá</label>
+                                        <input type="number" name="variants[{{ $index }}][price]" class="form-control"
+                                            value="{{ $variant->price }}" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Giá khuyến mãi</label>
+                                        <input type="number" name="variants[{{ $index }}][discount_price]" class="form-control"
+                                            value="{{ $variant->discount_price }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Số lượng</label>
+                                        <input type="number" name="variants[{{ $index }}][quantity]" class="form-control"
+                                            value="{{ $variant->quantity }}" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Ảnh (nếu thay)</label>
+                                        <input type="file" name="variants[{{ $index }}][image]" class="form-control" accept="image/*">
+                                        <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $variant->id }}">
+                                        <input type="hidden" name="variants[{{ $index }}][old_image]" value="{{ $variant->image }}">
+                                        @if($variant->image)
+                                            <img src="{{ asset('storage/' . $variant->image) }}" alt="variant image" class="img-thumbnail mt-1" style="max-height: 60px;">
+                                        @endif
+                                        @error("variants.$index.image") <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-variant">
+                                            <i class="fas fa-times"></i> Xoá biến thể
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
 
                 <button type="button" class="btn btn-outline-primary btn-sm" id="add-variant-btn">
@@ -183,7 +263,11 @@
         </div>
     </div>
 </div>
-@php $variantIndex = count($product->variants); @endphp
+
+@php 
+    // Tính toán index cho biến thể mới dựa trên old() hoặc variants hiện tại
+    $variantIndex = old('variants') ? count(old('variants')) : count($product->variants);
+@endphp
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -232,8 +316,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="number" name="variants[\${index}][quantity]" class="form-control" required>
             </div>
             <div class="col-md-2">
-                <label class="form-label">Ảnh</label>
-                <input type="file" name="color_images[new_\${index}]" class="form-control" accept="image/*">
+                <label class="form-label">Ảnh <span class="text-danger">*</span></label>
+                <input type="file" name="color_images[new_\${index}]" class="form-control" accept="image/*" required>
+                <small class="text-muted">Ảnh bắt buộc cho biến thể mới</small>
             </div>
             <div class="col-12 text-end">
                 <button type="button" class="btn btn-outline-danger btn-sm remove-variant">
@@ -257,6 +342,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+</script>
+
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#description'))
+        .catch(error => {
+            console.error(error);
+        });
 </script>
 
 @endsection

@@ -32,13 +32,15 @@ class CategoryController extends Controller
     // Lưu danh mục mới vào database
     public function store(Request $request)
     {
-       $validated = $request->validate([
-            'category_name' => 'required|string|max:225',
-            'description'   => 'nullable|string',
-        ], [
-            'category_name.required' => 'Tên danh mục không được để trống',
-            'category_name.max'      => 'Tên danh mục tối đa 225 ký tự',
-        ]);
+      $validated = $request->validate([
+    'category_name' => 'required|string|max:225|unique:categories,category_name',
+    'description'   => 'nullable|string',
+], [
+    'category_name.required' => 'Tên danh mục không được để trống',
+    'category_name.max'      => 'Tên danh mục tối đa 225 ký tự',
+    'category_name.unique'   => 'Tên danh mục đã tồn tại',
+]);
+
 
         Category::create($validated);
 
@@ -62,10 +64,15 @@ class CategoryController extends Controller
     // Cập nhật danh mục
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'category_name' => 'required|string|max:225',
-            'description' => 'nullable|string',
-        ]);
+      $validated = $request->validate([
+    'category_name' => 'required|string|max:225|unique:categories,category_name,' . $id,
+    'description'   => 'nullable|string',
+], [
+    'category_name.required' => 'Tên danh mục không được để trống',
+    'category_name.max'      => 'Tên danh mục tối đa 225 ký tự',
+    'category_name.unique'   => 'Tên danh mục đã tồn tại',
+]);
+
 
         $category = Category::findOrFail($id);
         $category->update($validated);
