@@ -24,10 +24,7 @@ class Account extends Authenticatable implements CanResetPasswordContract
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
-    public function wallet()
-{
-    return $this->hasOne(Wallet::class);
-}
+
 public function savedPromotions()
 {
     return $this->belongsToMany(Promotion::class, 'promotion_user', 'account_id', 'promotion_id')

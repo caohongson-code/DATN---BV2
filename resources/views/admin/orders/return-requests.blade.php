@@ -101,67 +101,67 @@
                                             <span class="text-muted">Chưa cập nhật</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        @if ($request->status == 'pending')
-                                            <a href="{{ route('admin.return_requests.approve', $request->id) }}"
-                                                class="btn btn-sm btn-success"
-                                                onclick="return confirm('Duyệt yêu cầu này?')">
-                                                <i class="fas fa-check"></i>
-                                            </a>
-                                            <a href="{{ route('admin.return_requests.reject', $request->id) }}"
-                                                class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Từ chối yêu cầu này?')">
-                                                <i class="fas fa-times"></i>
-                                            </a>
-                                        @elseif($request->status == 'approved' && $latestProgress)
-                                            @php
-                                                // Định nghĩa toàn bộ tiến trình
-                                                $allStatuses = [
-                                                    'shipping_pending',
-                                                    'shop_received',
-                                                    'checking',
-                                                    'refunded',
-                                                ];
+                                   <td>
+    @if ($request->status == 'pending')
+        {{-- Chưa duyệt: Hiện nút Duyệt / Từ chối --}}
+        <a href="{{ route('admin.return_requests.approve', $request->id) }}"
+            class="btn btn-sm btn-success"
+            onclick="return confirm('Duyệt yêu cầu này?')">
+            <i class="fas fa-check"></i>
+        </a>
+        <a href="{{ route('admin.return_requests.reject', $request->id) }}"
+            class="btn btn-sm btn-danger"
+            onclick="return confirm('Từ chối yêu cầu này?')">
+            <i class="fas fa-times"></i>
+        </a>
 
-                                                // Tìm vị trí hiện tại
-                                                $currentIndex = array_search($latestProgress->status, $allStatuses);
+    @elseif(in_array($request->status, ['approved', 'refunded']))
+        {{-- Luôn hiện nút Chi tiết khi đã duyệt hoặc đã hoàn tiền --}}
+        <a href="{{ route('admin.orders.refund_detail', $request->id) }}"
+            class="btn btn-sm btn-info mb-1">
+            <i class="fas fa-eye me-1"></i> Chi tiết
+        </a>
 
-                                                // Xác định bước tiếp theo (nếu có)
-                                                $nextStatus =
-                                                    $currentIndex !== false && isset($allStatuses[$currentIndex + 1])
-                                                        ? $allStatuses[$currentIndex + 1]
-                                                        : null;
-                                            @endphp
+        @php
+            $allStatuses = ['shipping_pending', 'shop_received', 'checking', 'refunded'];
+            $latestProgress = $request->progresses->last();
+            $currentIndex = $latestProgress ? array_search($latestProgress->status, $allStatuses) : -1;
+            $nextStatus = $currentIndex !== false && isset($allStatuses[$currentIndex + 1])
+                ? $allStatuses[$currentIndex + 1]
+                : null;
+        @endphp
 
+        @if ($latestProgress && $latestProgress->status === 'checking')
+            {{-- Nếu tiến trình đang kiểm tra → hiện nút Hoàn tiền --}}
+            <a href="{{ route('admin.orders.refund_form', $request->id) }}"
+                class="btn btn-sm btn-warning confirm-refund">
+                <i class="fas fa-money-bill-wave me-1"></i> Hoàn tiền
+            </a>
 
-                                            {{-- Nếu đang ở bước "checking" thì chỉ hiển thị nút Hoàn tiền --}}
-                                            {{-- Nếu đang ở bước "checking" thì chỉ hiển thị nút Hoàn tiền --}}
-                                            @if ($latestProgress->status === 'checking')
-                                                <a href="{{ route('admin.orders.refund_form', $request->id) }}"
-                                                    class="btn btn-sm btn-warning confirm-refund">
-                                                    <i class="fas fa-money-bill-wave me-1"></i> Hoàn tiền
-                                                </a>
-                                            @elseif($nextStatus && $latestProgress->status !== 'refunded')
-                                                <form method="POST"
-                                                    action="{{ route('admin.orders.progress', $request->id) }}"
-                                                    class="confirm-progress">
-                                                    @csrf
-                                                    <input type="hidden" name="status" value="{{ $nextStatus }}">
-                                                    <input type="text" name="note"
-                                                        class="form-control form-control-sm mb-1"
-                                                        placeholder="Ghi chú (tuỳ chọn)">
-                                                    <button type="submit" class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-plus-circle me-1"></i>
-                                                        {{ $statusViMap[$nextStatus] ?? ucfirst($nextStatus) }}
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <em class="text-muted">Đã hoàn tất</em>
-                                            @endif
-                                        @else
-                                            <em class="text-muted">Không khả dụng</em>
-                                        @endif
-                                    </td>
+        @elseif($nextStatus)
+            {{-- Nếu tiến trình chưa xong → hiện nút cập nhật bước tiếp theo --}}
+            <form method="POST"
+                action="{{ route('admin.orders.progress', $request->id) }}"
+                class="confirm-progress mt-1">
+                @csrf
+                <input type="hidden" name="status" value="{{ $nextStatus }}">
+                <input type="text" name="note" class="form-control form-control-sm mb-1"
+                    placeholder="Ghi chú (tuỳ chọn)">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus-circle me-1"></i>
+                    {{ $statusViMap[$nextStatus] ?? ucfirst($nextStatus) }}
+                </button>
+            </form>
+
+        
+        @endif
+
+    @else
+        {{-- rejected hoặc trạng thái khác --}}
+        <em class="text-muted">Không khả dụng</em>
+    @endif
+</td>
+
                                 </tr>
                             @empty
                                 <tr>
@@ -175,29 +175,30 @@
         </div>
     </div>
 @endsection
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Xác nhận khi submit form tiến trình
-        document.querySelectorAll('form.confirm-progress').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                if (confirm("Bạn có chắc chắn muốn cập nhật tiến trình không?")) {
-                    form.submit();
-                }
-            });
-        });
 
-        // Xác nhận khi click nút Hoàn tiền
-        document.querySelectorAll('.confirm-refund').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault(); // ⛔ chặn chuyển trang ngay
-                const url = btn.getAttribute('href');
-                if (confirm("Bạn có chắc chắn muốn hoàn tiền cho đơn hàng này không?")) {
-                    window.location.href = url; // ✅ chỉ chuyển khi bấm OK
-                }
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Xác nhận khi submit form tiến trình
+            document.querySelectorAll('form.confirm-progress').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    if (confirm("Bạn có chắc chắn muốn cập nhật tiến trình không?")) {
+                        form.submit();
+                    }
+                });
+            });
+
+            // Xác nhận khi click nút Hoàn tiền
+            document.querySelectorAll('.confirm-refund').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault(); // ⛔ chặn chuyển trang ngay
+                    const url = btn.getAttribute('href');
+                    if (confirm("Bạn có chắc chắn muốn hoàn tiền cho đơn hàng này không?")) {
+                        window.location.href = url; // ✅ chỉ chuyển khi bấm OK
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
 @endpush

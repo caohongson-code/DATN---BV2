@@ -34,22 +34,10 @@
                     <p><strong>Họ tên:</strong> {{ $refunder->full_name ?? 'N/A' }}</p>
                     <p><strong>Email:</strong> {{ $refunder->email ?? 'N/A' }}</p>
                     <p><strong>SĐT:</strong> {{ $refunder->phone ?? 'N/A' }}</p>
-                    <form method="POST" action="{{ route('admin.orders.process_refund', $returnRequest->id) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('admin.orders.process_refund', $returnRequest->id) }}"
+                        enctype="multipart/form-data">
                         @csrf
-                        <div class="mb-3 mt-3">
-                            <label for="refunder_bank">Ngân hàng người hoàn tiền</label>
-                            <select name="refunder_bank" id="refunder_bank" class="form-select" required>
-                                <option value="">-- Chọn ngân hàng --</option>
-                                <option value="Vietcombank">Vietcombank</option>
-                                <option value="BIDV">BIDV</option>
-                                <option value="Techcombank">Techcombank</option>
-                            </select>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="refunder_account">Số tài khoản người hoàn tiền</label>
-                            <input type="text" name="refunder_account" id="refunder_account" class="form-control" required>
-                        </div>
                 </div>
             </div>
         </div>
@@ -60,11 +48,24 @@
             <p><strong>Lý do trả hàng:</strong> {{ $returnRequest->reason }}</p>
             <p><strong>Trạng thái hiện tại:</strong>
                 @switch($returnRequest->status)
-                    @case('pending') <span class="badge bg-warning text-dark">Chờ duyệt</span> @break
-                    @case('approved') <span class="badge bg-primary">Đã duyệt</span> @break
-                    @case('shipped_back') <span class="badge bg-info text-dark">Khách đã gửi hàng</span> @break
-                    @case('refunded') <span class="badge bg-success">Đã hoàn tiền</span> @break
-                    @default <span class="badge bg-secondary">Không xác định</span>
+                    @case('pending')
+                        <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                    @break
+
+                    @case('approved')
+                        <span class="badge bg-primary">Đã duyệt</span>
+                    @break
+
+                    @case('shipped_back')
+                        <span class="badge bg-info text-dark">Khách đã gửi hàng</span>
+                    @break
+
+                    @case('refunded')
+                        <span class="badge bg-success">Đã hoàn tiền</span>
+                    @break
+
+                    @default
+                        <span class="badge bg-secondary">Không xác định</span>
                 @endswitch
             </p>
 
@@ -78,7 +79,8 @@
                     <strong>Ảnh sản phẩm lỗi:</strong>
                     <div class="d-flex flex-wrap gap-2 mt-2">
                         @foreach ($images as $img)
-                            <img src="{{ asset('storage/' . $img) }}" alt="return image" style="width: 100px;" class="img-thumbnail">
+                            <img src="{{ asset('storage/' . $img) }}" alt="return image" style="width: 100px;"
+                                class="img-thumbnail">
                         @endforeach
                     </div>
                 </div>
@@ -89,7 +91,8 @@
                     <strong>Ảnh vận đơn trả hàng:</strong>
                     <div class="d-flex flex-wrap gap-2 mt-2">
                         @foreach ($shippingImages as $img)
-                            <img src="{{ asset('storage/' . $img) }}" alt="shipping image" style="width: 100px;" class="img-thumbnail">
+                            <img src="{{ asset('storage/' . $img) }}" alt="shipping image" style="width: 100px;"
+                                class="img-thumbnail">
                         @endforeach
                     </div>
                 </div>
@@ -100,7 +103,8 @@
         <div class="mb-4 p-3 border rounded bg-light">
             <div class="mb-3">
                 <label>Số tiền hoàn</label>
-                <input type="number" name="refund_amount" value="{{ old('refund_amount', $order->total_amount - 30000) }}" class="form-control" required>
+                <input type="number" name="refund_amount" value="{{ old('refund_amount', $order->total_amount - 30000) }}"
+                    class="form-control" required>
             </div>
             <div class="mb-3">
                 <label>Ghi chú</label>
@@ -108,7 +112,8 @@
             </div>
             <div class="mb-3">
                 <label for="transaction_images">Ảnh thông tin giao dịch (nếu có)</label>
-                <input type="file" name="transaction_images[]" id="transaction_images" class="form-control" multiple accept="image/*">
+                <input type="file" name="transaction_images[]" id="transaction_images" class="form-control" multiple
+                    accept="image/*">
             </div>
 
             <button type="submit" class="btn btn-success">Xác nhận hoàn tiền</button>

@@ -338,90 +338,85 @@ public function processRefund(Request $request, $id)
 
     $amount = $request->input('refund_amount');
     $note = $request->input('note');
-    $newImages = [];
+    $adminImages = [];
 
-    // Lưu ảnh nếu có
+    // Lưu ảnh admin (ảnh hoàn tiền)
     if ($request->hasFile('transaction_images')) {
         foreach ($request->file('transaction_images') as $image) {
             $path = $image->store('refund_transactions', 'public');
-            $newImages[] = $path;
+            $adminImages[] = $path;
         }
-
-        $existingImages = json_decode($returnRequest->images, true) ?? [];
-        $returnRequest->images = json_encode(array_merge($existingImages, $newImages));
     }
 
-    $bankName = strtolower(trim($returnRequest->bank_name));
     $bankAccount = $returnRequest->bank_account;
 
-    // ✅ Nếu là ví nội bộ
-    if ($bankName === 'wallet' || $bankName === 'ví nội bộ') {
-        $receiver = Account::where('phone', $bankAccount)->first();
+    DB::beginTransaction();
+    try {
+        // Lưu tiến trình hoàn tiền, kèm ảnh admin
+        ReturnRequestProgress::create([
+            'return_request_id' => $id,
+            'status' => 'refunded',
+            'note' => $note,
+            'completed_at' => now(),
+            'images' => $adminImages,
+            'refunded_by_name' => auth()->user()->full_name,
+            'refunded_by_email' => auth()->user()->email,
+            'refunded_account_number' => $bankAccount,
+            'refunded_bank_name' => $returnRequest->bank_name,
+        ]);
 
-        if (!$receiver) {
-            return back()->withErrors(['bank_account' => 'Không tìm thấy tài khoản với số điện thoại: ' . $bankAccount]);
+        // Cập nhật trạng thái trả hàng và đơn hàng
+        $returnRequest->status = 'refunded';
+        $returnRequest->save();
+        $returnRequest->order->update(['payment_status_id' => 4]);
+
+        DB::commit();
+        return redirect()->route('admin.return_requests.index')->with('success', 'Đã hoàn tiền cho đơn hàng.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->withErrors(['error' => 'Lỗi hoàn tiền: ' . $e->getMessage()]);
+    }
+}
+
+
+public function refundDetail($id)
+{
+    $request = ReturnRequest::with([
+        'order',
+        'order.orderDetails.productVariant.product',
+        'order.orderDetails.productVariant.ram',
+        'order.orderDetails.productVariant.storage',
+        'order.orderDetails.productVariant.color',
+        'progresses' => function($q) {
+            $q->where('status', 'refunded')->latest();
         }
+    ])->findOrFail($id);
 
-        $wallet = $receiver->wallet;
+    $refundProgress = $request->progresses->first();
 
-        if (!$wallet) {
-            $wallet = $receiver->wallet()->create(['balance' => 0]);
-        }
+    // Ảnh lý do khách gửi
+    $customerReasonImages = $request->images;
+    if (is_string($customerReasonImages)) $customerReasonImages = json_decode($customerReasonImages, true);
+    if (!is_array($customerReasonImages)) $customerReasonImages = [];
 
-        DB::beginTransaction();
-        try {
-            $wallet->balance += $amount;
-            $wallet->save();
+    // Ảnh khách gửi hàng
+    $customerReturnImages = $request->shipping_images;
+    if (is_string($customerReturnImages)) $customerReturnImages = json_decode($customerReturnImages, true);
+    if (!is_array($customerReturnImages)) $customerReturnImages = [];
 
-            WalletTransaction::create([
-                'wallet_id' => $wallet->id,
-                'amount' => $amount,
-                'type' => 'refund',
-                'note' => 'Hoàn tiền đơn hàng ',
-            ]);
-
-            ReturnRequestProgress::create([
-                'return_request_id' => $id,
-                'status' => 'refunded',
-                'note' => $note,
-                'completed_at' => now(),
-                'images' => $newImages,
-                'refunded_by_name' => auth()->user()->full_name,
-                'refunded_by_email' => auth()->user()->email,
-                'refunded_account_number' => $bankAccount,
-                'refunded_bank_name' => 'Ví nội bộ',
-            ]);
-
-            $returnRequest->status = 'refunded';
-            $returnRequest->save();
-            $returnRequest->order->update(['payment_status_id' => 4]);
-
-            DB::commit();
-            return redirect()->route('admin.return_requests.index')->with('success', 'Đã hoàn tiền vào ví nội bộ.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Lỗi hoàn tiền ví: ' . $e->getMessage()]);
-        }
+    // Ảnh admin
+    $adminImages = [];
+    if ($refundProgress && $refundProgress->images) {
+        $adminImages = is_string($refundProgress->images) ? json_decode($refundProgress->images, true) : $refundProgress->images;
     }
 
-    // ✅ Nếu là ngân hàng
-    ReturnRequestProgress::create([
-        'return_request_id' => $id,
-        'status' => 'refunded',
-        'note' => $note,
-        'completed_at' => now(),
-        'images' => $newImages,
-        'refunded_by_name' => auth()->user()->full_name,
-        'refunded_by_email' => auth()->user()->email,
-        'refunded_account_number' => $bankAccount,
-        'refunded_bank_name' => $returnRequest->bank_name,
-    ]);
-
-    $returnRequest->status = 'refunded';
-    $returnRequest->save();
-    $returnRequest->order->update(['payment_status_id' => 4]);
-
-    return redirect()->route('admin.return_requests.index')->with('success', 'Đã hoàn tiền cho đơn hàng.');
+    return view('admin.orders.refund_detail', compact(
+        'request', 
+        'refundProgress', 
+        'customerReasonImages', 
+        'customerReturnImages', 
+        'adminImages'
+    ));
 }
 
 

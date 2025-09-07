@@ -34,7 +34,6 @@ use App\Http\Controllers\Client\ChatbotController as ClientChatbotController;
 use App\Http\Controllers\Client\CommentController;
 use App\Http\Controllers\Client\ContactController;
 use App\Http\Controllers\Client\PromotionController as ClientPromotionController;
-use App\Http\Controllers\Client\WalletController;
 use App\Http\Middleware\CheckRole;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Client\NewsClientController;
@@ -135,7 +134,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/client/orders/{id}/convert-to-cod', [MomoController::class, 'convertToCod'])->name('client.momo.to_cod');
 
     // Trang ví người dùng
-    Route::get('/dashboard/wallet', [WalletController::class, 'index'])->name('user.wallet');
     //phần khuyến mại
     Route::get('/khuyen-mai', [ClientPromotionController::class, 'index'])
         ->middleware('auth')
@@ -201,7 +199,7 @@ Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1,2'])->group(f
     Route::post('/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
     Route::get('/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
     Route::post('/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
-
+    Route::get('/admin/orders/{id}/refund-detail', [OrderController::class, 'refundDetail'])->name('admin.orders.refund_detail');
     // Comments
     Route::get('comments', [CommentSController::class, 'index'])->name('comments.index');
     Route::get('/hide/{id}', [CommentSController::class, 'hide'])->name('comments.hide');
