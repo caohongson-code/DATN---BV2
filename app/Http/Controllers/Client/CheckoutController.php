@@ -107,15 +107,23 @@ class CheckoutController extends Controller
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thanh toán.');
         }
 
-        $buyNow        = session('buy_now');
-        $selectedItems = session('checkout_selected', []);
-         if (!empty($selectedItems)) {
-            Session::forget('buy_now');
-            $buyNow = null;
-        }
+$buyNow = session('buy_now');
+$selectedItems = session('checkout_selected', []);
 
-        // Xóa selected sau khi lấy ra (tránh bị lặp lại)
-        Session::forget('checkout_selected');
+// Thanh toán giỏ hàng → xóa mua ngay ngay lập tức
+if ($request->has('from_cart')) {
+    $buyNow = null;
+    Session::forget('buy_now');
+}
+
+// Thanh toán mua ngay → xóa giỏ hàng ngay lập tức
+if ($request->has('buy_now')) {
+    $buyNow = $request->input('buy_now') ?: session('buy_now');
+    $selectedItems = [];
+    Session::forget('checkout_selected');
+}
+
+    $cartItems = [];
         $subtotal      = 0;
 
         // ===== MUA NGAY =====

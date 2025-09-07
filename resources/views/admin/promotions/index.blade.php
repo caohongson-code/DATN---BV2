@@ -18,6 +18,27 @@
         </div>
 
         <div class="card-body">
+            {{-- Tìm kiếm mã khuyến mãi --}}
+            <form method="GET" action="{{ route('promotions.index') }}" class="mb-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label for="code" class="col-form-label">Tìm mã:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" id="code" name="code" value="{{ request('code') }}" class="form-control" placeholder="Nhập mã giảm giá">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">
+                            <i class='bx bx-search'></i> Tìm kiếm
+                        </button>
+                        @if(request('code'))
+                            <a href="{{ route('promotions.index') }}" class="btn btn-outline-secondary">
+                                Làm mới
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
             {{-- Thông báo --}}
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -136,7 +157,7 @@
 
             {{-- Phân trang --}}
             <div class="mt-3 d-flex justify-content-center">
-                {{ $promotions->links('pagination::bootstrap-5') }}
+                {{ $promotions->appends(request()->only('code'))->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>

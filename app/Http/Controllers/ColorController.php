@@ -24,11 +24,15 @@ class ColorController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+       $request->validate([
             'value' => 'required|string|max:255|unique:colors,value',
             'code'  => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ], [
-            'code.regex' => 'Mã màu phải đúng định dạng HEX (ví dụ: #FF0000).',
+            'value.required' => 'Vui lòng nhập tên màu',
+            'value.string'   => 'Tên màu phải là chuỗi ký tự',
+            'value.max'      => 'Tên màu không được vượt quá 255 ký tự',
+            'value.unique'   => 'Tên màu này đã tồn tại',
+            'code.regex'     => 'Mã màu phải đúng định dạng HEX (ví dụ: #FF0000).',
         ]);
 
         Color::create([

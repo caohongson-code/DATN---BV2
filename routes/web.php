@@ -14,6 +14,7 @@ use App\Http\Controllers\RamController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\adminCatCategoriesController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\Client\CartController as ClientCartController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Client\MomoController;
@@ -29,7 +30,9 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductVariantImageController;
 use App\Http\Controllers\DashboardControlle;
 use App\Http\Controllers\Client\CategoryClientController;
+use App\Http\Controllers\Client\ChatbotController as ClientChatbotController;
 use App\Http\Controllers\Client\CommentController;
+use App\Http\Controllers\Client\ContactController;
 use App\Http\Controllers\Client\PromotionController as ClientPromotionController;
 use App\Http\Controllers\Client\WalletController;
 use App\Http\Middleware\CheckRole;
@@ -37,6 +40,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Client\NewsClientController;
 use App\Http\Controllers\CommentsController;
 use App\Http\Controllers\Client\IntroduceController;
+use App\Http\Controllers\ContactController as ControllersContactController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -118,8 +122,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
 
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
-    Route::get('/momo_redirect/{orderId}', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
-    // Route::get('/momo/result/{orderId}', [CheckoutController::class, 'momoResult'])->name('momo.result');
+    // Route::get('/momo_redirect/{orderId}', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
     Route::get('/momo/result', [CheckoutController::class, 'momoResult'])->name('momo.result');
 
     // Hiển thị tất cả sản phẩm (client)
@@ -128,7 +131,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
     Route::get('/momo_redirect', [MomoController::class, 'handleMomoRedirect'])->name('momo.redirect');
-    Route::get('/momo/retry/{orderId}', [MomoController::class, 'retryPayment'])->name('client.momo.retry');
+    Route::post('/momo/retry/{orderId}', [MomoController::class, 'retryPayment'])->name('client.momo.retry');
     Route::post('/client/orders/{id}/convert-to-cod', [MomoController::class, 'convertToCod'])->name('client.momo.to_cod');
 
     // Trang ví người dùng
@@ -146,10 +149,24 @@ Route::middleware('auth')->group(function () {
 
     //binh luan
     Route::post('/client/comments', [CommentController::class, 'store'])->name('client.comments.store');
+    
+    //
+    Route::get('/lien-he', [ContactController::class, 'showContactForm'])->name('client.contact');
+Route::post('/lien-he', [ContactController::class, 'submitContactForm'])->name('client.contact.submit');
 });
-
+Route::post('/chatbot/send', [ChatbotController::class, 'send']);
 // Khu vực quản trị (admin)
-Route::prefix('admin')->middleware(['auth', CheckRole::class . ':admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1'])->group(function () {
+    Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('admin.dashboard');
+
+    Route::resource('accounts', AccountController::class);
+    Route::resource('roles', RoleController::class);
+    Route::get('accounts/show', [AccountController::class, 'show'])->name('admin.profile');
+    Route::post('accounts/update-profile', [AccountController::class, 'updateAdminProfile'])->name('admin.updateProfile');
+    Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])->name('admin.updatePassword');
+});
+// 🌟 Admin + Quản trị viên phụ (role_id = 1,2)
+Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1,2'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('variants', ProductVariantController::class);
@@ -158,42 +175,40 @@ Route::prefix('admin')->middleware(['auth', CheckRole::class . ':admin'])->group
     Route::resource('storages', StorageController::class);
     Route::resource('colors', ColorController::class);
     Route::resource('customers', CustomersControllerr::class);
-    Route::resource('accounts', AccountController::class);
-    Route::resource('roles', RoleController::class);
     Route::resource('carts', CartController::class)->only(['index', 'show', 'destroy']);
     Route::resource('cart-details', CartDetailController::class);
-    Route::delete('/admin/cart-details/{id}', [CartDetailController::class, 'destroy'])->name('cart-details.destroy');
-    Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('admin.dashboard');
-    Route::get('accounts/show', [AccountController::class, 'show'])->name('admin.profile');
-    Route::post('accounts/update-profile', [AccountController::class, 'updateAdminProfile'])->name('admin.updateProfile');
-    Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])->name('admin.updatePassword');
+    Route::delete('/cart-details/{id}', [CartDetailController::class, 'destroy'])->name('cart-details.destroy');
 
-    // News routes (Admin)
+    // News
     Route::resource('news', NewsController::class);
     Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured');
     Route::post('/news/{id}/toggle-hot', [NewsController::class, 'toggleHot'])->name('admin.news.toggle-hot');
     Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
     Route::post('/news/test-upload', [NewsController::class, 'testUpload'])->name('admin.news.test-upload');
 
+    // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
     Route::put('/orders/{id}', [OrderController::class, 'update'])->name('admin.orders.update');
-    Route::get('/admin/orders/place/{cartId}', [OrderController::class, 'placeOrderFromCart'])->name('admin.orders.place');
+    Route::get('/orders/place/{cartId}', [OrderController::class, 'placeOrderFromCart'])->name('admin.orders.place');
     Route::post('/variants/{id}/images', [ProductVariantImageController::class, 'storeImages'])->name('admin.variant.images.store');
     Route::delete('/variant-images/{id}', [ProductVariantImageController::class, 'deleteImage'])->name('admin.variant.images.delete');
-    // Route::get('/dashboard', [DashboardControlle::class, 'index'])->name('dashboard');
-    // Hiển thị danh sách yêu cầu hoàn trả
-    Route::get('admin/return-requests', [OrderController::class, 'listReturnRequests'])->name('admin.return_requests.index');
-    // Duyệt yêu cầu
-    Route::get('admin/return-requests/{id}/approve', [OrderController::class, 'approveReturnRequest'])->name('admin.return_requests.approve');
-    // Từ chối yêu cầu
-    Route::get('admin/return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
+
+    // Return requests
+    Route::get('return-requests', [OrderController::class, 'listReturnRequests'])->name('admin.return_requests.index');
+    Route::get('return-requests/{id}/approve', [OrderController::class, 'approveReturnRequest'])->name('admin.return_requests.approve');
+    Route::get('return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
+    Route::post('/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
+    Route::get('/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
+    Route::post('/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
+
+    // Comments
+    Route::get('comments', [CommentSController::class, 'index'])->name('comments.index');
+    Route::get('/hide/{id}', [CommentSController::class, 'hide'])->name('comments.hide');
+    Route::get('/show/{id}', [CommentSController::class, 'showComment'])->name('comments.showComment');
     //
-    Route::post('/admin/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
-    Route::get('/admin/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
-    Route::post('/admin/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
-    //comment
-     Route::get('comments', [CommentsController::class, 'index'])->name('comments.index');
-    Route::get('/hide/{id}', [CommentsController::class, 'hide'])->name('comments.hide');
-    Route::get('/show/{id}', [CommentsController::class, 'showComment'])->name('comments.showComment');
+    Route::get('/admin/contact', [ControllersContactController::class, 'index'])->name('admin.contact.index');
+Route::get('/admin/contact/{id}', [ControllersContactController::class, 'show'])->name('admin.contact.show');
+Route::put('/admin/contact/{id}/status', [ControllersContactController::class, 'updateStatus'])->name('admin.contact.status');
+Route::delete('/admin/contact/{id}', [ControllersContactController::class, 'destroy'])->name('admin.contact.destroy');
 });

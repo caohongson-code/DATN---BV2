@@ -10,10 +10,19 @@ use App\Http\Requests\PromotionRequest;
 
 class PromotionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Nạp sản phẩm và danh mục liên quan để hiển thị
-        $promotions = Promotion::with(['products', 'categories'])->latest()->paginate(10);
+        $query = Promotion::with(['products', 'categories'])->latest();
+
+        // Tìm kiếm theo mã khuyến mãi
+        if ($request->filled('code')) {
+            $code = trim($request->input('code'));
+            $query->where('code', 'like', "%{$code}%");
+        }
+
+        $promotions = $query->paginate(10)->appends($request->only('code'));
+
         return view('admin.promotions.index', compact('promotions'));
     }
 
@@ -69,28 +78,5 @@ class PromotionController extends Controller
         $promotion->delete();
         return redirect()->route('promotions.index')->with('success', 'Đã xóa khuyến mãi.');
     }
-    public function rules()
-{
-    return [
-        'code' => 'required|string|unique:promotions,code,' . $this->id,
-        'description' => 'nullable|string',
-        'discount_type' => 'required|in:percentage,fixed',
-        'discount_value' => 'required|numeric|min:0',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'usage_limit' => 'nullable|integer|min:1',
-        'is_active' => 'boolean',
-
-        // 👇 Thêm 2 dòng mới:
-        'min_order_amount' => 'nullable|numeric|min:0',
-        'max_order_amount' => 'nullable|numeric|min:0|gte:min_order_amount',
-
-        'product_ids' => 'nullable|array',
-        'product_ids.*' => 'integer|exists:products,id',
-
-        'category_ids' => 'nullable|array',
-        'category_ids.*' => 'integer|exists:categories,id',
-    ];
-}
 
 }

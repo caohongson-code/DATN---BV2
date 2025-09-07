@@ -177,10 +177,10 @@
                             <label class="form-check-label" for="momo">Ví MoMo</label>
                         </div>
 
-                        <div id="momo-qr-container" class="mt-3" style="display: none;">
+                        {{-- <div id="momo-qr-container" class="mt-3" style="display: none;">
                             <img id="momo-qr" src="" alt="QR MoMo" style="max-width: 200px;">
                             <p><strong>Số tiền:</strong> <span id="momo-amount">0</span> VND</p>
-                        </div>
+                        </div> --}}
 
                         <div class="form-check mt-2">
     @php

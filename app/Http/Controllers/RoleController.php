@@ -10,7 +10,7 @@ class RoleController extends Controller
     /**
      * Display a listing of the resource.
      */
-  
+
 
     public function index(Request $request)
     {
@@ -45,9 +45,17 @@ class RoleController extends Controller
      public function store(Request $request)
     {
         $request->validate([
-            'role_name' => 'required|string|max:225|unique:roles,role_name',
+            'role_name'   => 'required|string|max:225|unique:roles,role_name',
             'description' => 'nullable|string',
+        ], [
+            'role_name.required' => 'Tên vai trò là bắt buộc.',
+            'role_name.string'   => 'Tên vai trò phải là chuỗi.',
+            'role_name.max'      => 'Tên vai trò không được vượt quá 225 ký tự.',
+            'role_name.unique'   => 'Tên vai trò đã tồn tại, vui lòng nhập tên khác.',
+
+            'description.string' => 'Mô tả phải là chuỗi.',
         ]);
+
 
         Role::create($request->all());
         return redirect()->route('roles.index')->with('success', 'Role created successfully.');

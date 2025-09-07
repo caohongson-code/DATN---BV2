@@ -28,13 +28,13 @@
             <div class="row mb-3 align-items-center">
                 <div class="col-md-8">
                     <a href="{{ route('categories.create') }}" class="btn btn-success btn-sm">+ Tạo mới</a>
-                    <button class="btn btn-warning btn-sm">Tải từ file</button>
+                    {{-- <button class="btn btn-warning btn-sm">Tải từ file</button>
                     <button class="btn btn-primary btn-sm">In dữ liệu</button>
                     <button class="btn btn-info btn-sm">Sao chép</button>
                     <button class="btn btn-success btn-sm">Xuất Excel</button>
                     <button class="btn btn-danger btn-sm">Xuất PDF</button>
-                    <button class="btn btn-secondary btn-sm">Xóa tất cả</button>
-                </div>
+                    <button class="btn btn-secondary btn-sm">Xóa tất cả</button> --}}
+                </div> 
                 <div class="col-md-4">
                     <form method="GET" action="{{ route('categories.index') }}">
                         <div class="input-group input-group-sm">

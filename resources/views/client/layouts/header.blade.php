@@ -2811,13 +2811,19 @@
                     <li class="nav-item"><a href="{{ route('client.introduce') }}"class="nav-link {{ request()->is('introduce') ? 'active' : '' }}">Giới thiệu </a></li>
                     <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
                     <li class="nav-item"><a href="{{ route('client.news.index') }}" class="nav-link {{ request()->is('news*') ? 'active' : '' }}">Tin tức</a></li>
-                    <li class="nav-item"><a href="{{ url('/contact') }}" class="nav-link">Liên hệ</a></li>
+                    <li class="nav-item"><a href="{{ route('client.contact') }}" class="nav-link">Liên hệ</a></li>
                     <li class="nav-item">
-                        @if(Auth::user() && in_array(Auth::user()->role_id, [1, 2]))
-                            <a href="{{ route('admin.dashboard') }}" class="nav-link text-success">Kênh Người Bán</a>
-                        @else
-                            <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
-                        @endif
+                                 @if(Auth::check())
+    @if(Auth::user()->role_id == 1)
+        <a href="{{ route('admin.dashboard') }}" class="nav-link text-success">Kênh Người Bán</a>
+    @elseif(Auth::user()->role_id == 2)
+        <a href="{{ route('products.index') }}" class="nav-link text-success">Kênh Người Bán</a>
+    @else
+        <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
+    @endif
+@else
+    <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
+@endif
                     </li>
                 </ul>
             </nav>
@@ -2867,14 +2873,17 @@
                         </div>
 
                         <!-- Cart -->
-                        <a href="{{ url('/cart') }}" class="btn btn-light position-relative">
-                            <i class="fas fa-shopping-cart fs-5"></i>
-                            @if($cartCount > 0)
-                                <span class="position-absolute top-0 start-100 translate-middle badge bg-danger">
-                                    {{ $cartCount }}
-                                </span>
-                            @endif
-                        </a>
+                        @if (!request()->is('checkout*'))
+    <a href="{{ url('/cart') }}" class="btn btn-light position-relative">
+        <i class="fas fa-shopping-cart fs-5"></i>
+        @if($cartCount > 0)
+            <span class="position-absolute top-0 start-100 translate-middle badge bg-danger">
+                {{ $cartCount }}
+            </span>
+        @endif
+    </a>
+@endif
+
                             </div>
                         </div>
                 </div>

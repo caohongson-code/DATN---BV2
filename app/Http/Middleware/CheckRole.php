@@ -16,14 +16,24 @@ class CheckRole
 
         $user = Auth::user();
 
-        // ✅ Admin luôn có quyền truy cập mọi route
+        // ✅ Admin luôn có quyền
         if ($user->role_id === 1) {
-    return $next($request); // Admin luôn có quyền
-}
+            return $next($request);
+        }
 
-if (!in_array($user->role_id, $roles)) {
-    abort(403, 'Bạn không có quyền truy cập trang này.');
-}
+        // ✅ Quản trị viên phụ (role_id = 2)
+        if ($user->role_id === 2) {
+            // Ví dụ chỉ cho phép các route có gắn role 2 hoặc role user
+            if (in_array(2, $roles)) {
+                return $next($request);
+            }
+            abort(403, 'Quản trị viên không có quyền truy cập route này.');
+        }
+
+        // ✅ Các role khác
+        if (!in_array($user->role_id, $roles)) {
+            abort(403, 'Bạn không có quyền truy cập trang này.');
+        }
 
         return $next($request);
     }

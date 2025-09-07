@@ -7,7 +7,7 @@
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">Tạo tài khoản mới</h4>
-            <a href="{{ route('admin.accounts.index') }}" class="btn btn-secondary btn-sm">
+            <a href="{{ route('accounts.index') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
             </a>
         </div>

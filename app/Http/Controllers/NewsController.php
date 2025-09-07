@@ -40,6 +40,10 @@ class NewsController extends Controller
 
         return view('admin.news.index', compact('news'));
     }
+    public function create()
+    {
+        return view('admin.news.create');
+    }
 
     public function store(NewsRequest $request)
 {

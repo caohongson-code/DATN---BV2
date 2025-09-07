@@ -19,7 +19,7 @@ class CategoryController extends Controller
                   ->orWhere('description', 'like', "%{$keyword}%");
         }
 
-        $categories = $query->orderByDesc('id')->paginate(3)->withQueryString();
+        $categories = $query->orderByDesc('id')->paginate(5)->withQueryString();
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -32,9 +32,12 @@ class CategoryController extends Controller
     // Lưu danh mục mới vào database
     public function store(Request $request)
     {
-        $validated = $request->validate([
+       $validated = $request->validate([
             'category_name' => 'required|string|max:225',
-            'description' => 'nullable|string',
+            'description'   => 'nullable|string',
+        ], [
+            'category_name.required' => 'Tên danh mục không được để trống',
+            'category_name.max'      => 'Tên danh mục tối đa 225 ký tự',
         ]);
 
         Category::create($validated);

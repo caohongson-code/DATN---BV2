@@ -80,8 +80,9 @@
                                 <td>{{ $product->category->category_name ?? 'Không có' }}</td>
                                 <td>
                                     @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}" width="80"
-                                             class="img-thumbnail" alt="Ảnh sản phẩm">
+                                    <img src="{{ asset('storage/' . $product->image) }}" width="80" class="img-thumbnail">
+
+
                                     @else
                                         <span class="text-muted">Chưa có ảnh</span>
                                     @endif

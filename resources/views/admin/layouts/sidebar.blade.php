@@ -80,6 +80,12 @@
             <span class="app-menu__label">Quản lý tin tức</span>
           </a>
         </li>
+          <li>
+        <a class="app-menu__item {{ request()->is('admin/contact*') ? 'active' : '' }}" href="{{ route('admin.contact.index') }}">
+            <i class='app-menu__icon bx bx-news'></i>
+            <span class="app-menu__label">Quản lý liên hệ</span>
+          </a>
+        </li>
         <li class="dropdown app-menu__item-wrapper position-relative">
             <a class="app-menu__item dropdown-toggle {{ request()->is('admin/attributes*') ? 'active' : '' }}"
                href="#"

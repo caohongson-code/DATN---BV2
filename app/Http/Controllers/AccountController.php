@@ -140,23 +140,37 @@ class AccountController extends Controller
    public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
+    'email'    => 'required|email',
+    'password' => 'required',
+], [
+    'email.required'    => 'Vui lòng nhập email.',
+    'email.email'       => 'Email không đúng định dạng.',
+    'password.required' => 'Vui lòng nhập mật khẩu.',
+]);
 
         $account = Account::where('email', $request->email)->first();
 
         if ($account && Hash::check($request->password, $account->password)) {
 
             // Laravel auth
-            Auth::login($account);
+           Auth::login($account);
 
-            if (in_array($account->role_id, [1, 2])) {
-                session(['admin_id' => $account->id]);
-                return redirect()->route('accounts.index')->with('success', 'Đăng nhập quản trị thành công!');
-            } else {
-                return redirect()->route('home')->with('success', 'Đăng nhập người dùng thành công!');
-            }
+if ($account->role_id == 1) {
+    // Admin
+    session(['admin_id' => $account->id]);
+    return redirect()->route('admin.dashboard')
+        ->with('success', 'Đăng nhập quản trị thành công!');
+} elseif ($account->role_id == 2) {
+    // Quản trị viên
+    session(['admin_id' => $account->id]);
+    return redirect()->route('products.index') // hoặc 'admin.products.index' nếu bạn đặt tên route theo group
+        ->with('success', 'Đăng nhập quản trị viên thành công!');
+} else {
+    // User thường
+    return redirect()->route('home')
+        ->with('success', 'Đăng nhập người dùng thành công!');
+}
+
         }
 
         return redirect()->back()->with('error', 'Email hoặc mật khẩu không đúng');
@@ -169,19 +183,21 @@ class AccountController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:accounts,email',
-            'password' => 'required|string|min:6|confirmed',
-            'password_confirmation' => 'required|string|min:6',
-        ], [
-            'full_name.required' => 'Vui lòng nhập họ tên.',
-            'email.required' => 'Vui lòng nhập email.',
-            'email.email' => 'Email không đúng định dạng.',
-            'email.unique' => 'Email đã tồn tại.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-            'password.min' => 'Mật khẩu phải từ 6 ký tự.',
-            'password.confirmed' => 'Mật khẩu nhập lại không khớp.',
-        ]);
+    'full_name' => 'required|string|max:255',
+    'email'     => 'required|email|unique:accounts,email',
+    'password'  => 'required|string|min:6|confirmed',
+    'password_confirmation' => 'required|string|min:6',
+], [
+    'full_name.required' => 'Vui lòng nhập họ tên.',
+    'email.required'     => 'Vui lòng nhập email.',
+    'email.email'        => 'Email không đúng định dạng.',
+    'email.unique'       => 'Email đã tồn tại.',
+    'password.required'  => 'Vui lòng nhập mật khẩu.',
+    'password.min'       => 'Mật khẩu phải từ 6 ký tự.',
+    'password.confirmed' => 'Mật khẩu nhập lại không khớp.',
+    'password_confirmation.required' => 'Vui lòng xác nhận mật khẩu.',
+]);
+
 
         try {
             DB::beginTransaction();
@@ -270,10 +286,12 @@ class AccountController extends Controller
 public function sendResetLink(Request $request)
 {
     // Validate email
-    $request->validate([
+     $request->validate([
         'email' => 'required|email',
+    ], [
+        'email.required' => 'Vui lòng nhập email',
+        'email.email'    => 'Email không đúng định dạng',
     ]);
-
     // Gửi link reset password qua broker 'accounts'
     $status = Password::broker('accounts')->sendResetLink(
         $request->only('email')
@@ -302,9 +320,16 @@ public function showResetForm(Request $request, $token = null)
 public function resetPassword(Request $request)
 {
     $request->validate([
-        'email' => 'required|email',
+        'email'    => 'required|email',
         'password' => 'required|min:6|confirmed',
-        'token' => 'required'
+        'token'    => 'required',
+    ], [
+        'email.required'    => 'Vui lòng nhập email',
+        'email.email'       => 'Email không đúng định dạng',
+        'password.required' => 'Vui lòng nhập mật khẩu mới',
+        'password.min'      => 'Mật khẩu phải có ít nhất 6 ký tự',
+        'password.confirmed'=> 'Mật khẩu nhập lại không khớp',
+        'token.required'    => 'Thiếu mã token đặt lại mật khẩu',
     ]);
 
     $status = Password::broker('accounts')->reset(

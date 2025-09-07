@@ -31,18 +31,27 @@
 
                 {{-- Role Name --}}
                 <div class="mb-4">
-                    <label for="role_name" class="form-label fw-semibold">Role Name <span class="text-danger">*</span></label>
+                    <label for="role_name" class="form-label fw-semibold">
+                        Role Name <span class="text-danger">*</span>
+                    </label>
                     <input type="text" name="role_name" id="role_name"
-                           class="form-control form-control-lg rounded-pill shadow-sm border-0"
-                           style="background: #f8faff;" required>
+                           value="{{ old('role_name') }}"
+                           class="form-control form-control-lg rounded-pill shadow-sm border-0 @error('role_name') is-invalid @enderror"
+                           style="background: #f8faff;">
+                    @error('role_name')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 {{-- Description --}}
                 <div class="mb-4">
                     <label for="description" class="form-label fw-semibold">Description</label>
                     <textarea name="description" id="description" rows="4"
-                              class="form-control form-control-lg rounded-3 shadow-sm border-0"
-                              style="background: #f8faff;"></textarea>
+                              class="form-control form-control-lg rounded-3 shadow-sm border-0 @error('description') is-invalid @enderror"
+                              style="background: #f8faff;">{{ old('description') }}</textarea>
+                    @error('description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 {{-- Submit --}}

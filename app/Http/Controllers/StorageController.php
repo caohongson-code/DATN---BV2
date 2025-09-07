@@ -34,10 +34,14 @@ class StorageController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+       $request->validate([
             'value' => 'required|string|max:255|unique:storages,value',
+        ], [
+            'value.required' => 'Vui lòng nhập dung lượng dung lượng',
+            'value.string'   => 'Dung lượng dung lượng phải là chuỗi ký tự',
+            'value.max'      => 'Dung lượng dung lượng không được vượt quá 255 ký tự',
+            'value.unique'   => 'Dung lượng dung lượng này đã tồn tại',
         ]);
-
         StorageOption::create(['value' => $request->value]);
 
         return redirect()->route('storages.index')->with('success', 'Thêm dung lượng thành công.');

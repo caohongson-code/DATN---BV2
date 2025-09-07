@@ -15,25 +15,31 @@
                         <i class="fas fa-arrow-left me-2 text-muted"></i>
                         <span class="fw-normal">Quay lại danh sách</span>
                     </a>
-                </div>
-                {{-- Hiển thị lỗi --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
 
+                </div>
+                <div class="card-body">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                 <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3">
                         <label for="product_name" class="form-label">Tên sản phẩm</label>
-                        <input type="text" class="form-control" id="product_name" name="product_name"
-                            value="{{ old('product_name') }}" required>
+                        <input type="text"
+                               class="form-control @error('product_name') is-invalid @enderror"
+                               id="product_name"
+                               name="product_name"
+                               value="{{ old('product_name') }}">
+                        @error('product_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     {{-- Danh mục --}}
@@ -42,7 +48,8 @@
                             <i class="fas fa-list-alt me-2"></i>Danh mục sản phẩm
                         </label>
                         <div class="custom-select-wrapper">
-                            <select class="form-select beautiful-select" id="category_id" name="category_id" required>
+                            <select class="form-select beautiful-select @error('category_id') is-invalid @enderror"
+                                    id="category_id" name="category_id">
                                 <option value="">-- Chọn danh mục --</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}"
@@ -51,32 +58,60 @@
                                     </option>
                                 @endforeach
                             </select>
+                            @error('category_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="price" class="form-label">Giá</label>
-                        <input type="number" class="form-control" id="price" name="price" value="{{ old('price') }}"
-                            step="0.01" required>
+                        <input type="number"
+                               class="form-control @error('price') is-invalid @enderror"
+                               id="price"
+                               name="price"
+                               value="{{ old('price') }}"
+                               step="0.01">
+                        @error('price')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="mb-3">
                         <label for="discount_price" class="form-label">Giá khuyến mãi</label>
-                        <input type="number" class="form-control" id="discount_price" name="discount_price"
-                            value="{{ old('discount_price') }}" step="0.01">
+                        <input type="number"
+                               class="form-control @error('discount_price') is-invalid @enderror"
+                               id="discount_price"
+                               name="discount_price"
+                               value="{{ old('discount_price') }}"
+                               step="0.01">
+                        @error('discount_price')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="mb-3">
                         <label for="image" class="form-label">Ảnh sản phẩm</label>
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <input type="file"
+                               class="form-control @error('image') is-invalid @enderror"
+                               id="image"
+                               name="image"
+                               accept="image/*">
+                        @error('image')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                  
                     <div class="mb-3">
                         <label for="description" class="form-label">Mô tả chi tiết</label>
-                        <textarea class="form-control" id="description" name="description" rows="4">{{ old('description') }}</textarea>
+                        <textarea class="form-control @error('description') is-invalid @enderror"
+                                  id="description"
+                                  name="description"
+                                  rows="4">{{ old('description') }}</textarea>
+                        @error('description')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
-
 
                     {{-- Trạng thái --}}
                     <div class="mb-4">
@@ -84,12 +119,17 @@
                             <i class="fas fa-toggle-on me-2"></i>Trạng thái hiển thị
                         </label>
                         <div class="custom-select-wrapper">
-                            <select class="form-select beautiful-select" id="status" name="status" required>
+                            <select class="form-select beautiful-select @error('status') is-invalid @enderror"
+                                    id="status" name="status">
                                 <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>✅ Hiển thị</option>
                                 <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>❌ Ẩn</option>
                             </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
+
                     <hr>
                     <h4>Thêm biến thể</h4>
 
@@ -137,9 +177,7 @@
                     </div>
 
                     <hr>
-                   
 
-                    <hr>
                     <h4>Danh sách biến thể</h4>
                     <div id="colorImageContainer"></div>
                     <div id="variantTableContainer"></div>
@@ -182,7 +220,9 @@
                         colorImageHtml += `
                         <div class="mb-2">
                             <label for="color_image_${color.id}" class="form-label">Hình ảnh cho màu ${color.value}</label>
-                            <input type="file" class="form-control" name="color_images[${color.id}]" id="color_image_${color.id}">
+                            <input type="file" class="form-control" name="color_images[${color.id}]" id="color_image_${color.id}" >
+
+                             
                         </div>`;
                     });
                     colorImageHtml += '</div>';
@@ -230,21 +270,55 @@
     <th>Giá</th>
     <th>Giá khuyến mãi</th>
     <th>Số lượng</th>
-    <th>Album ảnh</th> <!-- Cột mới -->
+    <th>Album ảnh</th>
 </tr></thead><tbody>`;
-
 
                 combinations.forEach((combo, index) => {
                     table += `<tr>
-    <td><input type="hidden" name="variants[${index}][color_id]" value="${combo.color.id}">${combo.color.value}</td>
-    <td><input type="hidden" name="variants[${index}][ram_id]" value="${combo.ram.id}">${combo.ram.value}</td>
-    <td><input type="hidden" name="variants[${index}][storage_id]" value="${combo.storage.id}">${combo.storage.value}</td>
-    <td><input type="number" class="form-control" name="variants[${index}][price]" min="0" required></td>
-    <td><input type="number" class="form-control" name="variants[${index}][discount_price]" min="0" placeholder="Giá khuyến mãi"></td>
-    <td><input type="number" class="form-control" name="variants[${index}][quantity]" min="0" required></td>
-    <td><input type="file" class="form-control" name="variants[${index}][images][]" multiple accept="image/*"></td>
-</tr>`;
+                        <td>
+                        <input type="hidden" name="variants[${index}][color_id]" value="${combo.color.id}">
+                        ${combo.color.value}
+                    </td>
 
+                    <td>
+                        <input type="hidden" name="variants[${index}][ram_id]" value="${combo.ram.id}">
+                        ${combo.ram.value}
+                    </td>
+
+                    <td>
+                        <input type="hidden" name="variants[${index}][storage_id]" value="${combo.storage.id}">
+                        ${combo.storage.value}
+                    </td>
+
+                    <td>
+                        <input type="number" class="form-control" name="variants[${index}][price]" min="0" >
+                        @error('variants.*.price')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </td>
+
+                    <td>
+                        <input type="number" class="form-control" name="variants[${index}][discount_price]" min="0" placeholder="Giá khuyến mãi">
+                        @error('variants.*.discount_price')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </td>
+
+                    <td>
+                        <input type="number" class="form-control" name="variants[${index}][quantity]" min="0" >
+                        @error('variants.*.quantity')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </td>
+
+                    <td>
+                        <input type="file" class="form-control" name="variants[${index}][images][]" multiple accept="image/*" >
+                        @error('variants.*.images')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </td>
+
+</tr>`;
                 });
 
                 table += "</tbody></table>";
@@ -259,6 +333,7 @@
         });
     </script>
 @endsection
+
 <style>
     .slim-select {
         height: 38px;
@@ -301,6 +376,7 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 </style>
+
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
     ClassicEditor

@@ -42,11 +42,14 @@ class NewsClientController extends Controller
             ->limit(5)
             ->get();
 
-        // Phân trang tin tức chính
-        $news = $query->paginate(12);
-
-        return view('client.news.index', compact('news', 'featuredNews', 'hotNews'));
+            $latestNews = News::published()
+            ->orderBy('published_at', 'desc')
+            ->limit(2)
+            ->get();
+            $news = $query->paginate(10)->appends($request->query());
+        return view('client.news.index', compact('news', 'featuredNews', 'hotNews','latestNews'));
     }
+
 
     public function show($slug)
     {

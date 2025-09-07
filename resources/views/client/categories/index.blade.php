@@ -439,11 +439,12 @@
                         </div>
                     @endif
 
-                    @if($products->count() > 0)
-                        <div class="pagination-wrapper">
-                            {{ $products->withQueryString()->links() }}
-                        </div>
-                    @endif
+                   @if($products->count() > 0)
+    <div class="my-custom-pagination">
+        {{ $products->withQueryString()->links() }}
+    </div>
+@endif
+
                 </div>
             </div>
         </div>

@@ -220,7 +220,8 @@
 
                             {{-- Thanh toán lại MOMO --}}
                             @if ($isMomoUnpaid)
-                                <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="GET">
+                                <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="POST">
+                                     @csrf
                                     <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
                                 </form>
                                 <form method="POST" action="{{ route('client.momo.to_cod', $order->id) }}" class="d-inline">

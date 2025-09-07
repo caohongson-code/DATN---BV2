@@ -9,50 +9,58 @@ use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Comment;
-
+use App\Models\Promotion;
+use Illuminate\Support\Facades\Session;
+use App\Models\News; 
 class ProductClientController extends Controller
 {
-    public function index()
-    {
-        
-        $products = Product::where('status', 1)->orderByDesc('created_at')->paginate(12);
-        return view('client.home', compact('products'));
-    }
+    // thêm dòng này ở đầu file
 
+public function index()
+{
+    // Sản phẩm mới nhất (phân trang 12 sp)
+    $products = Product::where('status', 1)
+        ->orderByDesc('created_at')
+        ->paginate(12);
 
-// public function show($id )
-// {
-//         $limit = $request->get('limit', 6);
-//     $product = Product::with(['variants.images','variants.ram', 'variants.storage', 'variants.color'])->findOrFail($id);
+    // 3 sản phẩm nổi bật
+    $featuredProducts = Product::where('status', 1)
+        ->orderByDesc('created_at')
+        ->take(3)
+        ->get();
 
-//     // Lấy các sản phẩm liên quan (trừ chính nó)
-//     $relatedProducts = Product::where('category_id', $product->category_id)
-//                             ->where('id', '!=', $product->id)
-//                             ->where('status', 1)
-//                             ->latest()
-//                             ->take(4)
-//                             ->get();
+    // 3 khuyến mãi mới nhất
+    $latestPromotions = Promotion::active()
+        ->orderByDesc('created_at')
+        ->take(3)
+        ->get();
 
-//     // Lấy đánh giá
-//     $reviews = Review::with(['account', 'variant.ram', 'variant.storage', 'variant.color'])
-//                     ->where('product_id', $product->id)
-//                     ->latest()
-//                     ->get();
+    // 📰 Tin tức mới nhất (lấy 5 bài)
+    $latestNews = News::orderByDesc('created_at')
+        ->take(5)
+        ->get();
 
-//     // Lấy bình luận riêng
-//     $comments = Comment::with('account')
-//                     ->where('product_id', $product->id)
-//                     ->latest()
-//                     ->get();
+    Session::forget('buy_now');
+    Session::forget('checkout_selected');
 
-//     return view('client.product.show', compact('product', 'relatedProducts', 'reviews', 'comments'));
-// }
+    // Truyền thêm $latestNews ra view
+    return view('client.home', compact(
+        'products',
+        'featuredProducts',
+        'latestPromotions',
+        'latestNews'
+    ));
+}
+
 public function show($id, Request $request)
 {
+    
+
     $limit = $request->get('limit', 6); // Lấy limit từ query, mặc định 6
 
     $product = Product::with(['variants.images','variants.ram', 'variants.storage', 'variants.color'])
         ->findOrFail($id);
+    $product->increment('views');
 
     $relatedProducts = Product::where('category_id', $product->category_id)
         ->where('id', '!=', $product->id)
@@ -77,11 +85,11 @@ public function show($id, Request $request)
         ->get();
 
     return view('client.product.show', compact(
-        'product', 
-        'relatedProducts', 
-        'reviews', 
-        'comments', 
-        'totalComments', 
+        'product',
+        'relatedProducts',
+        'reviews',
+        'comments',
+        'totalComments',
         'limit'
     ));
 }

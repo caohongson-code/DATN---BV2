@@ -35,6 +35,11 @@ class RamController extends Controller
     {
         $request->validate([
             'value' => 'required|string|max:255|unique:rams,value',
+        ], [
+            'value.required' => 'Vui lòng nhập dung lượng RAM',
+            'value.string'   => 'Dung lượng RAM phải là chuỗi ký tự',
+            'value.max'      => 'Dung lượng RAM không được vượt quá 255 ký tự',
+            'value.unique'   => 'Dung lượng RAM này đã tồn tại',
         ]);
 
         Ram::create(['value' => $request->value]);

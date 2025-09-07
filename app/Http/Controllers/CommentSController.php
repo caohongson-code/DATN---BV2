@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 
-class CommentsController extends Controller
+class CommentSController extends Controller
 {
     // Hiển thị danh sách bình luận
     public function index()

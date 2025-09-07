@@ -17,27 +17,64 @@
         </div>
 
         <div class="panel-body">
-            {{-- Danh sách sản phẩm --}}
-            <h4 class="mb-3">🛒 Sản phẩm trong đơn</h4>
-            @foreach ($order->orderDetails as $item)
-                @php
-                    $variant = $item->productVariant;
-                    $product = $variant?->product;
-                    $image = $product?->image ? asset('storage/' . $product->image) : asset('images/default.jpg');
-                    $variantPrice = $variant?->price ?? 0;
-                @endphp
-                <div class="media" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                    <div class="media-left">
-                        <img class="media-object img-thumbnail" src="{{ $image }}" alt="Ảnh sản phẩm"
-                            style="width: 90px; height: 90px; object-fit: cover;">
-                    </div>
-                    <div class="media-body">
-                        <h4 class="media-heading">{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h4>
-                        <p>Số lượng: <strong>{{ $item->quantity }}</strong></p>
-                        <p>Giá: <strong>{{ number_format($variantPrice, 0, ',', '.') }}₫</strong></p>
-                    </div>
-                </div>
-            @endforeach
+  @foreach ($order->orderDetails as $item)
+    @php
+        $variant = $item->productVariant;
+        $product = $variant?->product;
+        $image = $product?->image ? asset('storage/' . $product->image) : asset('images/default.jpg');
+
+        // Giá: ưu tiên discount_price, nếu không có thì dùng price
+        $variantPrice = $variant?->discount_price && $variant->discount_price > 0
+                        ? $variant->discount_price
+                        : $variant->price;
+
+        // Tổng tiền
+        $totalPrice = $variantPrice * $item->quantity;
+
+        // Biến thể
+        $ramValue = $variant?->ram?->value ?? null;
+        $storageValue = $variant?->storage?->value ?? null;
+        $colorValue = $variant?->color?->value ?? null;
+        $colorCode = $variant?->color?->code ?? null;
+    @endphp
+
+    <div class="media" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+        <div class="media-left">
+            <img class="media-object img-thumbnail" src="{{ $image }}" alt="Ảnh sản phẩm"
+                style="width: 90px; height: 90px; object-fit: cover;">
+        </div>
+        <div class="media-body">
+            <h4 class="media-heading">{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h4>
+            <p>Số lượng: <strong>{{ $item->quantity }}</strong></p>
+
+            {{-- Giá hiển thị --}}
+            <p>Giá: 
+                @if($variant->discount_price && $variant->discount_price > 0)
+                    <strong>{{ number_format($variant->discount_price, 0, ',', '.') }}₫</strong>
+                    <del style="color:#999;">{{ number_format($variant->price, 0, ',', '.') }}₫</del>
+                @else
+                    <strong>{{ number_format($variant->price, 0, ',', '.') }}₫</strong>
+                @endif
+            </p>
+
+            {{-- Tổng tiền --}}
+            <p>Tổng: <strong>{{ number_format($totalPrice, 0, ',', '.') }}₫</strong></p>
+
+            {{-- Biến thể --}}
+            @if($ramValue || $storageValue || $colorValue)
+                <p>Biến thể: 
+                    @if($ramValue) RAM: <strong>{{ $ramValue }}</strong>@endif
+                    @if($storageValue) , Storage: <strong>{{ $storageValue }}</strong>@endif
+                    @if($colorValue) , Màu: <strong>{{ $colorValue }}</strong>
+                        <span style="display:inline-block;width:15px;height:15px;background:{{ $colorCode }};border:1px solid #000;margin-left:5px;"></span>
+                    @endif
+                </p>
+            @endif
+        </div>
+    </div>
+@endforeach
+
+
 
             <hr>
 
@@ -47,7 +84,7 @@
             <p><strong>SĐT:</strong> {{ $order->recipient_phone }}</p>
             <p><strong>Địa chỉ:</strong> {{ $order->recipient_address }}</p>
             @if ($order->shippingZone)
-                <p><strong>Khu vực giao hàng:</strong> {{ $order->shippingZone->name }}</p>
+                {{-- <p><strong>Khu vực giao hàng:</strong> {{ $order->shippingZone->name }}</p> --}}
             @endif
             @if ($order->tracking_number)
                 <p><strong>Mã vận chuyển:</strong> <span class="text-primary">{{ $order->tracking_number }}</span></p>

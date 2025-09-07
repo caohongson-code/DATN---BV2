@@ -34,6 +34,7 @@ class ProductController extends Controller
         }
 
         $products = $query->orderByDesc('id')->paginate(10);
+        
         return view('admin.products.index', compact('products'));
     }
 
@@ -52,27 +53,57 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
-            'discount_price' => 'nullable|numeric|min:0|lte:price',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            // 'quantity' => 'required|integer|min:0',
+            'discount_price' => 'required|numeric|min:0|lte:price',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|boolean',
             'description' => 'nullable|string',
-        ]
-    ,  [
-        'product_name.required' => 'Tên sản phẩm là bắt buộc.',
-        'category_id.required' => 'Danh mục là bắt buộc.',
-        'category_id.exists' => 'Danh mục không hợp lệ.',
-        'price.required' => 'Giá sản phẩm là bắt buộc.',
-        'price.numeric' => 'Giá sản phẩm phải là số.',
-        'price.min' => 'Giá sản phẩm không được nhỏ hơn 0.',
-        'discount_price.numeric' => 'Giá khuyến mãi phải là số.',
-        'discount_price.lte' => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
-        'image.image' => 'Tệp tải lên phải là hình ảnh.',
-        'image.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif.',
-        'image.max' => 'Hình ảnh không được vượt quá 2MB.',
-        'status.required' => 'Trạng thái sản phẩm là bắt buộc.',
-        'status.boolean' => 'Trạng thái không hợp lệ.',
-    ]);
+
+            // ❌ lỗi ở đây: rule bị để nhầm sang phần messages
+            'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.quantity' => 'required|integer|min:1',
+            'variants.*.discount_price' => 'required|numeric|min:0',
+            'variants.*.images' => 'required',
+            'color_images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ],
+        [
+            // messages
+            'product_name.required' => 'Tên sản phẩm là bắt buộc.',
+            'category_id.required' => 'Danh mục là bắt buộc.',
+            'category_id.exists' => 'Danh mục không hợp lệ.',
+            'price.required' => 'Giá sản phẩm là bắt buộc.',
+            'price.numeric' => 'Giá sản phẩm phải là số.',
+            'price.min' => 'Giá sản phẩm không được nhỏ hơn 0.',
+            'discount_price.required' => 'Giá khuyến mãi  sản phẩm là bắt buộc.',
+            'discount_price.numeric' => 'Giá khuyến mãi phải là số.',
+            'discount_price.lte' => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
+            'image.required' => 'Vui lòng chọn ít nhất 1 ảnh cho biến thể.',
+            'image.image' => 'Tệp tải lên phải là hình ảnh.',
+            'image.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif.',
+            'image.max' => 'Hình ảnh không được vượt quá 2MB.',
+            'status.required' => 'Trạng thái sản phẩm là bắt buộc.',
+            'status.boolean' => 'Trạng thái không hợp lệ.',
+
+            // thêm messages cho variants
+            'variants.*.price.required' => 'Giá biến thể là bắt buộc.',
+            'variants.*.price.numeric' => 'Giá biến thể phải là số.',
+            'variants.*.price.min' => 'Giá biến thể không được nhỏ hơn 0.',
+
+
+            'variants.*.quantity.required' => 'Số lượng là bắt buộc.',
+            'variants.*.quantity.integer' => 'Số lượng phải là số nguyên.',
+            'variants.*.quantity.min' => 'Số lượng ít nhất là 1.',
+
+            'variants.*.discount_price.required' => 'Giá khuyến mại biến thể là bắt buộc.',
+            'variants.*.discount_price.numeric' => 'Giá khuyến mãi phải là số.',
+            'variants.*.discount_price.min' => 'Giá khuyến mãi không được nhỏ hơn 0.',
+
+            'variants.*.images.required' => 'Vui lòng chọn ít nhất 1 ảnh cho biến thể.',
+            'color_images.*.required' => 'Vui lòng chọn ảnh cho từng màu.',
+            'color_images.*.image' => 'File phải là ảnh.',
+            'color_images.*.mimes' => 'Ảnh phải có định dạng jpeg, png, jpg, gif.',
+            'color_images.*.max' => 'Ảnh không được vượt quá 2MB.',
+        ]);
+
 
         DB::beginTransaction();
         try {

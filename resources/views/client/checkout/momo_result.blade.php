@@ -37,10 +37,11 @@
 
     <div class="container py-5">
         {{-- Thông báo kết quả giao dịch --}}
+        {{-- <pre>{{ $result_code }}</pre>
+<pre>{{ print_r($info, true) }}</pre> --}}
+
         <div class="alert alert-{{ $info['type'] }}">
             <h4 class="mb-0">{{ $info['message'] }}</h4>
-            {{-- <p class="mt-2">Mã giao dịch: <strong>{{ $momo_trans->order_id }}</strong></p>
-            <p>Trạng thái mã: <code>{{ $result_code }}</code></p> --}}
         </div>
 
         {{-- Thông tin đơn hàng --}}
@@ -57,51 +58,33 @@
                         {{ strtoupper($order->payment_method_id == 3 ? 'MoMo' : 'COD') }}
                     </p>
                     <p><strong>🧾 Trạng thái thanh toán:</strong>
-                        @php
-                            $statusId = $order->payment_status_id;
-                        @endphp
-
-                        @switch($statusId)
-                            @case(1)
-                                <span class="badge bg-warning text-dark">Chờ thanh toán</span>
-                            @break
-
-                            @case(2)
-                                <span class="badge bg-success">Đã thanh toán</span>
-                            @break
-
-                            @case(3)
-                                <span class="badge bg-danger">Thanh toán thất bại</span>
-                            @break
-
-                            @case(4)
-                                <span class="badge bg-secondary">Hoàn tiền</span>
-                            @break
-
-                            @default
-                                <span class="badge bg-dark">Không rõ trạng thái</span>
+                        @switch($order->payment_status_id)
+                            @case(1) <span class="badge bg-warning text-dark">Chờ thanh toán</span> @break
+                            @case(2) <span class="badge bg-success">Đã thanh toán</span> @break
+                            @case(3) <span class="badge bg-danger">Thanh toán thất bại</span> @break
+                            @case(4) <span class="badge bg-secondary">Hoàn tiền</span> @break
+                            @default <span class="badge bg-dark">Không rõ trạng thái</span>
                         @endswitch
-
                     </p>
 
-                    <a href="{{ route('user.orders.detail', ['id' => $order->id]) }}"
-                        class="btn btn-outline-secondary mt-3">
+                    <a href="{{ route('user.orders.detail', ['id' => $order->id]) }}" class="btn btn-outline-secondary mt-3">
                         📄 Xem chi tiết đơn hàng
                     </a>
                 </div>
-
             </div>
         @endif
- <div>
-    @if ($order)
+
+        {{-- Nút retry chỉ khi thất bại --}}
+    @if ($order && $order->payment_status_id != 2)
     <div>
-        <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="GET">
+        <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="post">
+            @csrf
             <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
         </form>
     </div>
 @endif
+
+
         <a href="{{ route('home') }}" class="btn btn-primary mt-4">🔙 Quay về trang chủ</a>
-
     </div>
-
 @endsection

@@ -77,7 +77,8 @@
                     </div>
                 </a>
             </div>
-            @if ($lowStockVariant)
+             <div class="col-md-3">
+                 @if ($lowStockVariant)
                 <a href="{{ route('products.index', $lowStockVariant->product_id) }}" class="text-decoration-none">
                     <div class="card text-white mb-4 shadow-sm"
                         style="background: linear-gradient(135deg, #e74a3b, #b92c23);">
@@ -89,6 +90,7 @@
                     </div>
                 </a>
             @endif
+            </div>
 
         </div>
 
