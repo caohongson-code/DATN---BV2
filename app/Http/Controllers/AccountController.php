@@ -176,10 +176,15 @@ if ($account->role_id == 1) {
         return redirect()->back()->with('error', 'Email hoặc mật khẩu không đúng');
     }
     public function logout(Request $request)
-    {
-        $request->session()->forget(['admin_id', 'user_id']);
-        return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
-    }
+{
+    Auth::logout(); 
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
+}
+
     public function register(Request $request)
     {
         $request->validate([

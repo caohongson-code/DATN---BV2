@@ -43,7 +43,7 @@ use App\Http\Controllers\ContactController as ControllersContactController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
-    return view('admin.auth.login');
+    return redirect()->route('home');
 });
 
 // Trang người dùng (client)

@@ -26,10 +26,9 @@
   <!-- Main content -->
   <main class="app-content">
     @yield('content')
-    <div class="text-center" style="font-size: 13px">
-      <p><b>&copy; <script>document.write(new Date().getFullYear());</script> Phần mềm quản lý bán hàng | Dev By Trường</b></p>
-    </div>
+   
   </main>
+  @include('admin.layouts.footer')
 
   <!-- Scripts -->
   <script src="{{ asset('js/jquery-3.2.1.min.js') }}"></script>

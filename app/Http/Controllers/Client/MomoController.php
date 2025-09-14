@@ -104,14 +104,16 @@ class MomoController extends Controller
 
         // ✅ Cập nhật đơn hàng nếu thanh toán thành công
         if ($request->input('resultCode') == 0) {
-            $fullOrderId = $request->input('orderId');
-            $realOrderId = explode('-', $fullOrderId)[0];
+    $fullOrderId = $request->input('orderId');
+    $realOrderId = explode('-', $fullOrderId)[0];
 
-            DB::table('orders')->where('id', $realOrderId)->update([
-                'payment_status_id' => 2,
-                'updated_at' => now(),
-            ]);
-        }
+    DB::table('orders')->where('id', $realOrderId)->update([
+        'payment_status_id' => 2,
+        'order_status_id'   => 2, // ✅ Đánh dấu đã xác nhận
+        'updated_at'        => now(),
+    ]);
+}
+
 
         return response('IPN received', 200);
     }
@@ -141,9 +143,11 @@ MomoTransaction::create([
 if ($request->input('resultCode') == 0) {
     DB::table('orders')->where('id', $realOrderId)->update([
         'payment_status_id' => 2,
-        'updated_at' => now(),
+        'order_status_id'   => 2, // ✅ Chuyển trạng thái đơn hàng
+        'updated_at'        => now(),
     ]);
 }
+
 
 return redirect()->route('momo.result', ['orderId' => $realOrderId]);
     }

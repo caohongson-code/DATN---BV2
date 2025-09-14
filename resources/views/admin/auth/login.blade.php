@@ -12,14 +12,14 @@
     <header class="text-center py-6 text-3xl font-bold tracking-wider border-b">POW POW</header>
 
     <!-- Navigation -->
-    <nav class="flex justify-center space-x-8 py-3 border-b font-medium text-sm">
-        <a href="#" class="hover:underline">TRANG CHỦ</a>
-        <a href="#" class="hover:underline">SẢN PHẨM </a>
-        <a href="#" class="hover:underline">GIỚI THIỆU</a>
-        <a href="#" class="hover:underline">PHỤ KIỆN</a>
-        <a href="#" class="hover:underline">LIÊN HỆ</a>
-        <a href="#" class="hover:underline">CUSTOMER</a>
-    </nav>
+<nav class="flex justify-center space-x-8 py-3 border-b font-medium text-sm">
+    <a href="{{ route('home') }}" class="hover:underline">TRANG CHỦ</a>
+    <a href="{{ route('client.categories') }}" class="hover:underline">SẢN PHẨM</a>
+    <a href="{{ route('client.introduce') }}" class="hover:underline">GIỚI THIỆU</a>
+    <a href="{{ route('client.news.index') }}" class="hover:underline">TIN TỨC</a>
+    <a href="{{ route('client.contact') }}" class="hover:underline">LIÊN HỆ</a>
+</nav>
+
 
     <!-- Đây là tabs  Login/Register -->
     <div class="flex justify-center mt-8">

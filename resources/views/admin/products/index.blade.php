@@ -66,7 +66,6 @@
                             <th>Tên SP</th>
                             <th>Giá</th>
                             <th>Giá KM</th>
-                            <th>Số lượng</th>
                             <th>Trạng thái</th>
                             <th>Ngày tạo</th>
                             <th>Lượt xem</th>
@@ -96,7 +95,6 @@
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $product->quantity }}</td>
                                 <td>
                                     @if($product->status)
                                         <span class="badge bg-success">Hiển thị</span>

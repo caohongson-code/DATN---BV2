@@ -165,9 +165,11 @@ if ($order->order_status_id >= 3 && $status->id == 7) {
                                             $subtotal = $price * $qty;
                                             $totalQty += $qty;
                                             $total += $subtotal;
+                                            $image = $product?->image ? asset('storage/' . $product->image) : asset('images/default.jpg');
+                            
                                         @endphp
                                         <tr>
-                                            <td><img src="{{ asset('storage/' . $v->image) }}" width="60" class="rounded"></td>
+                                            <td><img src="{{ $image }}" width="60" class="rounded"></td>
                                             <td class="text-start">{{ $product->product_name }}</td>
                                             <td>{{ $v->ram->value ?? '-' }} / {{ $v->storage->value ?? '-' }} / {{ $v->color->value ?? '-' }}</td>
                                             <td>{{ number_format($price, 0, ',', '.') }}đ</td>
