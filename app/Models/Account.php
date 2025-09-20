@@ -31,4 +31,5 @@ public function savedPromotions()
                 ->withTimestamps();
 }
 
+
 }

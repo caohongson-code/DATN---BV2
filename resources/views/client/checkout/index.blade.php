@@ -164,7 +164,7 @@
                                 id="shipping">{{ number_format($shippingFee, 0, ',', '.') }}</span> VND</p>
                         <p><strong>Giảm giá:</strong>
                             <span id="discount">0%</span>
-                            - <span id="discount-amount">0</span> VND
+                            - <span id="discount-amount"></span> VND
                         </p>
                         <hr>
                         <h5><strong>Thanh toán:</strong>

@@ -86,4 +86,8 @@ class Order extends Model
     {
         return $this->hasMany(OrderDeliveryIssue::class);
     }
+    public function promotion()
+{
+    return $this->belongsTo(\App\Models\Promotion::class, 'voucher_code', 'code');
+}
 }

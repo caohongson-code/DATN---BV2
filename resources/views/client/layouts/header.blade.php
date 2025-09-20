@@ -2853,7 +2853,7 @@
                                 <i class="fa-regular fa-user"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                @if(Auth::check())
+                                {{-- @if(Auth::check())
                                 <li class="dropdown-item">
                                     Xin chào, <span class="fw-bold">{{ Auth::check() ? Auth::user()->full_name : 'Khách' }}</span>
                                 </li>
@@ -2868,7 +2868,30 @@
                                     </li>
                                 @else
                                     <li><a href="{{ route('login') }}" class="dropdown-item">Đăng nhập / Đăng ký</a></li>
+                                @endif --}}
+                                @if(Auth::check())
+                                    @php $user = Auth::user(); @endphp
+
+                                    <li class="dropdown-item">
+                                        Xin chào, <span class="fw-bold">{{ $user->full_name }}</span>
+                                    </li>
+
+                                    @if(!in_array($user->role_id, [1,2]))
+                                        <li><a href="{{ route('user.dashboard') }}" class="dropdown-item">Tài khoản của tôi</a></li>
+                                        <li>
+                                            <form action="{{ route('taikhoan.logout') }}" method="POST" class="px-3">
+                                                @csrf
+                                                <button class="btn btn-link text-danger p-0">Đăng xuất</button>
+                                            </form>
+                                        </li>
+                                    @else
+                                        <li class="dropdown-item text-muted">Bạn không được phép truy cập</li>
+                                    @endif
+
+                                @else
+                                    <li><a href="{{ route('login') }}" class="dropdown-item">Đăng nhập / Đăng ký</a></li>
                                 @endif
+
                             </ul>
                         </div>
 

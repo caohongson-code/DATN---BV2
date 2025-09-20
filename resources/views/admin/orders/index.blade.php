@@ -140,18 +140,30 @@
                                             </a>
                                         @endif
 
-                                        @if ($order->order_status_id == 1)
-                                            <form action="{{ route('admin.orders.update', $order->id) }}"
-                                                  method="POST" class="d-inline">
-                                                @csrf
-                                                @method('PUT')
-                                                <input type="hidden" name="order_status_id" value="2">
-                                                <button type="submit" class="btn btn-sm btn-success"
-                                                        onclick="return confirm('Xác nhận đơn hàng này?')">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
-                                        @endif
+                                       @if ($order->order_status_id == 1)
+    @php
+        $isMomoUnpaid = $order->paymentMethod?->code === 'momo' && $order->payment_status_id == 1;
+    @endphp
+
+    @if (!$isMomoUnpaid)
+        <form action="{{ route('admin.orders.update', $order->id) }}"
+              method="POST" class="d-inline">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="order_status_id" value="2">
+            <button type="submit" class="btn btn-sm btn-success"
+                    onclick="return confirm('Xác nhận đơn hàng này?')">
+                <i class="fas fa-check"></i>
+            </button>
+        </form>
+    @else
+        <button type="button" class="btn btn-sm btn-secondary" disabled
+                title="Chưa thể xác nhận — khách chưa thanh toán qua MoMo">
+            <i class="fas fa-lock"></i>
+        </button>
+    @endif
+@endif
+
                                     </td>
                                 </tr>
                             @empty

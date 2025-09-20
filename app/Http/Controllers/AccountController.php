@@ -175,16 +175,19 @@ if ($account->role_id == 1) {
 
         return redirect()->back()->with('error', 'Email hoặc mật khẩu không đúng');
     }
+
     public function logout(Request $request)
 {
-    Auth::logout(); 
-
+    Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
+    if ($request->is('admin/*')) {
+        return redirect()->route('login')->with('success', 'Đăng xuất admin thành công!');
+    }
+
     return redirect()->route('login')->with('success', 'Đăng xuất thành công!');
 }
-
     public function register(Request $request)
     {
         $request->validate([

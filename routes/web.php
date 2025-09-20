@@ -40,6 +40,7 @@ use App\Http\Controllers\Client\NewsClientController;
 use App\Http\Controllers\CommentsController;
 use App\Http\Controllers\Client\IntroduceController;
 use App\Http\Controllers\ContactController as ControllersContactController;
+use App\Http\Controllers\RolePermissionController;
 
 // Trang mặc định → login admin
 Route::get('/', function () {
@@ -68,9 +69,9 @@ Route::post('/register', [AccountController::class, 'register'])->name('taikhoan
     Route::get('reset-password/{token}', [AccountController::class, 'showResetForm'])->name('password.reset');
     Route::post('reset-password', [AccountController::class, 'resetPassword'])->name('password.update');
 
-
+    Route::get('/products', [ProductClientController::class, 'index'])->name('product.all');
 // 🌟 Các chức năng yêu cầu đăng nhập
-Route::middleware('auth')->group(function () {
+Route::middleware('auth','prevent.admin.order')->group(function () {
     Route::post('/logout', [AccountController::class, 'logout'])->name('taikhoan.logout');
     Route::post('/buy-now', [ClientCartController::class, 'buyNow'])->name('cart.buyNow');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
@@ -107,6 +108,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
+
     // Giỏ hàng
     Route::post('/cart/add', [ClientCartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [ClientCartController::class, 'show'])->name('cart.show');
@@ -125,7 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/momo/result', [CheckoutController::class, 'momoResult'])->name('momo.result');
 
     // Hiển thị tất cả sản phẩm (client)
-    Route::get('/products', [ProductClientController::class, 'index'])->name('product.all');
+
     // IPN từ server MoMo gửi về (POST), nơi xử lý đơn hàng chính thức
     Route::post('/momo_ipn', [MomoController::class, 'handleMomoIpn'])->name('momo.ipn');
     // Người dùng quay lại sau khi thanh toán xong, chỉ hiển thị kết quả
@@ -147,7 +149,7 @@ Route::middleware('auth')->group(function () {
 
     //binh luan
     Route::post('/client/comments', [CommentController::class, 'store'])->name('client.comments.store');
-    
+
     //
     Route::get('/lien-he', [ContactController::class, 'showContactForm'])->name('client.contact');
 Route::post('/lien-he', [ContactController::class, 'submitContactForm'])->name('client.contact.submit');
@@ -164,35 +166,116 @@ Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1'])->group(fun
     Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])->name('admin.updatePassword');
 });
 // 🌟 Admin + Quản trị viên phụ (role_id = 1,2)
-Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1,2'])->group(function () {
-    Route::resource('products', ProductController::class);
-    Route::resource('categories', CategoryController::class);
-    Route::resource('variants', ProductVariantController::class);
-    Route::resource('promotions', PromotionController::class);
-    Route::resource('rams', RamController::class);
-    Route::resource('storages', StorageController::class);
-    Route::resource('colors', ColorController::class);
-    Route::resource('customers', CustomersControllerr::class);
-    Route::resource('carts', CartController::class)->only(['index', 'show', 'destroy']);
-    Route::resource('cart-details', CartDetailController::class);
-    Route::delete('/cart-details/{id}', [CartDetailController::class, 'destroy'])->name('cart-details.destroy');
+// Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1,2'])->group(function () {
+//     Route::resource('products', ProductController::class);
+//     Route::resource('categories', CategoryController::class);
+//     Route::resource('variants', ProductVariantController::class);
+//     Route::resource('promotions', PromotionController::class);
+//     Route::resource('rams', RamController::class);
+//     Route::resource('storages', StorageController::class);
+//     Route::resource('colors', ColorController::class);
+//     Route::resource('customers', CustomersControllerr::class);
+//     Route::resource('carts', CartController::class)->only(['index', 'show', 'destroy']);
+//     Route::resource('cart-details', CartDetailController::class);
+//     Route::delete('/cart-details/{id}', [CartDetailController::class, 'destroy'])->name('cart-details.destroy');
 
-    // News
-    Route::resource('news', NewsController::class);
-    Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured');
-    Route::post('/news/{id}/toggle-hot', [NewsController::class, 'toggleHot'])->name('admin.news.toggle-hot');
-    Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
-    Route::post('/news/test-upload', [NewsController::class, 'testUpload'])->name('admin.news.test-upload');
+//     // News
+//     Route::resource('news', NewsController::class);
+//     Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured');
+//     Route::post('/news/{id}/toggle-hot', [NewsController::class, 'toggleHot'])->name('admin.news.toggle-hot');
+//     Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
+//     Route::post('/news/test-upload', [NewsController::class, 'testUpload'])->name('admin.news.test-upload');
 
-    // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
-    Route::put('/orders/{id}', [OrderController::class, 'update'])->name('admin.orders.update');
-    Route::get('/orders/place/{cartId}', [OrderController::class, 'placeOrderFromCart'])->name('admin.orders.place');
-    Route::post('/variants/{id}/images', [ProductVariantImageController::class, 'storeImages'])->name('admin.variant.images.store');
-    Route::delete('/variant-images/{id}', [ProductVariantImageController::class, 'deleteImage'])->name('admin.variant.images.delete');
+//     // Orders
+//     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+//     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
+//     Route::put('/orders/{id}', [OrderController::class, 'update'])->name('admin.orders.update');
+//     Route::get('/orders/place/{cartId}', [OrderController::class, 'placeOrderFromCart'])->name('admin.orders.place');
+//     Route::post('/variants/{id}/images', [ProductVariantImageController::class, 'storeImages'])->name('admin.variant.images.store');
+//     Route::delete('/variant-images/{id}', [ProductVariantImageController::class, 'deleteImage'])->name('admin.variant.images.delete');
 
-    // Return requests
+//     // Return requests
+//     Route::get('return-requests', [OrderController::class, 'listReturnRequests'])->name('admin.return_requests.index');
+//     Route::get('return-requests/{id}/approve', [OrderController::class, 'approveReturnRequest'])->name('admin.return_requests.approve');
+//     Route::get('return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
+//     Route::post('/orders/returns/{id}/progress', [OrderController::class, 'updateReturnProgress'])->name('admin.orders.progress');
+//     Route::get('/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
+//     Route::post('/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
+//     Route::get('/admin/orders/{id}/refund-detail', [OrderController::class, 'refundDetail'])->name('admin.orders.refund_detail');
+//     // Comments
+//     Route::get('comments', [CommentSController::class, 'index'])->name('comments.index');
+//     Route::get('/hide/{id}', [CommentSController::class, 'hide'])->name('comments.hide');
+//     Route::get('/show/{id}', [CommentSController::class, 'showComment'])->name('comments.showComment');
+//     //
+//     Route::get('/admin/contact', [ControllersContactController::class, 'index'])->name('admin.contact.index');
+// Route::get('/admin/contact/{id}', [ControllersContactController::class, 'show'])->name('admin.contact.show');
+// Route::put('/admin/contact/{id}/status', [ControllersContactController::class, 'updateStatus'])->name('admin.contact.status');
+// Route::delete('/admin/contact/{id}', [ControllersContactController::class, 'destroy'])->name('admin.contact.destroy');
+// });
+Route::prefix('admin')->group(function () {
+
+
+    Route::get('/dashboard', [DashboardControlle::class, 'index'])
+        ->middleware('check.permission:pos-sell')
+        ->name('admin.dashboard');
+
+    // Products
+    Route::resource('products', ProductController::class)
+        ->middleware('check.permission:product-manage')
+        ->names('products');
+    Route::resource('categories', CategoryController::class)
+        ->middleware('check.permission:category-manage')
+        ->names('categories');
+    Route::resource('variants', ProductVariantController::class)
+        ->middleware('check.permission:product-attribute')
+        ->names('variants');
+    Route::resource('rams', RamController::class)
+        ->middleware('check.permission:product-attribute')
+        ->names('rams');
+    Route::resource('storages', StorageController::class)
+        ->middleware('check.permission:product-attribute')
+        ->names('storages');
+    Route::resource('colors', ColorController::class)
+        ->middleware('check.permission:product-attribute')
+        ->names('colors');
+
+    // Customers
+    Route::resource('customers', CustomersControllerr::class)
+        ->middleware('check.permission:customer-manage')
+        ->names('customers');
+        Route::resource('accounts', AccountController::class)
+        ->middleware('check.permission:staff-manage')
+        ->names('accounts')
+        ->except(['show']); // loại bỏ route show
+
+        Route::get('accounts/show', [AccountController::class, 'show'])->middleware('check.permission:profile-view')->name('admin.profile');
+
+        Route::post('accounts/update-profile', [AccountController::class, 'updateAdminProfile'])
+        ->middleware('check.permission:profile-view')->name('admin.updateProfile');
+        Route::post('accounts/update-password', [AccountController::class, 'updateAdminPassword'])
+        ->middleware('check.permission:profile-view')->name('admin.updatePassword');
+    // Roles
+    Route::resource('roles', RoleController::class)
+        ->middleware('check.permission:role-manage')
+                        ->names('roles');
+    Route::resource('promotions', PromotionController::class)
+    ->middleware('check.permission:promotion-manage')
+    ->names('promotions');
+
+                // Orders
+                Route::get('/orders', [OrderController::class, 'index'])
+                    ->middleware('check.permission:order-manage')
+                    ->name('admin.orders.index');
+
+                Route::get('/orders/{id}', [OrderController::class, 'show'])
+                    ->middleware('check.permission:order-manage')
+                    ->name('admin.orders.show');
+
+                Route::put('/orders/{id}', [OrderController::class, 'update'])
+                    ->middleware('check.permission:order-manage')
+                    ->name('admin.orders.update');
+
+// Return requests
     Route::get('return-requests', [OrderController::class, 'listReturnRequests'])->name('admin.return_requests.index');
     Route::get('return-requests/{id}/approve', [OrderController::class, 'approveReturnRequest'])->name('admin.return_requests.approve');
     Route::get('return-requests/{id}/reject', [OrderController::class, 'rejectReturnRequest'])->name('admin.return_requests.reject');
@@ -200,13 +283,38 @@ Route::prefix('admin')->middleware(['auth', CheckRole::class . ':1,2'])->group(f
     Route::get('/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
     Route::post('/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
     Route::get('/admin/orders/{id}/refund-detail', [OrderController::class, 'refundDetail'])->name('admin.orders.refund_detail');
-    // Comments
-    Route::get('comments', [CommentSController::class, 'index'])->name('comments.index');
-    Route::get('/hide/{id}', [CommentSController::class, 'hide'])->name('comments.hide');
-    Route::get('/show/{id}', [CommentSController::class, 'showComment'])->name('comments.showComment');
-    //
-    Route::get('/admin/contact', [ControllersContactController::class, 'index'])->name('admin.contact.index');
-Route::get('/admin/contact/{id}', [ControllersContactController::class, 'show'])->name('admin.contact.show');
-Route::put('/admin/contact/{id}/status', [ControllersContactController::class, 'updateStatus'])->name('admin.contact.status');
-Route::delete('/admin/contact/{id}', [ControllersContactController::class, 'destroy'])->name('admin.contact.destroy');
-});
+                Route::resource('news', NewsController::class)
+                ->middleware('check.permission:news-manage');
+                Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured')
+                ->middleware('check.permission:news-manage');
+                Route::post('/news/{id}/toggle-hot', [NewsController::class, 'toggleHot'])->name('admin.news.toggle-hot')
+                ->middleware('check.permission:news-manage');
+                Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action')
+                ->middleware('check.permission:news-manage');
+                Route::post('/news/test-upload', [NewsController::class, 'testUpload'])->name('admin.news.test-upload')
+                ->middleware('check.permission:news-manage');
+
+                Route::get('/admin/contact', [ControllersContactController::class, 'index'])->name('admin.contact.index')
+                ->middleware('check.permission:contact-manage');
+                Route::get('/admin/contact/{id}', [ControllersContactController::class, 'show'])->name('admin.contact.show')
+                ->middleware('check.permission:contact-manage');
+                Route::put('/admin/contact/{id}/status', [ControllersContactController::class, 'updateStatus'])->name('admin.contact.status')
+                ->middleware('check.permission:contact-manage');
+                Route::delete('/admin/contact/{id}', [ControllersContactController::class, 'destroy'])->name('admin.contact.destroy')
+                ->middleware('check.permission:contact-manage');
+                // Role + Permission Assign
+                Route::get('/assign', [RolePermissionController::class, 'assign'])
+                // ->middleware('check.permission:permission-manage')
+                ->name('roles.permissions.assign');
+                Route::post('/assign', [RolePermissionController::class, 'storeAssign'])
+                // ->middleware('check.permission:permission-manage')
+                ->name('roles.permissions.storeAssign');
+
+                Route::get('comments', [CommentSController::class, 'index'])->name('comments.index')
+                ->middleware('check.permission:comment-manage');
+                Route::get('/hide/{id}', [CommentSController::class, 'hide'])->name('comments.hide')
+                ->middleware('check.permission:comment-manage');
+                Route::get('/show/{id}', [CommentSController::class, 'showComment'])->name('comments.showComment')
+                ->middleware('check.permission:comment-manage');
+                Route::post('/logout', [AccountController::class, 'logout'])->name('admin.logout');
+                });

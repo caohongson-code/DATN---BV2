@@ -1,9 +1,9 @@
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
   <div class="app-sidebar__user">
-<img class="app-sidebar__user-avatar" 
-     src="{{ $admin && $admin->avatar ? asset('storage/' . $admin->avatar) : asset('images/default-avatar.png') }}" 
-     width="50px" 
+<img class="app-sidebar__user-avatar"
+     src="{{ $admin && $admin->avatar ? asset('storage/' . $admin->avatar) : asset('images/default-avatar.png') }}"
+     width="50px"
      alt="User Image">
 
 <div>
@@ -59,13 +59,25 @@
               <span class="app-menu__label">Quản lý chức vụ</span>
             </a>
           </li>
+          @php
+          $userRoleId = auth()->user()->role->id ?? null;
+      @endphp
 
-          <li>
+      @if($userRoleId == 1)
+      <li>
+          <a class="app-menu__item {{ request()->is('admin/roles/assign') ? 'active' : '' }}"
+          href="{{ route('roles.permissions.assign') }}">
+              <i class='app-menu__icon bx bx-lock-alt'></i>
+              <span class="app-menu__label">Phân quyền</span>
+          </a>
+      </li>
+      @endif
+          {{-- <li>
             <a class="app-menu__item {{ request()->is('admin/promotions*') ? 'active' : '' }}" href="{{ route('promotions.index') }}">
                 <i class='app-menu__icon bx bx-purchase-tag'></i>
                 <span class="app-menu__label">Quản lý voucher</span>
               </a>
-            </li>
+            </li> --}}
 
     <li>
         <a class="app-menu__item {{ request()->is('admin/categories*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
@@ -142,6 +154,18 @@
         <span class="app-menu__label">Quản lý bình luận</span>
       </a>
     </li>
+
+    {{-- <li>
+        <a class="app-menu__item {{ request()->is('admin/login*') ? 'active' : '' }}" href="{{ route('login') }}"
+           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class='app-menu__icon bx bx-purchase-tag-alt'></i>
+            <span class="app-menu__label">Đăng xuất</span>
+        </a>
+
+        <form id="logout-form" action="{{ route('admin.logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+    </li> --}}
 
 
     {{-- <li>

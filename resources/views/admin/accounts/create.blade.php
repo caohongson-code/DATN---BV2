@@ -28,19 +28,22 @@
 
                 <div class="row">
                     {{-- Vai trò --}}
-                <div class="col-md-12 mb-3 select-box-group">
-                    <label class="form-label fw-semibold d-block">Vai trò</label>
-                    <div class="d-flex flex-wrap gap-3">
-                        @foreach($roles as $role)
-                            <div>
-                                <input type="radio" name="role_id" id="role-{{ $role->id }}" value="{{ $role->id }}"
-                                    {{ old('role_id', $user->role_id ?? '') == $role->id ? 'checked' : '' }}>
-                                <label class="select-box-label" for="role-{{ $role->id }}">
-                                    <i class="{{ strtolower($role->role_name) === 'admin' ? 'fas fa-user-shield' : 'fas fa-user' }}"></i>
-                                    {{ $role->role_name }}
-                                </label>
-                            </div>
+                    <div class="col-md-12 mb-3 select-box-group">
+                        <label class="form-label fw-semibold d-block">Vai trò</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach($roles as $role)
+                            @if(!in_array($role->id, [ 3]))
+                                <div>
+                                    <input type="radio" name="role_id" id="role-{{ $role->id }}" value="{{ $role->id }}"
+                                        {{ old('role_id', $user->role_id ?? '') == $role->id ? 'checked' : '' }}>
+                                    <label class="select-box-label" for="role-{{ $role->id }}">
+                                        <i class="{{ strtolower($role->role_name) === 'admin' ? 'fas fa-user-shield' : 'fas fa-user' }}"></i>
+                                        {{ $role->role_name }}
+                                    </label>
+                                </div>
+                            @endif
                         @endforeach
+
                     </div>
                     @error('role_id')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                 </div>
@@ -85,7 +88,7 @@
                     </div>
 
                     {{-- Giới tính --}}
-                 
+
             <div class="col-md-6 mb-3 select-box-group">
                 <label class="form-label fw-semibold d-block">Giới tính</label>
                 <div class="d-flex gap-3">

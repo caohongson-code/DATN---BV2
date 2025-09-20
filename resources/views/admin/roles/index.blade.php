@@ -8,9 +8,9 @@
         {{-- Tiêu đề và nút --}}
         <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">Danh sách chức vụ</h4>
-            <a href="{{ route('roles.create') }}" class="btn btn-success btn-sm">
+            {{-- <a href="{{ route('roles.create') }}" class="btn btn-success btn-sm">
                 <i class="fas fa-plus-circle me-1"></i> Thêm chức vụ
-            </a>
+            </a> --}}
         </div>
 
         {{-- Nội dung --}}
