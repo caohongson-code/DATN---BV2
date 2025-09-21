@@ -13,7 +13,7 @@ use App\Models\Cart;
 use App\Models\MomoTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-
+use App\Jobs\CancelOrderJob;
 class CheckoutController extends Controller
 {
     /**
@@ -449,75 +449,98 @@ class CheckoutController extends Controller
         return redirect()->route('home')->with('success', '✅ Đặt hàng thành công!');
     }
 
-    private function createOrder($user, $cartItems, $subtotal, $discount, $shippingFee, $voucher = null, $paymentMethod = 'cod', $requestId = null, $selectedItems = [])
 
-    {
-        // Kiểm tra tồn kho
-        foreach ($cartItems as $item) {
-            $availableQty = $item['variant']
-                ? DB::table('product_variants')->where('id', $item['variant']->id)->value('quantity')
-                : DB::table('products')->where('id', $item['product']->id)->value('quantity');
+private function createOrder(
+    $user,
+    $cartItems,
+    $subtotal,
+    $discount,
+    $shippingFee,
+    $voucher = null,
+    $paymentMethod = 'cod',
+    $requestId = null,
+    $selectedItems = []
+) {
+    // ✅ Kiểm tra tồn kho (như cũ)
+    foreach ($cartItems as $item) {
+        $availableQty = $item['variant']
+            ? DB::table('product_variants')->where('id', $item['variant']->id)->value('quantity')
+            : DB::table('products')->where('id', $item['product']->id)->value('quantity');
 
-            if ($availableQty < $item['quantity']) {
-                throw new \Exception("Sản phẩm {$item['product']->product_name} không đủ hàng");
-            }
+        if ($availableQty < $item['quantity']) {
+            throw new \Exception("Sản phẩm {$item['product']->product_name} không đủ hàng");
         }
+    }
 
-        $total         = $subtotal + $shippingFee - $discount;
-        $paymentStatus = 1;
+    $total         = $subtotal + $shippingFee - $discount;
+    $paymentStatus = 1;
+    $paymentMethodId = $this->getPaymentMethodId($paymentMethod);
 
-        $orderId = DB::table('orders')->insertGetId([
-            'account_id'        => $user->id,
-            'payment_method_id' => $this->getPaymentMethodId($paymentMethod),
-            'shipping_zone_id'  => 1,
-            'order_status_id'   => 1,
-            'payment_status_id' => $paymentStatus,
-            'voucher_id'        => $voucher?->id,
-            'voucher_code'      => $voucher?->code,
-            'shipping_fee'      => $shippingFee,
-            'recipient_name'    => $user->full_name,
-            'recipient_phone'   => $user->phone,
-            'recipient_email'   => $user->email,
-            'recipient_address' => $user->address,
-            'total_amount'      => $total,
-            'order_date'        => now(),
-            'momo_request_id'   => $requestId,
-            'created_at'        => now(),
-            'updated_at'        => now(),
+    // ⏱️ Set thời gian hết hạn nếu là MoMo
+    $paymentExpiresAt = null;
+    if ($paymentMethod === 'momo') {
+        $paymentExpiresAt = now()->addMinute(3);
+    }
+
+    // ✅ Tạo đơn hàng
+    $orderId = DB::table('orders')->insertGetId([
+        'account_id'         => $user->id,
+        'payment_method_id'  => $paymentMethodId,
+        'shipping_zone_id'   => 1,
+        'order_status_id'    => 1, // chờ xác nhận
+        'payment_status_id'  => $paymentStatus,
+        'voucher_id'         => $voucher?->id,
+        'voucher_code'       => $voucher?->code,
+        'shipping_fee'       => $shippingFee,
+        'recipient_name'     => $user->full_name,
+        'recipient_phone'    => $user->phone,
+        'recipient_email'    => $user->email,
+        'recipient_address'  => $user->address,
+        'total_amount'       => $total,
+        'order_date'         => now(),
+        'momo_request_id'    => $requestId,
+        'payment_expires_at' => $paymentExpiresAt, // 👈 thêm cột này
+        'created_at'         => now(),
+        'updated_at'         => now(),
+    ]);
+
+    // ✅ Lưu chi tiết đơn + trừ tồn kho (giữ nguyên)
+    foreach ($cartItems as $item) {
+        DB::table('order_details')->insert([
+            'order_id'         => $orderId,
+            'product_variant_id' => $item['variant']?->id,
+            'quantity'         => $item['quantity'],
+            'unit_price'       => $item['price'],
+            'total_price'      => $item['subtotal'],
+            'created_at'       => now(),
+            'updated_at'       => now(),
         ]);
 
-        foreach ($cartItems as $item) {
-            DB::table('order_details')->insert([
-                'order_id' => $orderId,
-                'product_variant_id' => $item['variant']?->id,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['price'],
-                'total_price' => $item['subtotal'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // ✅ Trừ tồn kho
-            if ($item['variant']) {
-                DB::table('product_variants')
-                    ->where('id', $item['variant']->id)
-                    ->decrement('quantity', $item['quantity']);
-            } else {
-                DB::table('products')
-                    ->where('id', $item['product']->id)
-                    ->decrement('quantity', $item['quantity']);
-            }
+        if ($item['variant']) {
+            DB::table('product_variants')
+                ->where('id', $item['variant']->id)
+                ->decrement('quantity', $item['quantity']);
+        } else {
+            DB::table('products')
+                ->where('id', $item['product']->id)
+                ->decrement('quantity', $item['quantity']);
         }
-
-
-        if (!empty($selectedItems)) {
-            CartDetail::whereIn('id', $selectedItems)->delete();
-        }
-
-        session()->forget('buy_now');
-
-        return $orderId;
     }
+
+    // ✅ Xóa sản phẩm khỏi giỏ nếu cần
+    if (!empty($selectedItems)) {
+        CartDetail::whereIn('id', $selectedItems)->delete();
+    }
+
+    session()->forget('buy_now');
+
+    // 🚀 Nếu là MoMo → dispatch job hủy sau 1 phút
+    if ($paymentMethod === 'momo') {
+        CancelOrderJob::dispatch($orderId)->delay(now()->addMinute(3));
+    }
+
+    return $orderId;
+}
 
     private function getPaymentMethodId($code)
     {

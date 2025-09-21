@@ -156,6 +156,45 @@
                         <strong>Trạng thái:</strong>
                         <span class="text-primary">{{ $order->orderStatus->status_name ?? 'Không rõ' }}</span> |
                         <strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}
+@if(!empty($order->payment_expires_at))
+    <div id="timer-{{ $order->id }}" style="font-size:18px; display:flex; align-items:center; gap:6px;">
+        ⏳
+        <span id="countdown-{{ $order->id }}">--:--:--</span>
+    </div>
+
+    <script>
+        const expiresAt{{ $order->id }} = new Date(
+            "{{ optional($order->payment_expires_at)->format('Y-m-d\\TH:i:s') }}"
+        ).getTime();
+
+        const countdownEl{{ $order->id }} = document.getElementById("countdown-{{ $order->id }}");
+        const timerDiv{{ $order->id }} = document.getElementById("timer-{{ $order->id }}");
+
+        const interval{{ $order->id }} = setInterval(() => {
+            const now = Date.now();
+            const distance = expiresAt{{ $order->id }} - now;
+
+            if (distance <= 0) {
+                clearInterval(interval{{ $order->id }});
+                countdownEl{{ $order->id }}.textContent = "Hết hạn thanh toán";
+                timerDiv{{ $order->id }}.style.color = "red";
+                return;
+            }
+
+            const hours = Math.floor(distance / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            countdownEl{{ $order->id }}.textContent =
+                String(hours).padStart(2, "0") + ":" +
+                String(minutes).padStart(2, "0") + ":" +
+                String(seconds).padStart(2, "0");
+        }, 1000);
+    </script>
+@else
+    <span>Không có thời gian hết hạn</span>
+@endif
+
                     </div>
 
                     <div class="card-body">
@@ -212,99 +251,107 @@
                             </div>
                         </div>
 
-                        {{-- Nút hành động --}}
-                        <div class="text-end order-action-buttons d-flex flex-wrap justify-content-end">
-                            @php
-                                $isMomoUnpaid = $order->paymentMethod->code === 'momo' && $order->payment_status_id == 1;
-                            @endphp
+                       {{-- Nút hành động --}}
+<div class="text-end order-action-buttons d-flex flex-wrap justify-content-end">
+    @php
+        $isMomoUnpaid = $order->paymentMethod->code === 'momo' && $order->payment_status_id == 1;
+        $isCancelled = $order->order_status_id == 7;
+    @endphp
 
-                            {{-- Thanh toán lại MOMO --}}
-                            @if ($isMomoUnpaid)
-                                <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="POST">
-                                     @csrf
-                                    <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
-                                </form>
-                                <form method="POST" action="{{ route('client.momo.to_cod', $order->id) }}" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-warning btn-sm"
-                                        onclick="return confirm('Bạn có chắc muốn chuyển sang thanh toán khi nhận hàng không?')">
-                                        💵 Thanh toán khi nhận hàng
-                                    </button>
-                                </form>
-                            @endif
+    {{-- Nút Xem chi tiết luôn hiển thị --}}
+    <a href="{{ route('user.orders.detail', $order->id) }}" class="btn btn-primary btn-sm">
+        Xem chi tiết
+    </a>
 
-                            {{-- Xem chi tiết --}}
-                            <a href="{{ route('user.orders.detail', $order->id) }}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+    {{-- Nếu không phải momo + chưa thanh toán + đã hủy => mới hiển thị các nút khác --}}
+    @if (!($isMomoUnpaid && $isCancelled))
+        {{-- Thanh toán lại MOMO --}}
+        @if ($isMomoUnpaid)
+            <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
+            </form>
+            <form method="POST" action="{{ route('client.momo.to_cod', $order->id) }}" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-outline-warning btn-sm"
+                    onclick="return confirm('Bạn có chắc muốn chuyển sang thanh toán khi nhận hàng không?')">
+                    💵 Thanh toán khi nhận hàng
+                </button>
+            </form>
+        @endif
 
-                            {{-- Huỷ đơn --}}
-                            @if ($order->order_status_id == 1)
-                                <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
-                            @endif
+        {{-- Huỷ đơn --}}
+        @if ($order->order_status_id == 1)
+            <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
+        @endif
 
-                            {{-- Xác nhận nhận hàng / Báo chưa nhận --}}
-                            @if ($order->order_status_id == 5)
-                                @if (!$order->user_confirmed_delivery)
-                                    <button class="btn btn-success btn-sm btn-confirm-received" data-id="{{ $order->id }}">
-                                        Tôi đã nhận hàng
-                                    </button>
-                                    @if (!isset($deliveryIssues[$order->id]))
-                                        <button class="btn btn-outline-danger btn-sm btn-report-issue" data-id="{{ $order->id }}">
-                                            Chưa nhận được hàng
-                                        </button>
-                                    @else
-                                        <span class="text-info fw-bold">Đã gửi phản hồi</span>
-                                    @endif
-                                @else
-                                    <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
-                                @endif
-                            @endif
+        {{-- Xác nhận nhận hàng / Báo chưa nhận
+        @if ($order->order_status_id == 5)
+            @if (!$order->user_confirmed_delivery)
+                <button class="btn btn-success btn-sm btn-confirm-received" data-id="{{ $order->id }}">
+                    Tôi đã nhận hàng
+                </button>
+                @if (!isset($deliveryIssues[$order->id]))
+                    <button class="btn btn-outline-danger btn-sm btn-report-issue" data-id="{{ $order->id }}">
+                        Chưa nhận được hàng
+                    </button>
+                @else
+                    <span class="text-info fw-bold">Đã gửi phản hồi</span>
+                @endif
+            @else
+                <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
+            @endif
+        @endif --}}
 
-                            {{-- Trả hàng / Hoàn tiền --}}
-                            @if ($order->order_status_id == 5 || $order->order_status_id == 6)
-                                @php
-                                    $returnRequest = $returnedOrders[$order->id] ?? null;
-                                    $latestProgress = null;
-                                    if ($returnRequest && isset($progresses[$returnRequest->id])) {
-                                        $latestProgress = $progresses[$returnRequest->id]->last();
-                                    }
-                                @endphp
+        {{-- Trả hàng / Hoàn tiền --}}
+        @if ($order->order_status_id == 5 || $order->order_status_id == 6)
+            @php
+                $returnRequest = $returnedOrders[$order->id] ?? null;
+                $latestProgress = null;
+                if ($returnRequest && isset($progresses[$returnRequest->id])) {
+                    $latestProgress = $progresses[$returnRequest->id]->last();
+                }
+            @endphp
 
-                                @if ($returnRequest)
-                                    @if ($returnRequest->status === 'pending')
-                                        <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
-                                        <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
-                                            data-id="{{ $returnRequest->id }}">
-                                            Hủy yêu cầu
-                                        </button>
-                                    @elseif ($returnRequest->status === 'rejected')
-                                        <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
-                                    @elseif ($returnRequest->status === 'approved' && (!$latestProgress || $latestProgress->status === 'approved'))
-                                        <a href="{{ route('user.return.enter_tracking', $returnRequest->id) }}"
-                                            class="btn btn-sm btn-outline-primary">
-                                            Người tiêu dùng hoàn hàng
-                                        </a>
-                                    @else
-                                        @php
-                                            $statusVN = match ($latestProgress->status ?? '') {
-                                                'pending' => 'Đang chờ xử lý',
-                                                'approved' => 'Đã duyệt',
-                                                'rejected' => 'Đã từ chối',
-                                                'shipped_back' => 'Đã gửi hàng trả lại',
-                                                'received' => 'Đã nhận hàng',
-                                                'checking' => 'Đang kiểm tra',
-                                                'refunded' => 'Đã hoàn tiền',
-                                                default => '...',
-                                            };
-                                        @endphp
-                                        <span class="text-secondary">Trạng thái trả hàng: {{ $statusVN }}</span>
-                                    @endif
-                                @else
-                                    <button class="btn btn-warning btn-sm return-order-btn">
-                                        Trả hàng/Hoàn tiền
-                                    </button>
-                                @endif
-                            @endif
-                        </div>
+            @if ($returnRequest)
+                @if ($returnRequest->status === 'pending')
+                    <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
+                    <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
+                        data-id="{{ $returnRequest->id }}">
+                        Hủy yêu cầu
+                    </button>
+                @elseif ($returnRequest->status === 'rejected')
+                    <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
+                @elseif ($returnRequest->status === 'approved' && (!$latestProgress || $latestProgress->status === 'approved'))
+                    <a href="{{ route('user.return.enter_tracking', $returnRequest->id) }}"
+                        class="btn btn-sm btn-outline-primary">
+                        Người tiêu dùng hoàn hàng
+                    </a>
+                @else
+                    @php
+                        $statusVN = match ($latestProgress->status ?? '') {
+                            'pending' => 'Đang chờ xử lý',
+                            'approved' => 'Đã duyệt',
+                            'rejected' => 'Đã từ chối',
+                            'shipped_back' => 'Đã gửi hàng trả lại',
+                            'received' => 'Đã nhận hàng',
+                            'checking' => 'Đang kiểm tra',
+                            'refunded' => 'Đã hoàn tiền',
+                            default => '...',
+                        };
+                    @endphp
+                    <span class="text-secondary">Trạng thái trả hàng: {{ $statusVN }}</span>
+                @endif
+            @else
+                <button class="btn btn-warning btn-sm return-order-btn">
+                    Trả hàng/Hoàn tiền
+                </button>
+            @endif
+        @endif
+    @endif
+</div>
+
+
                     </div>
                 </div>
             @endforeach

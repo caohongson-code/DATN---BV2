@@ -35,6 +35,7 @@ class Order extends Model
     // 👇 Đây là phần bạn thiếu để dùng format() với order_date
     protected $casts = [
         'order_date' => 'datetime',
+        'payment_expires_at' => 'datetime',
     ];
 
     public function account(): BelongsTo

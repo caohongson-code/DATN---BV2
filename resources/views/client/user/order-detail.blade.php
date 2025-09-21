@@ -17,62 +17,69 @@
         </div>
 
         <div class="panel-body">
-  @foreach ($order->orderDetails as $item)
-    @php
-        $variant = $item->productVariant;
-        $product = $variant?->product;
-        $image = $product?->image ? asset('storage/' . $product->image) : asset('images/default.jpg');
+            @foreach ($order->orderDetails as $item)
+                @php
+                    $variant = $item->productVariant;
+                    $product = $variant?->product;
+                    $image = $product?->image ? asset('storage/' . $product->image) : asset('images/default.jpg');
 
-        // Giá: ưu tiên discount_price, nếu không có thì dùng price
-        $variantPrice = $variant?->discount_price && $variant->discount_price > 0
-                        ? $variant->discount_price
-                        : $variant->price;
+                    // Giá: ưu tiên discount_price, nếu không có thì dùng price
+                    $variantPrice =
+                        $variant?->discount_price && $variant->discount_price > 0
+                            ? $variant->discount_price
+                            : $variant->price;
 
-        // Tổng tiền
-        $totalPrice = $variantPrice * $item->quantity;
+                    // Tổng tiền
+                    $totalPrice = $variantPrice * $item->quantity;
 
-        // Biến thể
-        $ramValue = $variant?->ram?->value ?? null;
-        $storageValue = $variant?->storage?->value ?? null;
-        $colorValue = $variant?->color?->value ?? null;
-        $colorCode = $variant?->color?->code ?? null;
-    @endphp
+                    // Biến thể
+                    $ramValue = $variant?->ram?->value ?? null;
+                    $storageValue = $variant?->storage?->value ?? null;
+                    $colorValue = $variant?->color?->value ?? null;
+                    $colorCode = $variant?->color?->code ?? null;
+                @endphp
 
-    <div class="media" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-        <div class="media-left">
-            <img class="media-object img-thumbnail" src="{{ $image }}" alt="Ảnh sản phẩm"
-                style="width: 90px; height: 90px; object-fit: cover;">
-        </div>
-        <div class="media-body">
-            <h4 class="media-heading">{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h4>
-            <p>Số lượng: <strong>{{ $item->quantity }}</strong></p>
+                <div class="media" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                    <div class="media-left">
+                        <img class="media-object img-thumbnail" src="{{ $image }}" alt="Ảnh sản phẩm"
+                            style="width: 90px; height: 90px; object-fit: cover;">
+                    </div>
+                    <div class="media-body">
+                        <h4 class="media-heading">{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h4>
+                        <p>Số lượng: <strong>{{ $item->quantity }}</strong></p>
 
-            {{-- Giá hiển thị --}}
-            <p>Giá: 
-                @if($variant->discount_price && $variant->discount_price > 0)
-                    <strong>{{ number_format($variant->discount_price, 0, ',', '.') }}₫</strong>
-                    <del style="color:#999;">{{ number_format($variant->price, 0, ',', '.') }}₫</del>
-                @else
-                    <strong>{{ number_format($variant->price, 0, ',', '.') }}₫</strong>
-                @endif
-            </p>
+                        {{-- Giá hiển thị --}}
+                        <p>Giá:
+                            @if ($variant->discount_price && $variant->discount_price > 0)
+                                <strong>{{ number_format($variant->discount_price, 0, ',', '.') }}₫</strong>
+                                <del style="color:#999;">{{ number_format($variant->price, 0, ',', '.') }}₫</del>
+                            @else
+                                <strong>{{ number_format($variant->price, 0, ',', '.') }}₫</strong>
+                            @endif
+                        </p>
 
-            {{-- Tổng tiền --}}
-            <p>Tổng: <strong>{{ number_format($totalPrice, 0, ',', '.') }}₫</strong></p>
+                        {{-- Tổng tiền --}}
+                        <p>Tổng: <strong>{{ number_format($totalPrice, 0, ',', '.') }}₫</strong></p>
 
-            {{-- Biến thể --}}
-            @if($ramValue || $storageValue || $colorValue)
-                <p>Biến thể: 
-                    @if($ramValue) RAM: <strong>{{ $ramValue }}</strong>@endif
-                    @if($storageValue) , Storage: <strong>{{ $storageValue }}</strong>@endif
-                    @if($colorValue) , Màu: <strong>{{ $colorValue }}</strong>
-                        <span style="display:inline-block;width:15px;height:15px;background:{{ $colorCode }};border:1px solid #000;margin-left:5px;"></span>
-                    @endif
-                </p>
-            @endif
-        </div>
-    </div>
-@endforeach
+                        {{-- Biến thể --}}
+                        @if ($ramValue || $storageValue || $colorValue)
+                            <p>Biến thể:
+                                @if ($ramValue)
+                                    RAM: <strong>{{ $ramValue }}</strong>
+                                @endif
+                                @if ($storageValue)
+                                    , Storage: <strong>{{ $storageValue }}</strong>
+                                @endif
+                                @if ($colorValue)
+                                    , Màu: <strong>{{ $colorValue }}</strong>
+                                    <span
+                                        style="display:inline-block;width:15px;height:15px;background:{{ $colorCode }};border:1px solid #000;margin-left:5px;"></span>
+                                @endif
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
 
 
 
@@ -93,41 +100,78 @@
 
             <hr>
 
-            {{-- Thông tin thanh toán --}}
-           <h4 class="mb-3">💳 Thông tin thanh toán</h4>
+           {{-- Thông tin thanh toán --}}
+<h4 class="mb-3">💳 Thông tin thanh toán</h4>
 
-<p><strong>Phương thức thanh toán:</strong> 
+<p><strong>Phương thức thanh toán:</strong>
     {{ $order->paymentMethod->method_name ?? 'Không rõ' }}
 </p>
 
 @php
+    // Trạng thái thanh toán
     $paymentStatus = $order->paymentStatus;
     $paymentStatusName = $paymentStatus->name ?? 'Không xác định';
 
     $paymentStatusColor = match ($order->payment_status_id) {
-        1 => 'text-warning',   // Chờ thanh toán
-        2 => 'text-success',   // Đã thanh toán
-        3 => 'text-danger',    // Thanh toán thất bại
-        4 => 'text-info',      // Hoàn tiền
+        1 => 'text-warning', // Chờ thanh toán
+        2 => 'text-success', // Đã thanh toán
+        3 => 'text-danger',  // Thanh toán thất bại
+        4 => 'text-info',    // Hoàn tiền
         default => 'text-secondary',
     };
+
+    // Tính tổng tiền hàng (subtotal) từ chi tiết đơn hàng
+    $orderSubtotal = $order->orderDetails->sum(function ($item) {
+        $variant = $item->productVariant;
+        $price = ($variant && $variant->discount_price > 0)
+                    ? $variant->discount_price
+                    : ($variant->price ?? 0);
+        return $price * $item->quantity;
+    });
+
+    // Tính số tiền giảm
+    $discountAmount = 0;
+    $promotion = $order->voucher; // Quan hệ Eloquent đến bảng promotions
+
+    if ($promotion) {
+        if ($promotion->discount_type === 'percentage') {
+            // Giảm theo %
+            $discountAmount = $orderSubtotal * ($promotion->discount_value / 100);
+        } else {
+            // Giảm số tiền cố định
+            $discountAmount = $promotion->discount_value;
+        }
+    }
 @endphp
 
-<p><strong>Trạng thái thanh toán:</strong> 
-    <span class="{{ $paymentStatusColor }}">
-        {{ $paymentStatusName }}
-    </span>
+<p><strong>Trạng thái thanh toán:</strong>
+    <span class="{{ $paymentStatusColor }}">{{ $paymentStatusName }}</span>
 </p>
 
+{{-- Hiển thị tổng tiền hàng trước giảm --}}
+<p><strong>Tổng tiền hàng:</strong> {{ number_format($orderSubtotal, 0, ',', '.') }}₫</p>
 
+{{-- Hiển thị giảm giá nếu có --}}
+@if ($promotion)
+    <p><strong>Mã giảm giá:</strong> {{ $promotion->code }}</p>
+    <p><strong>Giảm giá:</strong>
+        <span class="text-success">-{{ number_format($discountAmount, 0, ',', '.') }}₫</span>
+        @if ($promotion->discount_type === 'percentage')
+            <small class="text-muted">
+                ({{ rtrim(rtrim($promotion->discount_value, '0'), '.') }}%)
+            </small>
+        @endif
+    </p>
+@endif
 
-            @if ($order->voucher)
-                <p><strong>Mã giảm giá:</strong> {{ $order->voucher->code ?? $order->voucher_code }}</p>
-            @endif
-            <p><strong>Phí vận chuyển:</strong> {{ number_format($order->shipping_fee, 0, ',', '.') }}₫</p>
-            <p><strong>Tổng tiền:</strong>
-                <span class="text-danger">{{ number_format($order->total_amount, 0, ',', '.') }}₫</span>
-            </p>
+{{-- Phí vận chuyển --}}
+<p><strong>Phí vận chuyển:</strong> {{ number_format($order->shipping_fee, 0, ',', '.') }}₫</p>
+
+{{-- Tổng tiền phải thanh toán --}}
+<p><strong>Tổng tiền sau giảm:</strong>
+    <span class="text-danger fw-bold">{{ number_format($order->total_amount, 0, ',', '.') }}₫</span>
+</p>
+
 
             @if ($order->note)
                 <hr>

@@ -545,8 +545,13 @@
 
                 <div class="mb-3">
                     <strong class="d-block mb-1">Số lượng còn:</strong>
-                    <span id="stock" class="fs-6">{{ $product->quantity }}</span>
+                    @if ($product->quantity <= 1)
+                        <span id="stock" class="fs-6 text-danger fw-bold">Hết hàng</span>
+                    @else
+                        <span id="stock" class="fs-6">{{ $product->quantity }}</span>
+                    @endif
                 </div>
+
 
                 <table class="table table-bordered table-sm w-75">
                     <tbody>
@@ -590,9 +595,10 @@
                             max="{{ $product->quantity }}" class="form-control text-center">
                         <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1)">+</button>
                     </div>
-                    <button type="submit" class="btn btn-primary mt-2">
+                    <button type="submit" class="btn btn-primary mt-2" @if ($product->quantity <= 1) disabled @endif>
                         <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
                     </button>
+
                 </form>
 
 
@@ -601,9 +607,20 @@
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <input type="hidden" name="variant_id" id="selectedVariantId">
                     <input type="hidden" name="quantity" id="buyNowQuantity">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-bolt"></i> Mua ngay
-                    </button>
+                  {{-- Nếu có biến thể --}}
+@if($product->variants->count() > 0)
+    <button type="submit" class="btn btn-primary" id="buyNowButton">
+        <i class="fa fa-bolt"></i> Mua ngay
+    </button>
+@else
+    <button type="submit" class="btn btn-primary"
+        @if($product->quantity <= 0) disabled @endif id="buyNowButton">
+        <i class="fa fa-bolt"></i> Mua ngay
+    </button>
+@endif
+
+
+
                 </form>
             </div>
         </div>
@@ -616,210 +633,213 @@
 </pre>
 
 
-   <hr class="my-5">
+    <hr class="my-5">
 
-@php
-    $user = auth()->user();
-    // Lọc dữ liệu
-    $comments = $comments->filter(fn($c) => !empty($c->comment));
-    $ratings  = $reviews->filter(fn($r) => !empty($r->rating));
+    @php
+        $user = auth()->user();
+        // Lọc dữ liệu
+        $comments = $comments->filter(fn($c) => !empty($c->comment));
+        $ratings = $reviews->filter(fn($r) => !empty($r->rating));
 
-    // Giới hạn mặc định
-    $limit = $limit ?? 6;
-    $totalComments = $totalComments ?? $comments->count();
+        // Giới hạn mặc định
+        $limit = $limit ?? 6;
+        $totalComments = $totalComments ?? $comments->count();
 
-    $ratingLimit = request('rating_limit', 6);
-    $totalRatings = $ratings->count();
-    $displayRatings = $ratings->sortByDesc('created_at')->take($ratingLimit);
-@endphp
+        $ratingLimit = request('rating_limit', 6);
+        $totalRatings = $ratings->count();
+        $displayRatings = $ratings->sortByDesc('created_at')->take($ratingLimit);
+    @endphp
 
-<ul class="nav nav-tabs" id="reviewTab" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments"
-            type="button" role="tab" aria-controls="comments" aria-selected="true">
-            Bình luận ({{ $totalComments }})
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="ratings-tab" data-bs-toggle="tab" data-bs-target="#ratings"
-            type="button" role="tab" aria-controls="ratings" aria-selected="false">
-            Đánh giá ({{ $totalRatings }})
-        </button>
-    </li>
-</ul>
+    <ul class="nav nav-tabs" id="reviewTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments"
+                type="button" role="tab" aria-controls="comments" aria-selected="true">
+                Bình luận ({{ $totalComments }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ratings-tab" data-bs-toggle="tab" data-bs-target="#ratings" type="button"
+                role="tab" aria-controls="ratings" aria-selected="false">
+                Đánh giá ({{ $totalRatings }})
+            </button>
+        </li>
+    </ul>
 
-<div class="tab-content mt-4" id="reviewTabContent">
-    {{-- Tab Bình luận --}}
-    <div class="tab-pane fade show active" id="comments" role="tabpanel">
-        <h5 class="mb-4">Danh sách bình luận</h5>
+    <div class="tab-content mt-4" id="reviewTabContent">
+        {{-- Tab Bình luận --}}
+        <div class="tab-pane fade show active" id="comments" role="tabpanel">
+            <h5 class="mb-4">Danh sách bình luận</h5>
 
-        @if ($comments->count() > 0)
-            <ul class="list-group">
-                @foreach ($comments as $comment)
-                    <li class="list-group-item mb-3 rounded shadow-sm p-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <strong class="text-primary">{{ $comment->account->full_name ?? 'Người dùng ẩn danh' }}</strong>
-                            <small class="text-muted">
-                                {{ $comment->created_at->format('H:i d/m/Y') }}
-                            </small>
-                        </div>
-                        <p class="mb-2" style="font-size: 0.95rem;">{{ $comment->comment }}</p>
-
-                        @if ($comment->image)
-                            <img src="{{ asset('storage/' . $comment->image) }}" alt="Ảnh bình luận"
-                                class="img-thumbnail" style="max-width:130px; max-height:130px;" />
-                        @endif
-                    </li>
-                @endforeach
-            </ul>
-
-            {{-- Nút xem thêm / ẩn bớt --}}
-            <div class="text-center mt-3">
-                @if ($totalComments > $limit)
-                    <a href="{{ request()->fullUrlWithQuery(['limit' => $limit + 6]) }}"
-                        class="btn btn-sm btn-outline-primary">
-                        Xem thêm
-                    </a>
-                @endif
-                @if ($limit > 6)
-                    <a href="{{ request()->fullUrlWithQuery(['limit' => 6]) }}"
-                        class="btn btn-sm btn-outline-secondary">
-                        Ẩn bớt
-                    </a>
-                @endif
-            </div>
-        @else
-            <p class="text-muted fst-italic">Chưa có bình luận nào.</p>
-        @endif
-
-        <hr>
-
-        {{-- Form gửi bình luận --}}
-        @if ($user)
-            <form action="{{ route('client.comments.store') }}" method="POST" enctype="multipart/form-data" class="mt-4">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Nội dung bình luận:</label>
-                    <textarea name="comment" rows="4" class="form-control" placeholder="Viết bình luận của bạn..." required></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Ảnh đính kèm (nếu có):</label>
-                    <input type="file" name="image" accept="image/*" class="form-control">
-                </div>
-
-                <button type="submit" class="btn btn-primary px-4">Gửi bình luận</button>
-            </form>
-        @else
-            <p class="mt-4">Vui lòng <a href="{{ route('taikhoan.login') }}">đăng nhập</a> để bình luận.</p>
-        @endif
-    </div>
-
-    {{-- Tab Đánh giá --}}
-    <div class="tab-pane fade" id="ratings" role="tabpanel">
-        @if ($totalRatings > 0)
-            <ul class="list-group">
-                @foreach ($displayRatings as $rating)
-                    <li class="list-group-item mb-3 rounded shadow-sm p-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <strong class="text-success">{{ $rating->account->full_name ?? 'Người dùng ẩn danh' }}</strong>
-                            <small class="text-muted">
-                                {{ $rating->created_at->format('H:i d/m/Y') }}
-                            </small>
-                        </div>
-
-                        <div class="mb-2">
-                            <span class="fw-semibold">Sản phẩm:</span>
-                            {{ $rating->product->product_name ?? 'N/A' }}
-                            <span class="ms-3">
-                                {{ $rating->variant->ram->value ?? '' }} /
-                                {{ $rating->variant->storage->value ?? '' }} /
-                                {{ $rating->variant->color->value ?? '' }}
-                            </span>
-                        </div>
-
-                        <div class="mb-2">
-                            @for ($i = 1; $i <= 5; $i++)
-                                @if ($i <= $rating->rating)
-                                    <span class="text-warning">&#9733;</span>
-                                @else
-                                    <span class="text-muted">&#9733;</span>
-                                @endif
-                            @endfor
-                            <span class="ms-2 fw-bold">{{ $rating->rating }} sao</span>
-                        </div>
-
-                        @if (!empty($rating->comment))
-                            <p class="mb-2" style="font-size: 0.95rem;">
-                                <strong>Nội dung:</strong> {{ $rating->comment }}
-                            </p>
-                        @endif
-
-                        @if (!empty($rating->image))
-                            <img src="{{ asset('storage/' . $rating->image) }}" alt="Ảnh đánh giá"
-                                class="img-thumbnail" style="max-width:130px; max-height:130px;" />
-                        @endif
-                    </li>
-                @endforeach
-            </ul>
-
-            {{-- Nút xem thêm / ẩn bớt --}}
-            <div class="text-center mt-3">
-                @if ($totalRatings > $ratingLimit)
-                    <a href="{{ request()->fullUrlWithQuery(['rating_limit' => $ratingLimit + 6]) }}"
-                        class="btn btn-sm btn-outline-primary">
-                        Xem thêm
-                    </a>
-                @endif
-                @if ($ratingLimit > 6)
-                    <a href="{{ request()->fullUrlWithQuery(['rating_limit' => 6]) }}"
-                        class="btn btn-sm btn-outline-secondary">
-                        Ẩn bớt
-                    </a>
-                @endif
-            </div>
-        @else
-            <p class="text-muted fst-italic">Chưa có đánh giá nào.</p>
-        @endif
-    </div>
-</div>
-
-
-        @if ($relatedProducts->count())
-            <hr class="my-5">
-            <h4 class="fw-bold mb-4">Sản phẩm liên quan</h4>
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
-                @foreach ($relatedProducts as $item)
-                    <div class="col">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <a href="{{ route('product.show', $item->id) }}">
-                                <img src="{{ asset('storage/' . $item->image) }}" class="card-img-top"
-                                    alt="{{ $item->product_name }}" style="height: 200px; object-fit: cover;">
-                            </a>
-                            <div class="card-body p-2">
-                                <h6 class="card-title mb-1">
-                                    <a href="{{ route('product.show', $item->id) }}"
-                                        class="text-dark text-decoration-none">{{ $item->product_name }}</a>
-                                </h6>
-                                <p class="mb-0 text-danger fw-semibold">
-                                    @if ($item->discount_price)
-                                        {{ number_format($item->discount_price, 0, ',', '.') }} đ
-                                        <small class="text-muted text-decoration-line-through d-block">
-                                            {{ number_format($item->price, 0, ',', '.') }} đ
-                                        </small>
-                                    @else
-                                        {{ number_format($item->price, 0, ',', '.') }} đ
-                                    @endif
-                                </p>
+            @if ($comments->count() > 0)
+                <ul class="list-group">
+                    @foreach ($comments as $comment)
+                        <li class="list-group-item mb-3 rounded shadow-sm p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong
+                                    class="text-primary">{{ $comment->account->full_name ?? 'Người dùng ẩn danh' }}</strong>
+                                <small class="text-muted">
+                                    {{ $comment->created_at->format('H:i d/m/Y') }}
+                                </small>
                             </div>
+                            <p class="mb-2" style="font-size: 0.95rem;">{{ $comment->comment }}</p>
+
+                            @if ($comment->image)
+                                <img src="{{ asset('storage/' . $comment->image) }}" alt="Ảnh bình luận"
+                                    class="img-thumbnail" style="max-width:130px; max-height:130px;" />
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+
+                {{-- Nút xem thêm / ẩn bớt --}}
+                <div class="text-center mt-3">
+                    @if ($totalComments > $limit)
+                        <a href="{{ request()->fullUrlWithQuery(['limit' => $limit + 6]) }}"
+                            class="btn btn-sm btn-outline-primary">
+                            Xem thêm
+                        </a>
+                    @endif
+                    @if ($limit > 6)
+                        <a href="{{ request()->fullUrlWithQuery(['limit' => 6]) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                            Ẩn bớt
+                        </a>
+                    @endif
+                </div>
+            @else
+                <p class="text-muted fst-italic">Chưa có bình luận nào.</p>
+            @endif
+
+            <hr>
+
+            {{-- Form gửi bình luận --}}
+            @if ($user)
+                <form action="{{ route('client.comments.store') }}" method="POST" enctype="multipart/form-data"
+                    class="mt-4">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nội dung bình luận:</label>
+                        <textarea name="comment" rows="4" class="form-control" placeholder="Viết bình luận của bạn..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ảnh đính kèm (nếu có):</label>
+                        <input type="file" name="image" accept="image/*" class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary px-4">Gửi bình luận</button>
+                </form>
+            @else
+                <p class="mt-4">Vui lòng <a href="{{ route('taikhoan.login') }}">đăng nhập</a> để bình luận.</p>
+            @endif
+        </div>
+
+        {{-- Tab Đánh giá --}}
+        <div class="tab-pane fade" id="ratings" role="tabpanel">
+            @if ($totalRatings > 0)
+                <ul class="list-group">
+                    @foreach ($displayRatings as $rating)
+                        <li class="list-group-item mb-3 rounded shadow-sm p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong
+                                    class="text-success">{{ $rating->account->full_name ?? 'Người dùng ẩn danh' }}</strong>
+                                <small class="text-muted">
+                                    {{ $rating->created_at->format('H:i d/m/Y') }}
+                                </small>
+                            </div>
+
+                            <div class="mb-2">
+                                <span class="fw-semibold">Sản phẩm:</span>
+                                {{ $rating->product->product_name ?? 'N/A' }}
+                                <span class="ms-3">
+                                    {{ $rating->variant->ram->value ?? '' }} /
+                                    {{ $rating->variant->storage->value ?? '' }} /
+                                    {{ $rating->variant->color->value ?? '' }}
+                                </span>
+                            </div>
+
+                            <div class="mb-2">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    @if ($i <= $rating->rating)
+                                        <span class="text-warning">&#9733;</span>
+                                    @else
+                                        <span class="text-muted">&#9733;</span>
+                                    @endif
+                                @endfor
+                                <span class="ms-2 fw-bold">{{ $rating->rating }} sao</span>
+                            </div>
+
+                            @if (!empty($rating->comment))
+                                <p class="mb-2" style="font-size: 0.95rem;">
+                                    <strong>Nội dung:</strong> {{ $rating->comment }}
+                                </p>
+                            @endif
+
+                            @if (!empty($rating->image))
+                                <img src="{{ asset('storage/' . $rating->image) }}" alt="Ảnh đánh giá"
+                                    class="img-thumbnail" style="max-width:130px; max-height:130px;" />
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+
+                {{-- Nút xem thêm / ẩn bớt --}}
+                <div class="text-center mt-3">
+                    @if ($totalRatings > $ratingLimit)
+                        <a href="{{ request()->fullUrlWithQuery(['rating_limit' => $ratingLimit + 6]) }}"
+                            class="btn btn-sm btn-outline-primary">
+                            Xem thêm
+                        </a>
+                    @endif
+                    @if ($ratingLimit > 6)
+                        <a href="{{ request()->fullUrlWithQuery(['rating_limit' => 6]) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                            Ẩn bớt
+                        </a>
+                    @endif
+                </div>
+            @else
+                <p class="text-muted fst-italic">Chưa có đánh giá nào.</p>
+            @endif
+        </div>
+    </div>
+
+
+    @if ($relatedProducts->count())
+        <hr class="my-5">
+        <h4 class="fw-bold mb-4">Sản phẩm liên quan</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+            @foreach ($relatedProducts as $item)
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <a href="{{ route('product.show', $item->id) }}">
+                            <img src="{{ asset('storage/' . $item->image) }}" class="card-img-top"
+                                alt="{{ $item->product_name }}" style="height: 200px; object-fit: cover;">
+                        </a>
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1">
+                                <a href="{{ route('product.show', $item->id) }}"
+                                    class="text-dark text-decoration-none">{{ $item->product_name }}</a>
+                            </h6>
+                            <p class="mb-0 text-danger fw-semibold">
+                                @if ($item->discount_price)
+                                    {{ number_format($item->discount_price, 0, ',', '.') }} đ
+                                    <small class="text-muted text-decoration-line-through d-block">
+                                        {{ number_format($item->price, 0, ',', '.') }} đ
+                                    </small>
+                                @else
+                                    {{ number_format($item->price, 0, ',', '.') }} đ
+                                @endif
+                            </p>
                         </div>
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
+        </div>
         </form>
-        @endif
+    @endif
     </div>
 
     {{-- Nội dung trang sản phẩm giữ nguyên như bạn đã có --}}
@@ -870,6 +890,7 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const qtyInput = document.getElementById('quantityInput');
                 const buyNowQty = document.getElementById('buyNowQuantity');
+                
                 const cartQty = document.getElementById('cartQuantity');
                 const variantButtons = document.querySelectorAll('.variant-option');
                 const selectedVariantInput = document.getElementById('selectedVariantId');
@@ -878,12 +899,16 @@
                 const addToCartForm = document.getElementById('addToCartForm');
                 const albumImages = document.querySelectorAll('.variant-album-img-wrapper');
                 const mainImage = document.getElementById('mainImage');
+                const stockElement = document.getElementById('stock');
+                const buyNowBtn = document.getElementById('buyNowButton');
+                const addToCartBtn = document.getElementById('addToCartButton');
 
+                // --- Đồng bộ số lượng ---
                 function syncQty() {
                     let value = parseInt(qtyInput.value) || 1;
                     if (value < 1) value = 1;
                     const max = parseInt(qtyInput.max) || 9999;
-                    if (value > max - 1) value = max - 1;
+                    if (value > max) value = max;
                     qtyInput.value = value;
                     buyNowQty.value = value;
                     if (cartQty) cartQty.value = value;
@@ -897,7 +922,26 @@
                 qtyInput.addEventListener('input', syncQty);
                 syncQty();
 
-                // Handle variant button click
+                // --- Hàm bật/tắt nút theo tồn kho ---
+                function toggleButtonsByStock(quantity) {
+                    if (quantity <= 1) {
+                        stockElement.textContent = 'Hết hàng';
+                        stockElement.classList.add('text-danger', 'fw-bold');
+                        buyNowBtn?.setAttribute('disabled', true);
+                        addToCartBtn?.setAttribute('disabled', true);
+                        qtyInput.value = 0;
+                    } else {
+                        stockElement.textContent = quantity;
+                        stockElement.classList.remove('text-danger', 'fw-bold');
+                        buyNowBtn?.removeAttribute('disabled');
+                        addToCartBtn?.removeAttribute('disabled');
+                        qtyInput.max = quantity;
+                        qtyInput.value = 1;
+                    }
+                    syncQty();
+                }
+
+                // --- Xử lý khi click chọn biến thể ---
                 variantButtons.forEach(button => {
                     button.addEventListener('click', function() {
                         const variantId = this.dataset.id;
@@ -908,10 +952,10 @@
                         const color = this.dataset.color || '-';
                         const quantity = parseInt(this.dataset.quantity || 0);
 
-                        // Cập nhật hình ảnh chính
+                        // Cập nhật ảnh chính
                         mainImage.src = this.dataset.image;
 
-                        // Cập nhật block giá
+                        // Cập nhật giá
                         const priceBlock = document.getElementById('priceBlock');
                         if (discountPrice && discountPrice < price) {
                             priceBlock.innerHTML = `
@@ -928,10 +972,9 @@
                         document.getElementById('ram').innerText = ram;
                         document.getElementById('storage').innerText = storage;
                         document.getElementById('color').innerText = color;
-                        document.getElementById('stock').innerText = quantity;
-                        qtyInput.max = quantity;
-                        qtyInput.value = 1;
-                        buyNowQty.value = 1;
+
+                        // Cập nhật tồn kho + nút
+                        toggleButtonsByStock(quantity);
 
                         selectedVariantInput.value = variantId;
                         addToCartVariantInput.value = variantId;
@@ -948,14 +991,19 @@
                     });
                 });
 
-                // Click ảnh nhỏ → đổi ảnh lớn
+                // --- Auto click biến thể đầu tiên khi load ---
+                if (variantButtons.length > 0) {
+                    variantButtons[0].click();
+                }
+
+                // --- Đổi ảnh lớn khi click ảnh nhỏ ---
                 document.addEventListener('click', function(e) {
                     if (e.target.classList.contains('variant-album-img')) {
                         mainImage.src = e.target.dataset.image;
                     }
                 });
 
-                // Validate khi chưa chọn phiên bản
+                // --- Validate form ---
                 buyNowForm.addEventListener('submit', function(e) {
                     if (!selectedVariantInput.value) {
                         e.preventDefault();
@@ -970,14 +1018,14 @@
                     }
                 });
 
-                // Thông báo marketing popup nhẹ
+                // --- Thông báo marketing ---
                 setTimeout(() => {
                     const toastEl = document.getElementById('marketingToast');
-                    const toast = new bootstrap.Toast(toastEl);
-                    toast.show();
+                    if (toastEl) {
+                        const toast = new bootstrap.Toast(toastEl);
+                        toast.show();
+                    }
                 }, 4000);
-
             });
         </script>
-
     @endpush
