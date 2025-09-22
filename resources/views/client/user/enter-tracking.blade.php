@@ -94,36 +94,115 @@
         </div>
 
         {{-- Danh sách sản phẩm trong đơn hàng --}}
-        <div class="mb-4 p-3 border rounded bg-light">
-            <h5>🛒 Sản phẩm trong đơn hàng</h5>
-            @foreach ($returnRequest->order->orderDetails as $item)
-                @php
-                    $product = $item->productVariant->product ?? null;
-                    $image =
-                        $product && $product->image ? asset('storage/' . $product->image) : asset('images/default.jpg');
-                @endphp
-                <div class="d-flex mb-3 align-items-center border-bottom pb-2">
-                    <img src="{{ $image }}" alt="Ảnh sản phẩm"
-                        style="width: 80px; height: 80px; object-fit: cover; margin-right: 15px;" class="rounded border">
-                    <div>
-                        <strong>{{ $product->product_name ?? 'Không rõ sản phẩm' }}</strong><br>
-                        Số lượng: {{ $item->quantity }}<br>
-                        Giá: {{ number_format($item->productVariant->price ?? 0, 0, ',', '.') }}₫
-                    </div>
-                </div>
-            @endforeach
+ <div class="mb-4 p-3 border rounded bg-light">
+    <h5>🛒 Sản phẩm trong đơn hàng</h5>
+
+    @php
+        $subtotal = 0;
+    @endphp
+
+    @foreach ($returnRequest->order->orderDetails as $item)
+        @php
+            $variant = $item->productVariant;
+            $product = $variant->product ?? null;
+            $image = $variant->image
+                ? asset('storage/' . $variant->image)
+                : ($product && $product->image
+                    ? asset('storage/' . $product->image)
+                    : asset('images/default.jpg'));
+
+            // ✅ Tính giá từng sản phẩm (ưu tiên giá giảm)
+            $price = $variant->discount_price && $variant->discount_price < $variant->price
+                ? $variant->discount_price
+                : $variant->price;
+
+            $lineTotal = $price * $item->quantity;
+            $subtotal += $lineTotal;
+        @endphp
+
+        <div class="d-flex mb-3 align-items-center border-bottom pb-2">
+            <img src="{{ $image }}" alt="Ảnh sản phẩm"
+                style="width: 80px; height: 80px; object-fit: cover; margin-right: 15px;" class="rounded border">
+
+            <div>
+                <strong>{{ $product->product_name ?? 'Không rõ sản phẩm' }}</strong><br>
+
+                {{-- Chi tiết biến thể --}}
+                <span class="text-muted small">
+                    {{ $variant->ram->value ?? '' }}
+                    {{ $variant->storage->value ?? '' }}
+                    {{ $variant->color->value ?? '' }}
+                </span><br>
+
+                Số lượng: {{ $item->quantity }}<br>
+
+                Giá:
+                @if ($variant->discount_price && $variant->discount_price < $variant->price)
+                    <span class="text-danger fw-bold">{{ number_format($variant->discount_price, 0, ',', '.') }}₫</span>
+                    <del class="text-muted">{{ number_format($variant->price, 0, ',', '.') }}₫</del>
+                @else
+                    {{ number_format($variant->price ?? 0, 0, ',', '.') }}₫
+                @endif
+            </div>
+
+            <div class="ms-auto fw-bold">
+                {{ number_format($lineTotal, 0, ',', '.') }}₫
+            </div>
         </div>
+    @endforeach
+
+    {{-- ✅ Phần tổng tiền --}}
+    @php
+        $shippingFee = 30000;
+
+        // Lấy khuyến mãi nếu đơn hàng có (giả sử có cột promotion_id trong bảng orders)
+        $discountAmount = 0;
+        if ($returnRequest->order->promotion) {
+            $promotion = $returnRequest->order->promotion;
+            if ($promotion->discount_type === 'percentage') {
+                $discountAmount = $subtotal * ($promotion->discount_value / 100);
+            } elseif ($promotion->discount_type === 'fixed') {
+                $discountAmount = $promotion->discount_value;
+            }
+        }
+
+        $total = max(0, $subtotal - $discountAmount + $shippingFee);
+    @endphp
+
+    <div class="mt-3 p-3 bg-white rounded border">
+        <div class="d-flex justify-content-between">
+            <span>Tạm tính:</span>
+            <strong>{{ number_format($subtotal, 0, ',', '.') }}₫</strong>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Phí vận chuyển:</span>
+            <strong>{{ number_format($shippingFee, 0, ',', '.') }}₫</strong>
+        </div>
+        @if ($discountAmount > 0)
+            <div class="d-flex justify-content-between text-success">
+                <span>Khuyến mãi ({{ $promotion->code }}):</span>
+                <strong>-{{ number_format($discountAmount, 0, ',', '.') }}₫</strong>
+            </div>
+        @endif
+        <hr>
+        <div class="d-flex justify-content-between">
+            <span class="fw-bold">Tổng thanh toán:</span>
+            <span class="fw-bold text-danger fs-5">{{ number_format($total, 0, ',', '.') }}₫</span>
+        </div>
+    </div>
+</div>
+
 
         {{-- Form gửi mã vận đơn --}}
         <form action="{{ route('user.return.submit_tracking', $returnRequest->id) }}" method="POST"
             enctype="multipart/form-data" class="p-3 border rounded shadow-sm bg-white">
             @csrf
 
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="tracking_number" class="form-label fw-bold">🔁 Nhập mã vận đơn trả hàng</label>
                 <input type="text" name="tracking_number" class="form-control" required
                     placeholder="Nhập mã vận đơn (ví dụ: PPGH34567890)">
-            </div>
+            </div> --}}
 
             <div class="mb-3">
                 <label for="shipping_images" class="form-label fw-bold">📷 Ảnh gói hàng đã gửi</label>

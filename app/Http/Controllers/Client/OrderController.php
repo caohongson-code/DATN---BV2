@@ -279,7 +279,7 @@ class OrderController extends Controller
  public function submitTrackingCode(Request $request, $returnRequestId)
 {
     $request->validate([
-        'tracking_number' => 'required|string|max:255',
+        // 'tracking_number' => 'required|string|max:255',
         'shipping_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         'bank_name' => 'required|string|max:100',
             'bank_account' => [
@@ -293,10 +293,10 @@ class OrderController extends Controller
     $returnRequest = ReturnRequest::with('order')->findOrFail($returnRequestId);
     $order = $returnRequest->order;
 
-    // ❗ Kiểm tra mã vận đơn có khớp với tracking của order không
-    if ($order->tracking_number !== $request->tracking_number) {
-        return redirect()->back()->withErrors(['tracking_number' => 'Mã vận đơn không khớp với thông tin đã cung cấp.']);
-    }
+    // // ❗ Kiểm tra mã vận đơn có khớp với tracking của order không
+    // if ($order->tracking_number !== $request->tracking_number) {
+    //     return redirect()->back()->withErrors(['tracking_number' => 'Mã vận đơn không khớp với thông tin đã cung cấp.']);
+    // }
 
     // ✅ Upload ảnh shipping
     $imagePaths = [];
