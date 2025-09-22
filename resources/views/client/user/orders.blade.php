@@ -292,7 +292,7 @@
                                         <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
                                     @endif
 
-                                    {{-- Xác nhận nhận hàng / Báo chưa nhận
+                                    {{-- Xác nhận nhận hàng / Báo chưa nhận --}}
         @if ($order->order_status_id == 5)
             @if (!$order->user_confirmed_delivery)
                 <button class="btn btn-success btn-sm btn-confirm-received" data-id="{{ $order->id }}">
@@ -308,7 +308,7 @@
             @else
                 <span class="text-success fw-bold">✅ Đơn hàng đã hoàn tất</span>
             @endif
-        @endif --}}
+        @endif
 
                                  {{-- Trả hàng / Hoàn tiền --}}
 @if ($order->order_status_id == 5 || $order->order_status_id == 6 || 

@@ -20,6 +20,7 @@ use App\Models\ReturnRequestProgress;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Account;
+use App\Models\OrderDeliveryIssue;
 use App\Models\WalletTransaction;
 class OrderController extends Controller
 {
@@ -68,7 +69,8 @@ class OrderController extends Controller
             'paymentStatus',
              'promotion' 
         ])->findOrFail($id);
-
+              // Lấy các phản hồi của người dùng (chưa nhận được hàng)
+    
         $statuses = OrderStatus::all();
         $paymentMethods = PaymentMethod::all();
         $shippingZones = ShippingZone::all();
@@ -459,6 +461,37 @@ public function refundDetail($id)
         'adminImages'
     ));
 }
+public function resendOrder($orderId)
+{
+    $order = Order::findOrFail($orderId);
+
+    // Kiểm tra xem có issue chưa nhận hàng
+    $issue = OrderDeliveryIssue::where('order_id', $order->id)->first();
+
+    if (!$issue) {
+        return redirect()->back()->withErrors(['msg' => 'Không tìm thấy yêu cầu chưa nhận hàng.']);
+    }
+
+    // Mảng dữ liệu cần cập nhật
+    $updateData = [
+        'order_status_id' => 4, // trạng thái "đang giao lại"
+    ];
+
+    // Chỉ reset payment_status_id nếu phương thức là COD
+    if ($order->paymentMethod && strtolower($order->paymentMethod->code) === 'cod') {
+        $updateData['payment_status_id'] = 1; // chưa thanh toán
+    }
+
+    // Cập nhật đơn hàng
+    $order->update($updateData);
+
+    // Xóa issue để không hiển thị nữa
+    $issue->delete();
+
+    return redirect()->back()->with('success', 'Đơn hàng đã được giao lại.');
+}
+
+
 
 
 }

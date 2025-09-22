@@ -287,6 +287,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/orders/returns/{id}/refund-form', [OrderController::class, 'showRefundForm'])->name('admin.orders.refund_form');
     Route::post('/orders/returns/{id}/process-refund', [OrderController::class, 'processRefund'])->name('admin.orders.process_refund');
     Route::get('/admin/orders/{id}/refund-detail', [OrderController::class, 'refundDetail'])->name('admin.orders.refund_detail');
+    //giao lại
+    Route::post('/orders/{order}/resend', [OrderController::class, 'resendOrder'])
+    ->name('admin.orders.resend');
+
                 Route::resource('news', NewsController::class)
                 ->middleware('check.permission:news-manage');
                 Route::post('/news/{id}/toggle-featured', [NewsController::class, 'toggleFeatured'])->name('admin.news.toggle-featured')

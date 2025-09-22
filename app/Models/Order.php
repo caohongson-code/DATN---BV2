@@ -91,4 +91,5 @@ class Order extends Model
 {
     return $this->belongsTo(\App\Models\Promotion::class, 'voucher_code', 'code');
 }
+
 }

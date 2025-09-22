@@ -132,6 +132,11 @@
                                            class="btn btn-sm btn-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                         {{-- Hiển thị icon cảnh báo nếu có delivery issue --}}
+@if ($order->deliveryIssues->count() > 0 && $order->user_confirmed_delivery === 0)
+    <i class="fas fa-truck text-warning" title="Giao lại đơn hàng"></i>
+@endif
+
 
                                         @if ($order->order_status_id == 6)
                                             <a href="{{ route('admin.return_requests.index') }}"

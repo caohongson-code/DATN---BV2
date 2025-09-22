@@ -59,7 +59,8 @@
                                 </p>
                                 <p><strong>Phương thức thanh toán:</strong>
                                     {{ $order->paymentMethod->method_name ?? 'Không có' }}</p>
-                                <p><strong>Trạng thái thanh toán:</strong> {{ $order->paymentStatus->name ?? 'Không có' }}</p>
+                                <p><strong>Trạng thái thanh toán:</strong> {{ $order->paymentStatus->name ?? 'Không có' }}
+                                </p>
                                 @if ($order->voucher_code)
                                     <p><strong>Mã giảm giá:</strong> {{ $order->voucher_code }}</p>
                                 @endif
@@ -81,10 +82,11 @@
                                     <div class="row align-items-end">
                                         <div class="col-md-4">
                                             <label for="order_status_id" class="form-label">Trạng thái đơn</label>
-                                            <select name="order_status_id"
-                                                class="form-select @error('order_status_id') is-invalid @endif" id="order_status_id">
+                                            <select name="order_status_id" class="form-select @error('order_status_id') is-invalid @endif" id="order_status_id">
                                                 @foreach ($statuses as $status)
                                                     @php
+                                                    // Bỏ trạng thái Trả hàng / Hoàn tiền (id = 6)
+                                                        if ($status->id == 6) continue;
                                                         $disabled = '';
                                                         // Không cho phép quay lại "Chờ xác nhận" (ID 1) nếu đã qua ID 1
                                                         if ($order->order_status_id > 1 && $status->id == 1) {
@@ -123,6 +125,10 @@
                                         <div class="col-md-2">
                                             <button class="btn btn-primary w-100 mt-3 mt-md-0">Cập nhật</button>
                                         </div>
+                                        
+               
+
+
                                     </div>
                                 </form>
                                 @if ($order->order_status_id > 1)
@@ -138,6 +144,17 @@
                             </div>
                         </div>
                     </div>
+                   <div class="col-md-2">
+    @if ($order->order_status_id == 5 && $order->user_confirmed_delivery == 0)
+        <form action="{{ route('admin.orders.resend', $order->id) }}" method="POST" class="d-inline" 
+              onsubmit="return confirm('Bạn có chắc chắn muốn giao lại đơn hàng này không?');">
+            @csrf
+            <button type="submit" class="btn btn-warning btn-sm">
+                <i class="fas fa-truck"></i> Giao lại
+            </button>
+        </form>
+    @endif
+</div>
 
                     {{-- Danh sách sản phẩm --}}
                     <div class="col-12">
@@ -178,7 +195,7 @@
                                                 <td class="text-start">{{ $product->product_name }}</td>
                                                 <td>{{ $v->ram->value ?? '-' }} / {{ $v->storage->value ?? '-' }} / {{ $v->color->value ?? '-' }}</td>
                                                 <td>
-                                                    @if($v->discount_price && $v->discount_price > 0)
+                                                    @if ($v->discount_price && $v->discount_price > 0)
                                                         <span class="text-muted text-decoration-line-through me-1">{{ number_format($v->price, 0, ',', '.') }}đ</span>
                                                         <span class="text-danger fw-bold">{{ number_format($v->discount_price, 0, ',', '.') }}đ</span>
                                                     @else
@@ -219,38 +236,76 @@
                                             </tr>
                                         @endif
                                         <tr>
-                                            <td colspan="5" class="text-end"><strong>Phí ship:</strong></td>
-                                            <td class="text-end"><strong>{{ number_format($order->shipping_fee ?? 30000, 0, ',', '.') }}đ</strong></td>
-                                        </tr>
-                                        <tr class="table-primary">
-                                            <td colspan="5" class="text-end"><strong>Tổng đơn hàng:</strong></td>
-                                            <td class="text-end"><strong>{{ number_format($total - $discountAmount + ($order->shipping_fee ?? 30000), 0, ',', '.') }}đ</strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                            <td colspan="5"
+                                                class="text-end"><strong>Phí ship:</strong></td>
+                                                <td class="text-end">
+                                                    <strong>{{ number_format($order->shipping_fee ?? 30000, 0, ',', '.') }}đ</strong>
+                                                </td>
+                                                </tr>
+                                                <tr class="table-primary">
+                                                    <td colspan="5" class="text-end"><strong>Tổng đơn hàng:</strong></td>
+                                                    <td class="text-end">
+                                                        <strong>{{ number_format($total - $discountAmount + ($order->shipping_fee ?? 30000), 0, ',', '.') }}đ</strong>
+                                                    </td>
+                                                </tr>
+                                                </tfoot>
+                                                </table>
+                                        </div>
+                                    </div>
                             </div>
-                        </div>
-                    </div>
-                </div> <!-- row -->
-            </div> <!-- card-body -->
-        </div> <!-- card -->
+                        </div> <!-- row -->
+                    </div> <!-- card-body -->
+                    {{-- Vấn đề giao hàng từ khách hàng --}}
+@if ($order->deliveryIssues && $order->deliveryIssues->count() > 0)
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Vấn đề giao hàng từ khách</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Khách hàng</th>
+                            <th>Lý do</th>
+                            <th>Ngày báo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($order->deliveryIssues as $issue)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $issue->account->full_name ?? 'Không rõ' }} (ID: {{ $issue->account_id }})</td>
+                                <td class="text-danger fw-bold">{{ $issue->reason }}</td>
+                                <td>{{ $issue->created_at->format('d/m/Y H:i') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+@endif
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const orderStatusSelect = document.getElementById('order_status_id');
-            const cancelReasonDiv = document.getElementById('cancel_reason');
+                    </div> <!-- card -->
+                </div>
 
-            function toggleCancelReason() {
-                if (orderStatusSelect.value === '7') {
-                    cancelReasonDiv.closest('.col-md-4').style.display = 'block';
-                } else {
-                    cancelReasonDiv.closest('.col-md-4').style.display = 'none';
-                }
-            }
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const orderStatusSelect = document.getElementById('order_status_id');
+                        const cancelReasonDiv = document.getElementById('cancel_reason');
 
-            orderStatusSelect.addEventListener('change', toggleCancelReason);
-            toggleCancelReason(); // Gọi lần đầu để thiết lập trạng thái ban đầu
-        });
-    </script>
-@endsection
+                        function toggleCancelReason() {
+                            if (orderStatusSelect.value === '7') {
+                                cancelReasonDiv.closest('.col-md-4').style.display = 'block';
+                            } else {
+                                cancelReasonDiv.closest('.col-md-4').style.display = 'none';
+                            }
+                        }
+
+                        orderStatusSelect.addEventListener('change', toggleCancelReason);
+                        toggleCancelReason(); // Gọi lần đầu để thiết lập trạng thái ban đầu
+                    });
+                </script>
+        @endsection
