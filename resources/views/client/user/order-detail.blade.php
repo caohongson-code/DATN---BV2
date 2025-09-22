@@ -8,7 +8,9 @@
             <strong>Trạng thái đơn hàng:</strong>
             <span class="text-warning">{{ $order->orderStatus->status_name ?? 'Không rõ' }}</span><br>
 
-            <strong>Ngày đặt hàng:</strong> {{ $order->created_at->format('d/m/Y H:i') }}
+            <strong>Ngày đặt hàng:</strong> {{ $order->created_at->format('d/m/Y H:i') }} <br>
+            <strong>Lý do hủy hàng:</strong> 
+            <span class="text-warning">{{ $order->cancel_reason}}</span>
 
             @if ($order->order_status_id == 7)
                 <br><strong>Ngày huỷ:</strong>

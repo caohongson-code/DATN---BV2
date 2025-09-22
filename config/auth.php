@@ -3,7 +3,7 @@
 return [
 
     'defaults' => [
-        'guard' => 'web',
+        'guard' => 'account',
         'passwords' => 'accounts',
     ],
 
@@ -16,6 +16,10 @@ return [
         'admin' => [
             'driver' => 'session',
             'provider' => 'admins',
+        ],
+        'account' => [
+            'driver' => 'session',
+            'provider' => 'accounts',
         ],
     ],
 

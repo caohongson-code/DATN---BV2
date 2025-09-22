@@ -40,6 +40,7 @@ use App\Http\Controllers\Client\NewsClientController;
 use App\Http\Controllers\CommentsController;
 use App\Http\Controllers\Client\IntroduceController;
 use App\Http\Controllers\ContactController as ControllersContactController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RolePermissionController;
 
 // Trang mặc định → login admin
@@ -87,6 +88,9 @@ Route::middleware('auth','prevent.admin.order')->group(function () {
         return view('client.user.orders');
     })->name('user.orders');
     //
+    // Notifiations
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::get('/user/profile', [UserProfileController::class, 'show'])->name('user.profile');
     Route::post('/user/profile/update', [UserProfileController::class, 'update'])->name('user.profile.update');
     //

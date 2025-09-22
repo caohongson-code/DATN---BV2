@@ -2796,122 +2796,107 @@
     </div>
 
     <!--header section start-->
-    <header class="py-3 shadow-sm">
-        <div class="container-1440 d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <!-- Logo -->
-            <a href="{{ route('home') }}">
-                <img src="/client/img/anh1.png" alt="Logo" style="height: 48px;">
-            </a>
+<header class="py-3 shadow-sm">
+    <div class="container-1440 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <!-- Logo -->
+        <a href="{{ route('home') }}">
+            <img src="/client/img/anh1.png" alt="Logo" style="height: 48px;">
+        </a>
 
-            <!-- Navigation -->
-            <nav class="d-none d-lg-block">
-                <ul class="nav gap-4">
-                    <li class="nav-item"><a href="{{ route('home') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Trang chủ</a></li>
+        <!-- Navigation -->
+        <nav class="d-none d-lg-block">
+            <ul class="nav gap-4">
+                <li class="nav-item"><a href="{{ route('home') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Trang chủ</a></li>
+                <li class="nav-item"><a href="{{ route('client.introduce') }}" class="nav-link {{ request()->is('introduce') ? 'active' : '' }}">Giới thiệu</a></li>
+                <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
+                <li class="nav-item"><a href="{{ route('client.news.index') }}" class="nav-link {{ request()->is('news*') ? 'active' : '' }}">Tin tức</a></li>
+                <li class="nav-item"><a href="{{ route('client.contact') }}" class="nav-link">Liên hệ</a></li>
+                <li class="nav-item">
+                    @if(Auth::guard('account')->check())
+                        @if(Auth::guard('account')->user()->role_id == 1)
+                            <a href="{{ route('admin.dashboard') }}" class="nav-link text-success">Kênh Người Bán</a>
+                        @elseif(Auth::guard('account')->user()->role_id == 2)
+                            <a href="{{ route('products.index') }}" class="nav-link text-success">Kênh Người Bán</a>
+                        @else
+                            <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
+                        @endif
+                    @else
+                        <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
+                    @endif
+                </li>
+            </ul>
+        </nav>
 
-                    <li class="nav-item"><a href="{{ route('client.introduce') }}"class="nav-link {{ request()->is('introduce') ? 'active' : '' }}">Giới thiệu </a></li>
-                    <li class="nav-item"><a href="{{ route('client.categories') }}" class="nav-link">Sản phẩm</a></li>
-                    <li class="nav-item"><a href="{{ route('client.news.index') }}" class="nav-link {{ request()->is('news*') ? 'active' : '' }}">Tin tức</a></li>
-                    <li class="nav-item"><a href="{{ route('client.contact') }}" class="nav-link">Liên hệ</a></li>
-                    <li class="nav-item">
-                                 @if(Auth::check())
-    @if(Auth::user()->role_id == 1)
-        <a href="{{ route('admin.dashboard') }}" class="nav-link text-success">Kênh Người Bán</a>
-    @elseif(Auth::user()->role_id == 2)
-        <a href="{{ route('products.index') }}" class="nav-link text-success">Kênh Người Bán</a>
-    @else
-        <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
-    @endif
-@else
-    <a href="#" class="nav-link text-muted" onclick="showPermissionDenied(); return false;">Kênh Bán Hàng</a>
-@endif
-                    </li>
-                </ul>
-            </nav>
+        <div class="d-flex align-items-center gap-2">
+            <div class="el2-header-right d-flex align-items-center justify-content-end pe-2">
+                <!-- Search form -->
+                <form action="{{ route('client.search') }}" method="GET" class="d-none d-lg-block me-3">
+                    <div class="search-wrapper">
+                        <input
+                            type="text"
+                            name="keyword"
+                            placeholder="Tìm kiếm sản phẩm..."
+                            value="{{ request('keyword', $keyword ?? '') }}"
+                            class="search-input"
+                        >
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
 
-                <div class="d-flex align-items-center gap-2">
-
-                    <div class="el2-header-right d-flex align-items-center justify-content-end pe-2">
-                        <form action="{{ route('client.search') }}" method="GET" class="d-none d-lg-block me-3">
-                            <div class="search-wrapper">
-                                <input
-                                    type="text"
-                                    name="keyword"
-                                    placeholder="Tìm kiếm sản phẩm..."
-                                    value="{{ request('keyword', $keyword ?? '') }}"
-                                    class="search-input"
-                                >
-                                <button type="submit" class="search-btn">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </form>
-
-
-                         <!-- Account dropdown -->
-                        <div class="dropdown">
-                            <a href="#" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="fa-regular fa-user"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                {{-- @if(Auth::check())
-                                <li class="dropdown-item">
-                                    Xin chào, <span class="fw-bold">{{ Auth::check() ? Auth::user()->full_name : 'Khách' }}</span>
+                <!-- Account dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fa-regular fa-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        @if(Auth::guard('account')->check())
+                            @php $user = Auth::guard('account')->user(); @endphp
+                            <li class="dropdown-item">
+                                Xin chào, <span class="fw-bold">{{ $user->full_name }}</span>
+                            </li>
+                            @if(!in_array($user->role_id, [1, 2]))
+                                <li><a href="{{ route('user.dashboard') }}" class="dropdown-item">Tài khoản của tôi</a></li>
+                                <li>
+                                    <a href="{{ route('notifications.index') }}" class="dropdown-item">
+                                        <i class="fas fa-bell me-2"></i> Thông báo
+                                        @php $unreadCount = \App\Models\Notification::where('account_id', Auth::guard('account')->id())->where('read', false)->count(); @endphp
+                                        @if($unreadCount > 0)
+                                            <span class="badge bg-danger ms-2">{{ $unreadCount }}</span>
+                                        @endif
+                                    </a>
                                 </li>
-
-
-                                    <li><a href="{{ route('user.dashboard') }}" class="dropdown-item">Tài khoản của tôi</a></li>
-                                    <li>
-                                        <form action="{{ route('taikhoan.logout') }}" method="POST" class="px-3">
-                                            @csrf
-                                            <button class="btn btn-link text-danger p-0">Đăng xuất</button>
-                                        </form>
-                                    </li>
-                                @else
-                                    <li><a href="{{ route('login') }}" class="dropdown-item">Đăng nhập / Đăng ký</a></li>
-                                @endif --}}
-                                @if(Auth::check())
-                                    @php $user = Auth::user(); @endphp
-
-                                    <li class="dropdown-item">
-                                        Xin chào, <span class="fw-bold">{{ $user->full_name }}</span>
-                                    </li>
-
-                                    @if(!in_array($user->role_id, [1,2]))
-                                        <li><a href="{{ route('user.dashboard') }}" class="dropdown-item">Tài khoản của tôi</a></li>
-                                        <li>
-                                            <form action="{{ route('taikhoan.logout') }}" method="POST" class="px-3">
-                                                @csrf
-                                                <button class="btn btn-link text-danger p-0">Đăng xuất</button>
-                                            </form>
-                                        </li>
-                                    @else
-                                        <li class="dropdown-item text-muted">Bạn không được phép truy cập</li>
-                                    @endif
-
-                                @else
-                                    <li><a href="{{ route('login') }}" class="dropdown-item">Đăng nhập / Đăng ký</a></li>
-                                @endif
-
-                            </ul>
-                        </div>
-
-                        <!-- Cart -->
-                        @if (!request()->is('checkout*'))
-    <a href="{{ url('/cart') }}" class="btn btn-light position-relative">
-        <i class="fas fa-shopping-cart fs-5"></i>
-        @if($cartCount > 0)
-            <span class="position-absolute top-0 start-100 translate-middle badge bg-danger">
-                {{ $cartCount }}
-            </span>
-        @endif
-    </a>
-@endif
-
-                            </div>
-                        </div>
+                                <li>
+                                    <form action="{{ route('taikhoan.logout') }}" method="POST" class="px-3">
+                                        @csrf
+                                        <button class="btn btn-link text-danger p-0">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            @else
+                                <li class="dropdown-item text-muted">Bạn không được phép truy cập</li>
+                            @endif
+                        @else
+                            <li><a href="{{ route('login') }}" class="dropdown-item">Đăng nhập / Đăng ký</a></li>
+                        @endif
+                    </ul>
                 </div>
+
+                <!-- Cart -->
+                @if (!request()->is('checkout*'))
+                    <a href="{{ url('/cart') }}" class="btn btn-light position-relative">
+                        <i class="fas fa-shopping-cart fs-5"></i>
+                        @if($cartCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge bg-danger">
+                                {{ $cartCount }}
+                            </span>
+                        @endif
+                    </a>
+                @endif
+            </div>
         </div>
-    </header>
+    </div>
+</header>
 
     <!--header section end-->
 
