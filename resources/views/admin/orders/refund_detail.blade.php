@@ -18,43 +18,40 @@
             <table class="table table-bordered align-middle">
                 <tr>
                     <th class="w-25 bg-light">Mã đơn hàng</th>
-                    <td>#{{ $request->order->id }}</td>
+                    <td>#{{ $request->order->id ?? '---' }}</td>
                 </tr>
                 <tr>
                     <th class="bg-light">Khách hàng</th>
                     <td>
-                        <strong>{{ $request->order->account->full_name }}</strong><br>
-                        <small class="text-muted">{{ $request->order->account->email }}</small>
+                        <strong>{{ $request->order->account->full_name ?? '---' }}</strong><br>
+                        <small class="text-muted">{{ $request->order->account->email ?? '---' }}</small>
                     </td>
                 </tr>
                 <tr>
                     <th class="bg-light">Lý do hoàn</th>
-                    <td>{{ $request->reason }}</td>
+                    <td>{{ $request->reason ?? '---' }}</td>
                 </tr>
 
                 {{-- Ảnh lý do khách gửi --}}
+                @php
+                    $customerReasonImages = json_decode($request->getOriginal('images') ?? '[]', true);
+                @endphp
                 <tr>
                     <th class="bg-light">Ảnh minh chứng lý do</th>
                     <td>
-@php
-// Lấy ảnh lý do khách gửi trực tiếp từ bảng return_requests
-$customerReasonImages = json_decode($request->getOriginal('images') ?? '[]', true);
-@endphp
-
-@if (!empty($customerReasonImages))
-    <div class="d-flex flex-wrap gap-2">
-        @foreach ($customerReasonImages as $img)
-            <div class="border rounded p-1" style="width:120px; height:120px; overflow:hidden;">
-                <img src="{{ asset('storage/' . ltrim($img, '/')) }}" 
-                     alt="Ảnh lý do khách gửi"
-                     class="img-fluid w-100 h-100 object-fit-cover rounded">
-            </div>
-        @endforeach
-    </div>
-@else
-    <em class="text-muted">Khách không gửi ảnh minh chứng</em>
-@endif
-
+                        @if (!empty($customerReasonImages))
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($customerReasonImages as $img)
+                                    <div class="border rounded p-1" style="width:120px; height:120px; overflow:hidden;">
+                                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" 
+                                             alt="Ảnh lý do khách gửi"
+                                             class="img-fluid w-100 h-100 object-fit-cover rounded">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <em class="text-muted">Khách không gửi ảnh minh chứng</em>
+                        @endif
                     </td>
                 </tr>
 
@@ -126,32 +123,61 @@ $customerReasonImages = json_decode($request->getOriginal('images') ?? '[]', tru
                         </tbody>
                     </table>
                 </div>
-
-                {{-- Mã giảm giá & tổng tiền --}}
-                <table class="table table-bordered mt-3 w-100">
-                    <tr>
-                        <th class="bg-light w-25">Mã giảm giá</th>
-                        <td>
-                            @if ($request->order->coupon_code)
-                                <span class="badge bg-info">{{ $request->order->coupon_code }}</span>
-                                - {{ number_format($request->order->discount_amount, 0, ',', '.') }} đ
-                            @else
-                                <em class="text-muted">Không áp dụng</em>
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="bg-light">Tổng tiền</th>
-                        <td>
-                            <strong class="text-danger fs-5">
-                                {{ number_format($request->order->orderDetails->sum('total_price') - ($request->order->discount_amount ?? 0), 0, ',', '.') }} đ
-                            </strong>
-                        </td>
-                    </tr>
-                </table>
             @else
-                <p class="text-muted">Không tìm thấy sản phẩm trong đơn hoàn.</p>
+                <p class="text-muted">Không có sản phẩm trong đơn này.</p>
             @endif
+
+            {{-- Mã giảm giá & tổng tiền --}}
+            @php
+                $promotion = $request->order->promotion ?? null;
+                $subTotal = $request->order->orderDetails->sum('total_price');
+                $discount = 0;
+
+                if ($promotion) {
+                    if ($promotion->discount_type === 'percentage') {
+                        $discount = $subTotal * ($promotion->discount_value / 100);
+                    } elseif ($promotion->discount_type === 'fixed') {
+                        $discount = $promotion->discount_value;
+                    }
+                }
+                $grandTotal = max($subTotal - $discount, 0);
+            @endphp
+
+            <table class="table table-bordered mt-3 w-100">
+                <tr>
+                    <th class="bg-light w-25">Mã giảm giá</th>
+                    <td>
+                        @if ($promotion)
+                            <span class="badge bg-info">{{ $promotion->code }}</span>
+                            – {{ $promotion->description ?? 'Không có mô tả' }}
+                            <br>
+                            <small class="text-muted">
+                                {{ $promotion->discount_type === 'percentage' 
+                                    ? "Giảm {$promotion->discount_value}%"
+                                    : "Giảm " . number_format($promotion->discount_value, 0, ',', '.') . " đ" }}
+                            </small>
+                        @else
+                            <em class="text-muted">Không áp dụng</em>
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <th class="bg-light">Tổng tiền</th>
+                    <td>
+                        <div class="fw-bold">
+                            <div>Tạm tính: {{ number_format($subTotal, 0, ',', '.') }} đ</div>
+                            @if ($discount > 0)
+                                <div>Giảm giá: -{{ number_format($discount, 0, ',', '.') }} đ</div>
+                            @endif
+                            <div class="mt-1">
+                                <strong class="text-danger fs-5">
+                                    Thanh toán: {{ number_format($grandTotal, 0, ',', '.') }} đ
+                                </strong>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
 
             {{-- Thông tin hoàn tiền --}}
             <h5 class="fw-bold text-primary mt-4 mb-3">💰 Thông tin hoàn tiền</h5>
@@ -163,11 +189,13 @@ $customerReasonImages = json_decode($request->getOriginal('images') ?? '[]', tru
                     </tr>
                     <tr>
                         <th class="bg-light">Ngày hoàn</th>
-                        <td>{{ $refundProgress->completed_at ? \Carbon\Carbon::parse($refundProgress->completed_at)->format('d/m/Y H:i') : $refundProgress->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ $refundProgress->completed_at 
+                            ? \Carbon\Carbon::parse($refundProgress->completed_at)->format('d/m/Y H:i') 
+                            : $refundProgress->created_at->format('d/m/Y H:i') }}</td>
                     </tr>
                     <tr>
                         <th class="bg-light">Số tiền</th>
-                        <td>{{ number_format($refundProgress->amount ?? ($request->order->orderDetails->sum('total_price') - ($request->order->discount_amount ?? 0)), 0, ',', '.') }} đ</td>
+                        <td>{{ number_format($refundProgress->amount ?? $grandTotal, 0, ',', '.') }} đ</td>
                     </tr>
                     <tr>
                         <th class="bg-light">Phương thức hoàn</th>
@@ -185,7 +213,6 @@ $customerReasonImages = json_decode($request->getOriginal('images') ?? '[]', tru
                         <th class="bg-light">Ghi chú</th>
                         <td>{{ $refundProgress->note ?? 'Không có' }}</td>
                     </tr>
-                    {{-- Ảnh admin --}}
                     <tr>
                         <th class="bg-light">Ảnh minh chứng (admin)</th>
                         <td>
@@ -193,7 +220,8 @@ $customerReasonImages = json_decode($request->getOriginal('images') ?? '[]', tru
                                 <div class="d-flex flex-wrap gap-2">
                                     @foreach ($adminImages as $img)
                                         <div class="border rounded p-1" style="width:120px; height:120px; overflow:hidden;">
-                                            <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="ảnh hoàn tiền admin"
+                                            <img src="{{ asset('storage/' . ltrim($img, '/')) }}" 
+                                                 alt="ảnh hoàn tiền admin"
                                                  class="img-fluid w-100 h-100 object-fit-cover rounded">
                                         </div>
                                     @endforeach

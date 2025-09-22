@@ -204,11 +204,25 @@
                     placeholder="Nhập mã vận đơn (ví dụ: PPGH34567890)">
             </div> --}}
 
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="shipping_images" class="form-label fw-bold">📷 Ảnh gói hàng đã gửi</label>
                 <input type="file" name="shipping_images[]" class="form-control" multiple accept="image/*" required>
                 <small class="text-muted">Chọn 1 hoặc nhiều ảnh chứng minh bạn đã gửi hàng</small>
-            </div>
+            </div> --}}
+            <div class="mb-3">
+    <label for="require_images" class="form-label fw-bold">📷 Ảnh chứng minh gửi hàng</label>
+    <select name="require_images" id="require_images" class="form-select">
+        <option value="yes" selected>Yêu cầu gửi ảnh chứng minh đã gửi hàng</option>
+        <option value="no">Không cần ảnh (shop đã hủy đơn – hoàn tiền trực tiếp)</option>
+    </select>
+</div>
+
+<div class="mb-3" id="shipping_images_wrapper">
+    <label for="shipping_images" class="form-label fw-bold">📦 Ảnh gói hàng đã gửi</label>
+    <input type="file" name="shipping_images[]" class="form-control" multiple accept="image/*" >
+    <small class="text-muted">Chọn 1 hoặc nhiều ảnh chứng minh bạn đã gửi hàng</small>
+</div>
+
 
             <div class="mb-3">
                 <label for="bank_name" class="form-label fw-bold">🏦 Chọn phương thức hoàn tiền</label>

@@ -45,12 +45,28 @@
       </a>
     </li>
 
-    <li>
-      <a class="app-menu__item {{ request()->is('admin/orders*') ? 'active' : '' }}" href="{{ url('/admin/orders') }}">
-        <i class='app-menu__icon bx bx-task'></i>
+   <li class="treeview {{ request()->is('admin/orders*') || request()->is('admin/return-requests*') ? 'is-expanded' : '' }}">
+    <a class="app-menu__item" href="#" data-toggle="treeview">
+        <i class="app-menu__icon bx bx-task"></i>
         <span class="app-menu__label">Quản lý đơn hàng</span>
-      </a>
-    </li>
+        <i class="treeview-indicator bx bx-chevron-right"></i>
+    </a>
+    <ul class="treeview-menu">
+        <li>
+            <a class="treeview-item {{ request()->is('admin/orders*') ? 'active' : '' }}" 
+               href="{{ url('/admin/orders') }}">
+                <i class="icon bx bx-right-arrow-alt"></i> Đơn hàng
+            </a>
+        </li>
+        <li>
+            <a class="treeview-item {{ request()->is('admin/return-requests*') ? 'active' : '' }}" 
+               href="{{ url('/admin/return-requests') }}">
+                <i class="icon bx bx-right-arrow-alt"></i> Hoàn hàng
+            </a>
+        </li>
+    </ul>
+</li>
+
 
     <li>
         <li>

@@ -100,25 +100,32 @@
         </div>
 
         {{-- Thông tin hoàn tiền --}}
-        <div class="mb-4 p-3 border rounded bg-light">
-            <div class="mb-3">
-                <label>Số tiền hoàn</label>
-                <input type="number" name="refund_amount" value="{{ old('refund_amount', $order->total_amount - 30000) }}"
-                    class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label>Ghi chú</label>
-                <textarea name="note" class="form-control">{{ old('note') }}</textarea>
-            </div>
-            <div class="mb-3">
-                <label for="transaction_images">Ảnh thông tin giao dịch (nếu có)</label>
-                <input type="file" name="transaction_images[]" id="transaction_images" class="form-control" multiple
-                    accept="image/*">
-            </div>
+<div class="mb-4 p-3 border rounded bg-light">
+    <div class="mb-3">
+        <label>Số tiền hoàn</label>
+        <input type="number" 
+               name="refund_amount" 
+               value="{{ old('refund_amount', $order->total_amount - 30000) }}" 
+               class="form-control" 
+               readonly>
+    </div>
+    <div class="mb-3">
+        <label>Ghi chú</label>
+        <textarea name="note" class="form-control">{{ old('note') }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="transaction_images">Ảnh thông tin giao dịch (nếu có)</label>
+        <input type="file" 
+               name="transaction_images[]" 
+               id="transaction_images" 
+               class="form-control" 
+               multiple
+               accept="image/*">
+    </div>
 
-            <button type="submit" class="btn btn-success">Xác nhận hoàn tiền</button>
-            </form>
-        </div>
+    <button type="submit" class="btn btn-success">Xác nhận hoàn tiền</button>
+    </form>
+</div>
 
         {{-- Nút quay lại --}}
         <div class="mt-4">

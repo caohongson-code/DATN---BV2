@@ -115,31 +115,44 @@
             <i class="fas fa-times"></i>
         </a>
 
-    @elseif(in_array($request->status, ['approved', 'refunded']))
-        {{-- Luôn hiện nút Chi tiết khi đã duyệt hoặc đã hoàn tiền --}}
-        <a href="{{ route('admin.orders.refund_detail', $request->id) }}"
-            class="btn btn-sm btn-info mb-1">
-            <i class="fas fa-eye me-1"></i> Chi tiết
-        </a>
+@elseif(in_array($request->status, ['approved', 'refunded']))
+    {{-- Luôn hiện nút Chi tiết khi đã duyệt hoặc đã hoàn tiền --}}
+    <a href="{{ route('admin.orders.refund_detail', $request->id) }}"
+        class="btn btn-sm btn-info mb-1">
+        <i class="fas fa-eye me-1"></i> Chi tiết
+    </a>
 
-        @php
-            $allStatuses = ['shipping_pending', 'shop_received', 'checking', 'refunded'];
-            $latestProgress = $request->progresses->last();
-            $currentIndex = $latestProgress ? array_search($latestProgress->status, $allStatuses) : -1;
-            $nextStatus = $currentIndex !== false && isset($allStatuses[$currentIndex + 1])
-                ? $allStatuses[$currentIndex + 1]
-                : null;
-        @endphp
+    @php
+        // Nếu lý do là "Hoàn tiền do người bán hủy đơn" → bỏ toàn bộ các bước tiến trình
+        $isDirectRefund = trim($request->reason) === 'Hoàn tiền do người bán hủy đơn';
 
+        $allStatuses = ['shipping_pending', 'shop_received', 'checking', 'refunded'];
+        $latestProgress = $request->progresses->last();
+        $currentIndex = $latestProgress ? array_search($latestProgress->status, $allStatuses) : -1;
+
+        $nextStatus = $currentIndex !== false && isset($allStatuses[$currentIndex + 1])
+            ? $allStatuses[$currentIndex + 1]
+            : null;
+    @endphp
+
+    @if ($isDirectRefund)
+        {{-- Nếu hoàn tiền trực tiếp → hiện nút Hoàn tiền luôn, không có bước trung gian --}}
+        @if(!$latestProgress || $latestProgress->status !== 'refunded')
+            <a href="{{ route('admin.orders.refund_form', $request->id) }}"
+                class="btn btn-sm btn-warning confirm-refund">
+                <i class="fas fa-money-bill-wave me-1"></i> Hoàn tiền trực tiếp
+            </a>
+        @endif
+    @else
+        {{-- Quy trình bình thường --}}
         @if ($latestProgress && $latestProgress->status === 'checking')
-            {{-- Nếu tiến trình đang kiểm tra → hiện nút Hoàn tiền --}}
+            {{-- Nếu đang ở bước "Đang kiểm tra" → hiện nút Hoàn tiền --}}
             <a href="{{ route('admin.orders.refund_form', $request->id) }}"
                 class="btn btn-sm btn-warning confirm-refund">
                 <i class="fas fa-money-bill-wave me-1"></i> Hoàn tiền
             </a>
-
         @elseif($nextStatus)
-            {{-- Nếu tiến trình chưa xong → hiện nút cập nhật bước tiếp theo --}}
+            {{-- Nếu còn bước tiếp theo → hiện nút cập nhật --}}
             <form method="POST"
                 action="{{ route('admin.orders.progress', $request->id) }}"
                 class="confirm-progress mt-1">
@@ -152,9 +165,8 @@
                     {{ $statusViMap[$nextStatus] ?? ucfirst($nextStatus) }}
                 </button>
             </form>
-
-        
         @endif
+    @endif
 
     @else
         {{-- rejected hoặc trạng thái khác --}}

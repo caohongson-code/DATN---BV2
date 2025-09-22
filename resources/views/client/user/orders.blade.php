@@ -133,109 +133,113 @@
         $statusMap = [0 => null, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7];
         $maxVisible = 10;
     @endphp
-{{-- Tabs trạng thái --}}
-<ul class="nav nav-tabs" id="orderTabs" role="tablist">
-    @foreach ($statusLabels as $index => $label)
-        <li class="nav-item" role="presentation">
-            <a class="nav-link {{ $statusMap[$index] == $status || ($index == 0 && !$status) ? 'active' : '' }}"
-                href="{{ route('user.orders', ['status' => $statusMap[$index]]) }}">
-                {{ $label }}
-            </a>
-        </li>
-    @endforeach
-</ul>
+    {{-- Tabs trạng thái --}}
+    <ul class="nav nav-tabs" id="orderTabs" role="tablist">
+        @foreach ($statusLabels as $index => $label)
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{ $statusMap[$index] == $status || ($index == 0 && !$status) ? 'active' : '' }}"
+                    href="{{ route('user.orders', ['status' => $statusMap[$index]]) }}">
+                    {{ $label }}
+                </a>
+            </li>
+        @endforeach
+    </ul>
 
-{{-- Nội dung đơn hàng --}}
-<div class="tab-content pt-3">
-    <div class="tab-pane fade show active" id="orders-tab" role="tabpanel">
-        @if ($orders->count())
-            @foreach ($orders as $key => $order)
-                <div class="card mb-3 order-item {{ $key >= $maxVisible ? 'd-none' : '' }}" data-id="{{ $order->id }}">
-                    <div class="card-header">
-                        <strong>Mã đơn hàng:</strong> Đơn #{{ $order->id }} |
-                        <strong>Trạng thái:</strong>
-                        <span class="text-primary">{{ $order->orderStatus->status_name ?? 'Không rõ' }}</span> |
-                        <strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}
-@if(!empty($order->payment_expires_at))
-    <div id="timer-{{ $order->id }}" style="font-size:18px; display:flex; align-items:center; gap:6px;">
-        ⏳
-        <span id="countdown-{{ $order->id }}">--:--:--</span>
-    </div>
-
-    <script>
-        const expiresAt{{ $order->id }} = new Date(
-            "{{ optional($order->payment_expires_at)->format('Y-m-d\\TH:i:s') }}"
-        ).getTime();
-
-        const countdownEl{{ $order->id }} = document.getElementById("countdown-{{ $order->id }}");
-        const timerDiv{{ $order->id }} = document.getElementById("timer-{{ $order->id }}");
-
-        const interval{{ $order->id }} = setInterval(() => {
-            const now = Date.now();
-            const distance = expiresAt{{ $order->id }} - now;
-
-            if (distance <= 0) {
-                clearInterval(interval{{ $order->id }});
-                countdownEl{{ $order->id }}.textContent = "Hết hạn thanh toán";
-                timerDiv{{ $order->id }}.style.color = "red";
-                return;
-            }
-
-            const hours = Math.floor(distance / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            countdownEl{{ $order->id }}.textContent =
-                String(hours).padStart(2, "0") + ":" +
-                String(minutes).padStart(2, "0") + ":" +
-                String(seconds).padStart(2, "0");
-        }, 1000);
-    </script>
-@else
-    <span>Không có thời gian hết hạn</span>
-@endif
-
-                    </div>
-
-                    <div class="card-body">
-                        {{-- Danh sách sản phẩm --}}
-                        @foreach ($order->orderDetails as $item)
-                            @php
-                                $variant = $item->productVariant;
-                                $product = $variant?->product;
-                                $image = $product?->image
-                                    ? asset('storage/' . $product->image)
-                                    : asset('images/default.jpg');
-                            @endphp
-                            <div class="d-flex mb-3 border-bottom pb-2">
-                                <img src="{{ $image }}" class="img-thumbnail me-3"
-                                    style="width: 80px; height: 80px; object-fit: cover;">
-                                <div>
-                                    <h5>{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h5>
-                                    <p>Giá: {{ number_format($item->unit_price, 0, ',', '.') }}₫ x {{ $item->quantity }}</p>
-
-                                    {{-- Đánh giá sản phẩm --}}
-                                    @if ($order->order_status_id == 5)
-                                        @php
-                                            $keyItem = $order->id . '-' . $item->product_variant_id;
-                                            $alreadyReviewed = isset($reviewedMap[$keyItem]);
-                                        @endphp
-                                        @if ($alreadyReviewed)
-                                            <span class="badge bg-secondary">Đã đánh giá</span>
-                                        @else
-                                            <button class="btn btn-success btn-sm btn-review"
-                                                data-variant-id="{{ $item->product_variant_id }}"
-                                                data-product-name="{{ $product->product_name }}"
-                                                data-order-id="{{ $order->id }}">Đánh giá</button>
-                                        @endif
-                                    @endif
+    {{-- Nội dung đơn hàng --}}
+    <div class="tab-content pt-3">
+        <div class="tab-pane fade show active" id="orders-tab" role="tabpanel">
+            @if ($orders->count())
+                @foreach ($orders as $key => $order)
+                    <div class="card mb-3 order-item {{ $key >= $maxVisible ? 'd-none' : '' }}"
+                        data-id="{{ $order->id }}">
+                        <div class="card-header">
+                            <strong>Mã đơn hàng:</strong> Đơn #{{ $order->id }} |
+                            <strong>Trạng thái:</strong>
+                            <span class="text-primary">{{ $order->orderStatus->status_name ?? 'Không rõ' }}</span> |
+                            <strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}
+                            @if ($order->payment_status === 'pending' && !empty($order->payment_expires_at))
+                                <div id="timer-{{ $order->id }}"
+                                    style="font-size:18px; display:flex; align-items:center; gap:6px;">
+                                    ⏳
+                                    <span id="countdown-{{ $order->id }}">--:--:--</span>
                                 </div>
-                            </div>
-                        @endforeach
 
-                        {{-- Thanh toán + tổng tiền --}}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge
+                                <script>
+                                    const expiresAt{{ $order->id }} = new Date(
+                                        "{{ optional($order->payment_expires_at)->format('Y-m-d\\TH:i:s') }}"
+                                    ).getTime();
+
+                                    const countdownEl{{ $order->id }} = document.getElementById("countdown-{{ $order->id }}");
+                                    const timerDiv{{ $order->id }} = document.getElementById("timer-{{ $order->id }}");
+
+                                    const interval{{ $order->id }} = setInterval(() => {
+                                        const now = Date.now();
+                                        const distance = expiresAt{{ $order->id }} - now;
+
+                                        if (distance <= 0) {
+                                            clearInterval(interval{{ $order->id }});
+                                            countdownEl{{ $order->id }}.textContent = "Hết hạn thanh toán";
+                                            timerDiv{{ $order->id }}.style.color = "red";
+                                            return;
+                                        }
+
+                                        const hours = Math.floor(distance / (1000 * 60 * 60));
+                                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                        countdownEl{{ $order->id }}.textContent =
+                                            String(hours).padStart(2, "0") + ":" +
+                                            String(minutes).padStart(2, "0") + ":" +
+                                            String(seconds).padStart(2, "0");
+                                    }, 1000);
+                                </script>
+                            @else
+                                <span>Không có thời gian hết hạn</span>
+                            @endif
+
+                        </div>
+
+                        <div class="card-body">
+                            {{-- Danh sách sản phẩm --}}
+                            @foreach ($order->orderDetails as $item)
+                                @php
+                                    $variant = $item->productVariant;
+                                    $product = $variant?->product;
+                                    $image = $product?->image
+                                        ? asset('storage/' . $product->image)
+                                        : asset('images/default.jpg');
+                                @endphp
+                                <div class="d-flex mb-3 border-bottom pb-2">
+                                    <img src="{{ $image }}" class="img-thumbnail me-3"
+                                        style="width: 80px; height: 80px; object-fit: cover;">
+                                    <div>
+                                        <h5>{{ $product->product_name ?? 'Không rõ sản phẩm' }}</h5>
+                                        <p>Giá: {{ number_format($item->unit_price, 0, ',', '.') }}₫ x
+                                            {{ $item->quantity }}</p>
+
+                                        {{-- Đánh giá sản phẩm --}}
+                                        @if ($order->order_status_id == 5)
+                                            @php
+                                                $keyItem = $order->id . '-' . $item->product_variant_id;
+                                                $alreadyReviewed = isset($reviewedMap[$keyItem]);
+                                            @endphp
+                                            @if ($alreadyReviewed)
+                                                <span class="badge bg-secondary">Đã đánh giá</span>
+                                            @else
+                                                <button class="btn btn-success btn-sm btn-review"
+                                                    data-variant-id="{{ $item->product_variant_id }}"
+                                                    data-product-name="{{ $product->product_name }}"
+                                                    data-order-id="{{ $order->id }}">Đánh giá</button>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            {{-- Thanh toán + tổng tiền --}}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span
+                                    class="badge
                                 @switch($order->payment_status_id)
                                     @case(1) bg-warning text-dark @break
                                     @case(2) bg-success @break
@@ -243,49 +247,52 @@
                                     @case(4) bg-info text-dark @break
                                     @default bg-secondary
                                 @endswitch">
-                                {{ $order->paymentStatus->name ?? 'Không rõ' }}
-                            </span>
-                            <div>
-                                <strong>Tổng tiền:</strong>
-                                {{ number_format($order->total_amount, 0, ',', '.') }}₫
+                                    {{ $order->paymentStatus->name ?? 'Không rõ' }}
+                                </span>
+                                <div>
+                                    <strong>Tổng tiền:</strong>
+                                    {{ number_format($order->total_amount, 0, ',', '.') }}₫
+                                </div>
                             </div>
-                        </div>
 
-                       {{-- Nút hành động --}}
-<div class="text-end order-action-buttons d-flex flex-wrap justify-content-end">
-    @php
-        $isMomoUnpaid = $order->paymentMethod->code === 'momo' && $order->payment_status_id == 1;
-        $isCancelled = $order->order_status_id == 7;
-    @endphp
+                            {{-- Nút hành động --}}
+                            <div class="text-end order-action-buttons d-flex flex-wrap justify-content-end">
+                                @php
+                                    $isMomoUnpaid =
+                                        $order->paymentMethod->code === 'momo' && $order->payment_status_id == 1;
+                                    $isCancelled = $order->order_status_id == 7;
+                                @endphp
 
-    {{-- Nút Xem chi tiết luôn hiển thị --}}
-    <a href="{{ route('user.orders.detail', $order->id) }}" class="btn btn-primary btn-sm">
-        Xem chi tiết
-    </a>
+                                {{-- Nút Xem chi tiết luôn hiển thị --}}
+                                <a href="{{ route('user.orders.detail', $order->id) }}" class="btn btn-primary btn-sm">
+                                    Xem chi tiết
+                                </a>
 
-    {{-- Nếu không phải momo + chưa thanh toán + đã hủy => mới hiển thị các nút khác --}}
-    @if (!($isMomoUnpaid && $isCancelled))
-        {{-- Thanh toán lại MOMO --}}
-        @if ($isMomoUnpaid)
-            <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}" method="POST">
-                @csrf
-                <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
-            </form>
-            <form method="POST" action="{{ route('client.momo.to_cod', $order->id) }}" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-outline-warning btn-sm"
-                    onclick="return confirm('Bạn có chắc muốn chuyển sang thanh toán khi nhận hàng không?')">
-                    💵 Thanh toán khi nhận hàng
-                </button>
-            </form>
-        @endif
+                                {{-- Nếu không phải momo + chưa thanh toán + đã hủy => mới hiển thị các nút khác --}}
+                                @if (!($isMomoUnpaid && $isCancelled))
+                                    {{-- Thanh toán lại MOMO --}}
+                                    @if ($isMomoUnpaid)
+                                        <form id="retryForm" action="{{ route('client.momo.retry', $order->id) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-primary">Quay lại thanh toán</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('client.momo.to_cod', $order->id) }}"
+                                            class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-warning btn-sm"
+                                                onclick="return confirm('Bạn có chắc muốn chuyển sang thanh toán khi nhận hàng không?')">
+                                                💵 Thanh toán khi nhận hàng
+                                            </button>
+                                        </form>
+                                    @endif
 
-        {{-- Huỷ đơn --}}
-        @if ($order->order_status_id == 1)
-            <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
-        @endif
+                                    {{-- Huỷ đơn --}}
+                                    @if ($order->order_status_id == 1)
+                                        <button class="btn btn-danger btn-sm cancel-order-btn">Huỷ đơn</button>
+                                    @endif
 
-        {{-- Xác nhận nhận hàng / Báo chưa nhận
+                                    {{-- Xác nhận nhận hàng / Báo chưa nhận
         @if ($order->order_status_id == 5)
             @if (!$order->user_confirmed_delivery)
                 <button class="btn btn-success btn-sm btn-confirm-received" data-id="{{ $order->id }}">
@@ -303,70 +310,72 @@
             @endif
         @endif --}}
 
-        {{-- Trả hàng / Hoàn tiền --}}
-        @if ($order->order_status_id == 5 || $order->order_status_id == 6)
-            @php
-                $returnRequest = $returnedOrders[$order->id] ?? null;
-                $latestProgress = null;
-                if ($returnRequest && isset($progresses[$returnRequest->id])) {
-                    $latestProgress = $progresses[$returnRequest->id]->last();
-                }
-            @endphp
+                                 {{-- Trả hàng / Hoàn tiền --}}
+@if ($order->order_status_id == 5 || $order->order_status_id == 6 || 
+    ($order->order_status_id == 7 && $order->paymentMethod->code === 'momo' && $order->payment_status_id == 2))
+    @php
+        $returnRequest = $returnedOrders[$order->id] ?? null;
+        $latestProgress = null;
+        if ($returnRequest && isset($progresses[$returnRequest->id])) {
+            $latestProgress = $progresses[$returnRequest->id]->last();
+        }
+    @endphp
 
-            @if ($returnRequest)
-                @if ($returnRequest->status === 'pending')
-                    <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
-                    <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
-                        data-id="{{ $returnRequest->id }}">
-                        Hủy yêu cầu
-                    </button>
-                @elseif ($returnRequest->status === 'rejected')
-                    <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
-                @elseif ($returnRequest->status === 'approved' && (!$latestProgress || $latestProgress->status === 'approved'))
-                    <a href="{{ route('user.return.enter_tracking', $returnRequest->id) }}"
-                        class="btn btn-sm btn-outline-primary">
-                        Người tiêu dùng hoàn hàng
-                    </a>
-                @else
-                    @php
-                        $statusVN = match ($latestProgress->status ?? '') {
-                            'pending' => 'Đang chờ xử lý',
-                            'approved' => 'Đã duyệt',
-                            'rejected' => 'Đã từ chối',
-                            'shipped_back' => 'Đã gửi hàng trả lại',
-                            'received' => 'Đã nhận hàng',
-                            'checking' => 'Đang kiểm tra',
-                            'refunded' => 'Đã hoàn tiền',
-                            default => '...',
-                        };
-                    @endphp
-                    <span class="text-secondary">Trạng thái trả hàng: {{ $statusVN }}</span>
+    @if ($returnRequest)
+        @if ($returnRequest->status === 'pending')
+            <span class="text-warning fw-bold">Đã gửi yêu cầu trả hàng</span>
+            <button class="btn btn-danger btn-sm ms-2 cancel-return-request-btn"
+                data-id="{{ $returnRequest->id }}">
+                Hủy yêu cầu
+            </button>
+        @elseif ($returnRequest->status === 'rejected')
+            <span class="text-danger fw-bold">Yêu cầu bị từ chối</span>
+        @elseif ($returnRequest->status === 'approved' && (!$latestProgress || $latestProgress->status === 'approved'))
+            <a href="{{ route('user.return.enter_tracking', $returnRequest->id) }}"
+                class="btn btn-sm btn-outline-primary">
+                Nhập thông tin hoàn tiền
+            </a>
+        @else
+            @php
+                $statusVN = match ($latestProgress->status ?? '') {
+                    'pending' => 'Đang chờ xử lý',
+                    'approved' => 'Đã duyệt',
+                    'rejected' => 'Đã từ chối',
+                    'shipped_back' => 'Đã gửi hàng trả lại',
+                    'received' => 'Đã nhận hàng',
+                    'checking' => 'Đang kiểm tra',
+                    'refunded' => 'Đã hoàn tiền',
+                    default => '...',
+                };
+            @endphp
+            <span class="text-secondary">Trạng thái trả hàng: {{ $statusVN }}</span>
+        @endif
+    @else
+        <button class="btn btn-warning btn-sm return-order-btn">
+            Trả hàng/Hoàn tiền
+        </button>
+    @endif
+@endif
+
+                                @endif
+                            </div>
+
+
+                        </div>
+                    </div>
+                @endforeach
+
+                {{-- Xem thêm --}}
+                @if ($orders->count() > $maxVisible)
+                    <div class="text-center">
+                        <button class="btn btn-link btn-show-more">Xem thêm</button>
+                    </div>
                 @endif
             @else
-                <button class="btn btn-warning btn-sm return-order-btn">
-                    Trả hàng/Hoàn tiền
-                </button>
+                <p class="text-muted">Chưa có đơn hàng trong mục này.</p>
             @endif
-        @endif
-    @endif
-</div>
-
-
-                    </div>
-                </div>
-            @endforeach
-
-            {{-- Xem thêm --}}
-            @if ($orders->count() > $maxVisible)
-                <div class="text-center">
-                    <button class="btn btn-link btn-show-more">Xem thêm</button>
-                </div>
-            @endif
-        @else
-            <p class="text-muted">Chưa có đơn hàng trong mục này.</p>
-        @endif
+        </div>
     </div>
-</div>
 
     {{-- Modal đánh giá --}}
     <div id="reviewModal" class="modal fade" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
@@ -424,9 +433,19 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Lý do trả hàng</label>
-                            <textarea name="reason" class="form-control" rows="4" required></textarea>
-                        </div>
+    <label class="form-label">Lý do trả hàng</label>
+    <select name="reason" class="form-select" required>
+        <option value="">-- Chọn lý do --</option>
+        <option value="Sản phẩm lỗi" {{ old('reason') == 'Sản phẩm lỗi' ? 'selected' : '' }}>Sản phẩm lỗi</option>
+        <option value="Giao sai sản phẩm" {{ old('reason') == 'Giao sai sản phẩm' ? 'selected' : '' }}>Giao sai sản phẩm</option>
+        <option value="Không muốn mua nữa" {{ old('reason') == 'Không muốn mua nữa' ? 'selected' : '' }}>Không muốn mua nữa</option>
+        <option value="Hoàn tiền do người bán hủy đơn"
+            {{ $order->order_status_id == 7 ? 'selected' : '' }}>
+            Hoàn tiền do người bán hủy đơn
+        </option>
+    </select>
+</div>
+
                         <div class="mb-3">
                             <label class="form-label">Ảnh sản phẩm lỗi</label>
                             <input type="file" name="images[]" multiple class="form-control" accept="image/*">

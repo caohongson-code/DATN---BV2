@@ -161,9 +161,20 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
         }
 
-        if ($order->order_status_id != 5) {
-            return response()->json(['success' => false, 'message' => 'Chỉ có thể trả hàng khi đơn hàng đã giao.'], 400);
-        }
+       if (!(
+    $order->order_status_id == 5 || // Đã giao hàng -> cho phép trả hàng
+    (
+        $order->order_status_id == 7 && // Đã hủy
+        $order->paymentMethod->code === 'momo' && // Thanh toán bằng momo
+        $order->payment_status_id == 2 // Đã thanh toán
+    )
+)) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Chỉ có thể trả hàng khi đơn đã giao hoặc yêu cầu hoàn tiền nếu đơn đã hủy nhưng đã thanh toán MoMo.'
+    ], 400);
+}
+
 
         if (ReturnRequest::where('order_id', $order->id)->exists()) {
             return response()->json(['success' => false, 'message' => 'Bạn đã gửi yêu cầu trả hàng cho đơn này.'], 400);
