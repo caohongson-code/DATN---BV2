@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use App\Events\OrderStatusUpdated;
 use App\Models\ReturnRequest;
 use Illuminate\Support\Str;
+use App\Models\Notification;
 use App\Models\ReturnRequestProgress;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -76,97 +77,127 @@ class OrderController extends Controller
         return view('admin.orders.show', compact('order', 'statuses', 'paymentMethods', 'shippingZones', 'paymentStatus'));
     }
  public function update(Request $request, $id)
-{
-    $order = Order::with('orderStatus', 'orderDetails', 'paymentMethod')->findOrFail($id);
+    {
+        $order = Order::with('orderStatus', 'orderDetails', 'paymentMethod')->findOrFail($id);
 
-    $request->validate([
-        'order_status_id' => 'required|exists:order_statuses,id',
-    ]);
+        $request->validate([
+            'order_status_id' => 'required|exists:order_statuses,id',
+            'cancel_reason' => 'required_if:order_status_id,7|string|max:500|nullable',
+        ]);
 
-    $newStatusId = (int) $request->order_status_id;
-    $oldStatusId = $order->order_status_id;
+        $newStatusId = (int) $request->order_status_id;
+        $oldStatusId = $order->order_status_id;
 
-    // ✅ Chặn xác nhận nếu là Chờ xác nhận + MoMo + chưa thanh toán
-    if (
-        $oldStatusId === 1 &&
-        $newStatusId === 2 && // chuyển sang "Đã xác nhận"
-        $order->paymentMethod?->code === 'momo' &&
-        $order->payment_status_id === 1 // Chờ thanh toán
-    ) {
-        return back()->with('error', 'Không thể xác nhận đơn hàng vì khách hàng chưa thanh toán qua MoMo.');
-    }
-
-    if ($newStatusId === 5) {
-        $order->payment_status_id = 2; // Đã thanh toán
-    }
-
-    $FINAL_STATUS_IDS = [5, 6, 7]; // 5: Đã giao, 6: Trả hàng / Hoàn tiền, 7: Đã huỷ
-
-    // Không cho phép update nếu đã vào trạng thái cuối
-    if (in_array($oldStatusId, $FINAL_STATUS_IDS)) {
-        return back()->with('error', 'Đơn hàng đã hoàn tất hoặc bị huỷ. Không thể cập nhật nữa.');
-    }
-
-    // Chỉ cho phép cập nhật tuần tự
-    $allowedNextStatus = [];
-
-    switch ($oldStatusId) {
-        case 1:
-            $allowedNextStatus = [2, 7]; // từ Chờ xác nhận → Đã xác nhận hoặc Hủy
-            break;
-        case 2:
-            $allowedNextStatus = [3];    // từ Đã xác nhận → Đang chuẩn bị hàng
-            break;
-        case 3:
-            $allowedNextStatus = [4];    // từ Đang chuẩn bị hàng → Đang giao
-            break;
-        case 4:
-            $allowedNextStatus = [5];    // từ Đang giao → Đã giao
-            break;
-        case 5:
-            $allowedNextStatus = [6];    // từ Đã giao → Trả hàng
-            break;
-    }
-
-    if (!in_array($newStatusId, $allowedNextStatus)) {
-        return back()->with('error', 'Chuyển trạng thái không hợp lệ. Vui lòng tuân thủ quy trình.');
-    }
-
-    DB::beginTransaction();
-
-    try {
-        $order->order_status_id = $newStatusId;
-
-        // Tạo mã vận đơn nếu cần
-        if ($newStatusId === 3 && !$order->shipping_code) {
-            $order->tracking_number = 'PPGH' . strtoupper(Str::random(7));
+        // Chặn xác nhận nếu là Chờ xác nhận + MoMo + chưa thanh toán
+        if (
+            $oldStatusId === 1 &&
+            $newStatusId === 2 && // chuyển sang "Đã xác nhận"
+            $order->paymentMethod?->code === 'momo' &&
+            $order->payment_status_id === 1 // Chờ thanh toán
+        ) {
+            return back()->with('error', 'Không thể xác nhận đơn hàng vì khách hàng chưa thanh toán qua MoMo.');
         }
 
-        // Cập nhật phí vận chuyển
-        if ($order->shipping_zone_id) {
-            $shippingZone = ShippingZone::find($order->shipping_zone_id);
-            $order->shipping_fee = $shippingZone?->shipping_fee ?? 30000;
-        } elseif (is_null($order->shipping_fee)) {
-            $order->shipping_fee = 30000;
-        }
-
-        // Nếu đã giao hàng và người dùng xác nhận → cập nhật thanh toán
-        if ($newStatusId === 5 && $order->user_confirmed_delivery) {
+        if ($newStatusId === 5) {
             $order->payment_status_id = 2; // Đã thanh toán
         }
 
-        $order->save();
-        DB::commit();
+        $FINAL_STATUS_IDS = [5, 6, 7]; // 5: Đã giao, 6: Trả hàng / Hoàn tiền, 7: Đã huỷ
 
-        return redirect()->route('admin.orders.show', $order->id)
-            ->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error("Lỗi cập nhật trạng thái đơn hàng #$id: " . $e->getMessage());
-        return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        // Không cho phép update nếu đã vào trạng thái cuối
+        if (in_array($oldStatusId, $FINAL_STATUS_IDS)) {
+            return back()->with('error', 'Đơn hàng đã hoàn tất hoặc bị huỷ. Không thể cập nhật nữa.');
+        }
+
+        // Chỉ cho phép cập nhật tuần tự hoặc hủy khi ở trạng thái Đang xác nhận
+        $allowedNextStatus = [];
+
+        switch ($oldStatusId) {
+            case 1:
+                $allowedNextStatus = [2, 7]; // từ Chờ xác nhận → Đã xác nhận hoặc Hủy
+                break;
+            case 2:
+                $allowedNextStatus = [3, 7]; // từ Đã xác nhận → Đang chuẩn bị hàng hoặc Hủy
+                break;
+            case 3:
+                $allowedNextStatus = [4];    // từ Đang chuẩn bị hàng → Đang giao
+                break;
+            case 4:
+                $allowedNextStatus = [5];    // từ Đang giao → Đã giao
+                break;
+            case 5:
+                $allowedNextStatus = [6];    // từ Đã giao → Trả hàng
+                break;
+        }
+
+        if (!in_array($newStatusId, $allowedNextStatus)) {
+            return back()->with('error', 'Chuyển trạng thái không hợp lệ. Vui lòng tuân thủ quy trình.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $order->order_status_id = $newStatusId;
+
+            // Xử lý khi đơn hàng bị hủy (ID 7)
+            if ($newStatusId === 7) {
+                $cancelReason = $request->cancel_reason ?? 'Hết hàng trong kho';
+                $order->cancel_reason = $cancelReason;
+
+                // Tạo thông báo cho người dùng
+                if ($order->account_id) {
+                    $notification = Notification::create([
+                        'account_id' => $order->account_id,
+                        'type' => 'order_cancelled',
+                        'message' => 'Đơn hàng #' . $order->id . ' của bạn đã bị hủy. Lý do: ' . $cancelReason,
+                        'read' => false,
+                    ]);
+                    Log::info("Tạo thông báo thành công cho đơn hàng #$order->id, account_id: $order->account_id, notification_id: $notification->id");
+                } else {
+                    Log::warning("Không thể tạo thông báo cho đơn hàng #$order->id vì account_id là null.");
+                    return back()->with('warning', 'Không thể gửi thông báo vì đơn hàng không liên kết với người dùng.');
+                }
+
+                // Hoàn kho cho các sản phẩm trong đơn
+                foreach ($order->orderDetails as $detail) {
+                    $variant = $detail->productVariant;
+                    if ($variant) {
+                        $variant->increment('quantity', $detail->quantity);
+                    } else {
+                        Log::error("Không tìm thấy productVariant cho order_detail #$detail->id");
+                    }
+                }
+            }
+
+            // Tạo mã vận đơn nếu cần
+            if ($newStatusId === 3 && !$order->shipping_code) {
+                $order->tracking_number = 'PPGH' . strtoupper(Str::random(7));
+            }
+
+            // Cập nhật phí vận chuyển
+            if ($order->shipping_zone_id) {
+                $shippingZone = ShippingZone::find($order->shipping_zone_id);
+                $order->shipping_fee = $shippingZone?->shipping_fee ?? 30000;
+            } elseif (is_null($order->shipping_fee)) {
+                $order->shipping_fee = 30000;
+            }
+
+            // Nếu đã giao hàng và người dùng xác nhận → cập nhật thanh toán
+            if ($newStatusId === 5 && $order->user_confirmed_delivery) {
+                $order->payment_status_id = 2; // Đã thanh toán
+            }
+
+            $order->save();
+            DB::commit();
+
+            return redirect()->route('admin.orders.show', $order->id)
+                ->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Lỗi cập nhật trạng thái đơn hàng #$id: " . $e->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        }
     }
-}
-
     public function placeOrderFromCart($cartId)
     {
         DB::beginTransaction();
