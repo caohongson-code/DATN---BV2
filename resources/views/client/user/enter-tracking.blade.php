@@ -209,7 +209,7 @@
                 <input type="file" name="shipping_images[]" class="form-control" multiple accept="image/*" required>
                 <small class="text-muted">Chọn 1 hoặc nhiều ảnh chứng minh bạn đã gửi hàng</small>
             </div> --}}
-            <div class="mb-3">
+         <div class="mb-3">
     <label for="require_images" class="form-label fw-bold">📷 Ảnh chứng minh gửi hàng</label>
     <select name="require_images" id="require_images" class="form-select">
         <option value="yes" selected>Yêu cầu gửi ảnh chứng minh đã gửi hàng</option>
@@ -219,7 +219,7 @@
 
 <div class="mb-3" id="shipping_images_wrapper">
     <label for="shipping_images" class="form-label fw-bold">📦 Ảnh gói hàng đã gửi</label>
-    <input type="file" name="shipping_images[]" class="form-control" multiple accept="image/*" >
+    <input type="file" name="shipping_images[]" id="shipping_images" class="form-control" multiple accept="image/*" >
     <small class="text-muted">Chọn 1 hoặc nhiều ảnh chứng minh bạn đã gửi hàng</small>
 </div>
 
@@ -286,5 +286,27 @@
         select.addEventListener('change', updateFieldDisplay);
         updateFieldDisplay();
     });
+    document.addEventListener('DOMContentLoaded', function() {
+    const requireImages = document.getElementById('require_images');
+    const shippingWrapper = document.getElementById('shipping_images_wrapper');
+    const shippingInput = document.getElementById('shipping_images');
+
+    // Hàm check và bật/tắt required
+    function toggleRequired() {
+        if (requireImages.value === 'yes') {
+            shippingInput.setAttribute('required', 'required');
+            shippingWrapper.style.display = 'block';
+        } else {
+            shippingInput.removeAttribute('required');
+            shippingWrapper.style.display = 'none';
+        }
+    }
+
+    // Check lần đầu
+    toggleRequired();
+
+    // Check khi thay đổi select
+    requireImages.addEventListener('change', toggleRequired);
+});
 </script>
 @endpush
