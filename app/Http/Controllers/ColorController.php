@@ -77,13 +77,23 @@ class ColorController extends Controller
             ->with('success', 'Cập nhật màu sắc thành công.');
     }
 
-    public function destroy($id)
-    {
-        $color = Color::findOrFail($id);
-        $color->delete();
+public function destroy($id)
+{
+    $color = Color::findOrFail($id);
 
+    // Kiểm tra có sản phẩm nào đang dùng Color này không
+    $hasVariants = \App\Models\ProductVariant::where('color_id', $id)->exists();
+
+    if ($hasVariants) {
         return redirect()
             ->route('colors.index')
-            ->with('success', 'Xóa màu sắc thành công.');
+            ->with('error', 'Màu sắc này đang được sử dụng bởi sản phẩm, không thể xóa.');
     }
+
+    $color->delete();
+
+    return redirect()
+        ->route('colors.index')
+        ->with('success', 'Xóa màu sắc thành công.');
+}
 }

@@ -71,11 +71,23 @@ class StorageController extends Controller
         return redirect()->route('storages.index')->with('success', 'Cập nhật dung lượng thành công.');
     }
 
-    public function destroy($id)
-    {
-        $storages = StorageOption::findOrFail($id);
-        $storages->delete();
+public function destroy($id)
+{
+    $storage = StorageOption::findOrFail($id);
 
-        return redirect()->route('storages.index')->with('success', 'Xóa dung lượng thành công.');
+    // Kiểm tra có sản phẩm nào đang dùng Storage này không
+    $hasVariants = \App\Models\ProductVariant::where('storage_id', $id)->exists();
+
+    if ($hasVariants) {
+        return redirect()
+            ->route('storages.index')
+            ->with('error', 'Dung lượng này đang được sử dụng bởi sản phẩm, không thể xóa.');
     }
+
+    $storage->delete();
+
+    return redirect()
+        ->route('storages.index')
+        ->with('success', 'Xóa dung lượng thành công.');
+}
 }

@@ -71,11 +71,23 @@ class RamController extends Controller
         return redirect()->route('rams.index')->with('success', 'Cập nhật RAM thành công.');
     }
 
-    public function destroy($id)
-    {
-        $rams = Ram::findOrFail($id);
-        $rams->delete();
+  public function destroy($id)
+{
+    $ram = Ram::findOrFail($id);
 
-        return redirect()->route('rams.index')->with('success', 'Xóa RAM thành công.');
+    $hasVariants = \App\Models\ProductVariant::where('ram_id', $id)->exists();
+
+    if ($hasVariants) {
+        return redirect()
+            ->route('rams.index')
+            ->with('error', 'RAM này đang được sử dụng bởi sản phẩm, không thể xóa.');
     }
+
+    $ram->delete();
+
+    return redirect()
+        ->route('rams.index')
+        ->with('success', 'Xóa RAM thành công.');
+}
+
 }
