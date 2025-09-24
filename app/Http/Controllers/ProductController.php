@@ -173,7 +173,7 @@ class ProductController extends Controller
 
     public function update(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
+         $product = Product::with('variants.images')->findOrFail($id);
 
         $request->validate([
             'product_name' => 'required|string|max:255|unique:products,product_name,' . $id,
@@ -300,6 +300,30 @@ class ProductController extends Controller
                                 'image' => $imagePath,
                             ]);
                             $processedVariantIds[] = $variantId;
+                            // ----------------- Xử lý album ảnh biến thể -----------------
+$existingImages = $variantData['existing_images'] ?? [];
+// Xóa các ảnh không còn giữ
+$variant->images()->whereNotIn('id', $existingImages)->get()->each(function ($img) {
+    if ($img->path && StorageFacade::disk('public')->exists($img->path)) {
+        StorageFacade::disk('public')->delete($img->path);
+    }
+    $img->delete();
+});
+
+
+// Thêm ảnh mới
+if (!empty($variantData['images'])) {
+    foreach ($variantData['images'] as $imageFile) {
+        if ($imageFile) {
+            $path = $imageFile->store('uploads/variants', 'public');
+            $variant->images()->create([
+                'image' => $path, // **bắt buộc có**
+            ]);
+        }
+    }
+}
+
+
                         }
                     } else {
                         // Thêm mới biến thể
@@ -314,6 +338,7 @@ class ProductController extends Controller
                             'image' => $imagePath,
                         ]);
                         $processedVariantIds[] = $newVariant->id;
+                        
                     }
                 }
             }

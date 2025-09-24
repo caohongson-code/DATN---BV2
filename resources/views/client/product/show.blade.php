@@ -857,7 +857,7 @@
                 <i class="fa fa-phone" style="font-size: 24px; color: #fff;"></i>
             </a>
         </div>
-        <!-- Banner bên trái -->
+        {{-- <!-- Banner bên trái -->
         <div class="promo-fixed promo-left">
             <a href="#">
                 <img src="https://png.pngtree.com/template/20200517/ourlarge/pngtree-summer-sale-banner-promotion-template-in-portrait-position-with-bright-design-image_372761.jpg"
@@ -870,7 +870,7 @@
             <a href="#">
                 <img src="https://img.pikbest.com/origin/09/06/37/13NpIkbEsTGT5.jpg!w700wp" alt="Flash Sale">
             </a>
-        </div>
+        </div> --}}
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
             <div id="marketingToast" class="toast align-items-center text-white bg-primary border-0" role="alert"
                 aria-live="assertive" aria-atomic="true">
