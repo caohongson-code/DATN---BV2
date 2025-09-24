@@ -35,7 +35,7 @@ class ProductController extends Controller
         }
 
         $products = $query->orderByDesc('id')->paginate(10);
-        
+
         return view('admin.products.index', compact('products'));
     }
 
@@ -133,7 +133,6 @@ class ProductController extends Controller
                         throw new \Exception("Ảnh biến thể cho màu ID $colorId là bắt buộc.");
                     }
 
-                    // Tạo biến thể
                     $variant = ProductVariant::create([
                         'product_id' => $product->id,
                         'color_id' => $variantData['color_id'],
@@ -142,8 +141,18 @@ class ProductController extends Controller
                         'price' => $variantData['price'],
                         'discount_price' => $variantData['discount_price'] ?? 0,
                         'quantity' => $variantData['quantity'],
-                        'image' => $request->file("color_images.$colorId")->store('uploads/variants', 'public'),
+                        'image' => null, // ảnh chính nếu muốn, còn album lưu bên dưới
                     ]);
+
+                    // Lưu album ảnh nhiều file
+                    if (isset($variantData['images'])) {
+                        foreach ($variantData['images'] as $imageFile) {
+                            if ($imageFile) {
+                                $path = $imageFile->store('uploads/variants', 'public');
+                                $variant->images()->create(['image' => $path]);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -173,7 +182,7 @@ class ProductController extends Controller
 
     public function update(Request $request, $id)
     {
-         $product = Product::with('variants.images')->findOrFail($id);
+        $product = Product::with('variants.images')->findOrFail($id);
 
         $request->validate([
             'product_name' => 'required|string|max:255|unique:products,product_name,' . $id,
@@ -265,7 +274,7 @@ class ProductController extends Controller
 
                     // Xử lý ảnh biến thể
                     $imagePath = $variantData['old_image'] ?? null;
-                    
+
                     // Ưu tiên sử dụng ảnh từ variants.*.image
                     if ($request->hasFile("variants.$index.image")) {
                         // Xóa ảnh cũ nếu có
@@ -300,30 +309,24 @@ class ProductController extends Controller
                                 'image' => $imagePath,
                             ]);
                             $processedVariantIds[] = $variantId;
-                            // ----------------- Xử lý album ảnh biến thể -----------------
-$existingImages = $variantData['existing_images'] ?? [];
-// Xóa các ảnh không còn giữ
-$variant->images()->whereNotIn('id', $existingImages)->get()->each(function ($img) {
-    if ($img->path && StorageFacade::disk('public')->exists($img->path)) {
-        StorageFacade::disk('public')->delete($img->path);
-    }
-    $img->delete();
-});
+                            // Xóa các ảnh không còn giữ
+                            $existingImages = $variantData['existing_images'] ?? [];
+                            $variant->images()->whereNotIn('id', $existingImages)->get()->each(function ($img) {
+                                if ($img->path && StorageFacade::disk('public')->exists($img->path)) {
+                                    StorageFacade::disk('public')->delete($img->path);
+                                }
+                                $img->delete();
+                            });
 
-
-// Thêm ảnh mới
-if (!empty($variantData['images'])) {
-    foreach ($variantData['images'] as $imageFile) {
-        if ($imageFile) {
-            $path = $imageFile->store('uploads/variants', 'public');
-            $variant->images()->create([
-                'image' => $path, // **bắt buộc có**
-            ]);
-        }
-    }
-}
-
-
+                            // Thêm ảnh mới
+                            if (!empty($variantData['images'])) {
+                                foreach ($variantData['images'] as $imageFile) {
+                                    if ($imageFile) {
+                                        $path = $imageFile->store('uploads/variants', 'public');
+                                        $variant->images()->create(['image' => $path]);
+                                    }
+                                }
+                            }
                         }
                     } else {
                         // Thêm mới biến thể
@@ -338,7 +341,6 @@ if (!empty($variantData['images'])) {
                             'image' => $imagePath,
                         ]);
                         $processedVariantIds[] = $newVariant->id;
-                        
                     }
                 }
             }
